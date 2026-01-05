@@ -1,0 +1,30 @@
+[workspace]
+members = ["shadcn-rs", "shadcn-showcase"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+authors = ["Hugh Brown"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/hughdbrown/shadcn-rs"
+homepage = "https://github.com/hughdbrown/shadcn-rs"
+keywords = ["ui", "wasm", "yew", "components", "shadcn"]
+categories = ["wasm", "web-programming", "gui"]
+
+[workspace.dependencies]
+# Core Yew and WASM dependencies
+yew = { version = "0.21", features = ["csr"] }
+wasm-bindgen = "0.2"
+web-sys = "0.3"
+gloo = "0.11"
+
+# Date/time handling
+chrono = { version = "0.4", features = ["wasmbind"] }
+
+# Utilities
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Development dependencies
+wasm-bindgen-test = "0.3"
