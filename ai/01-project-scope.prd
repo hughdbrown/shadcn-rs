@@ -1,0 +1,239 @@
+# Project: shadcn-rs
+
+## Description
+A comprehensive UI component library for Rust/WebAssembly that provides shadcn/ui compatible components. This library enables developers to build modern web applications using Rust with a familiar component API.
+
+## Technical Stack
+- **Language**: Rust 2024 edition
+- **Web Framework**: Yew (React-like framework for WASM)
+- **Styling**: CSS classes (Tailwind-like utilities) with CSS custom properties
+- **Build Target**: WebAssembly (wasm32-unknown-unknown)
+- **Testing**: wasm-bindgen-test for UI integration tests
+
+## Project Structure
+This repository will use a Cargo workspace with multiple crates:
+1. **shadcn-rs** (library crate): The component library
+2. **shadcn-showcase** (binary crate): Interactive showcase/demo application
+3. **shadcn-icons** (library crate): Port of Lucide icons to Rust/Yew
+
+Note: The icon library may be published separately or as part of the main library.
+
+## Styling Approach
+- **Complete CSS file shipped with library** - Users include via `<link>` tag
+- Pre-generated CSS with utility classes (Tailwind-inspired)
+- CSS custom properties (CSS variables) for theming
+- Light and dark mode support via CSS variables
+- Users include CSS file in their HTML, WASM adds class names to elements
+- No runtime style generation - all styles are static CSS
+- Users can override any styles with custom CSS
+
+## Component API Design
+- **Type-safe props**: Use Rust enums for variants, sizes, colors
+  - Example: `size={Size::Large}`, `variant={Variant::Destructive}`
+- **Yew Properties derive**: All component props use `#[derive(Properties)]`
+- **Children support**: Components accept children via `props.children`
+- **Event handlers**: Callback props for user interactions
+- **Controlled/Uncontrolled**: Support both patterns where applicable
+- **Compound components**: Multiple separate components for complex UI (Card, Dialog, etc.)
+- **Validation**: Simple callback-based validation using `Callback<T, Result<(), String>>`
+- **Error handling**: Panic for developer errors (invalid props), callbacks for user errors (validation)
+
+## Accessibility Requirements
+- Full WCAG 2.1 AA compliance
+- Proper ARIA attributes (roles, labels, states)
+- Keyboard navigation support (Tab, Enter, Escape, Arrow keys)
+- Focus management (trap focus in modals, restore on close)
+- Screen reader announcements for dynamic content
+- Semantic HTML elements
+
+## Component Scope
+All 65+ shadcn/ui components, implemented in priority order from simple to complex:
+
+### Tier 1 - Foundational (Simple, no dependencies)
+1. Badge - Status indicators
+2. Button - Primary interactive element
+3. Label - Form field labels
+4. Separator - Visual dividers
+5. Skeleton - Loading placeholders
+6. Spinner - Loading indicators
+7. Kbd - Keyboard shortcut display
+8. Typography - Text styling helpers
+9. Avatar - User profile images
+10. Alert - Notification messages
+
+### Tier 2 - Form Components
+11. Input - Text input field
+12. Textarea - Multi-line text input
+13. Checkbox - Boolean input
+14. Switch - Toggle input
+15. Radio Group - Single selection from options
+16. Native Select - Basic dropdown
+17. Slider - Range input
+18. Progress - Progress bars
+
+### Tier 3 - Layout & Structure
+19. Card - Content container
+20. Aspect Ratio - Maintain aspect ratios
+21. Scroll Area - Custom scrollbars
+22. Resizable - Resizable panels
+23. Tabs - Tabbed content
+24. Table - Data tables
+25. Empty - Empty state displays
+26. Item - Generic list item
+
+### Tier 4 - Interactive Components
+27. Button Group - Grouped buttons
+28. Input Group - Grouped inputs
+29. Field - Form field wrapper
+30. Collapsible - Expandable content
+31. Accordion - Multiple collapsible sections
+32. Toggle - Toggle button
+33. Toggle Group - Multiple toggles
+
+### Tier 5 - Overlays & Popups
+34. Dialog - Modal dialog
+35. Alert Dialog - Confirmation dialogs
+36. Popover - Floating content
+37. Tooltip - Hover information
+38. Hover Card - Rich hover content
+39. Sheet - Side panel/drawer
+40. Drawer - Mobile-friendly drawer
+
+### Tier 6 - Navigation
+41. Breadcrumb - Navigation trail
+42. Navigation Menu - Main navigation
+43. Menubar - Application menu bar
+44. Dropdown Menu - Action menus
+45. Context Menu - Right-click menu
+46. Pagination - Page navigation
+47. Sidebar - Application sidebar
+
+### Tier 7 - Advanced Forms
+48. Form - Form wrapper with validation
+49. Select - Advanced dropdown with search
+50. Combobox - Searchable dropdown
+51. Command - Command palette
+52. Input OTP - One-time password input
+53. Date Picker - Date selection (uses chrono)
+54. Calendar - Calendar view (uses chrono)
+
+### Tier 8 - Complex Components
+55. Carousel - Image/content carousel
+56. Data Table - Advanced tables with sorting/filtering
+57. Chart - Data visualization (custom Rust implementation)
+58. Toast - Notification toasts
+59. Sonner - Advanced toast system
+
+## External Dependencies - Rust Equivalents
+- **Dates**: chrono crate (replaces date-fns)
+- **Charts**: Full-featured SVG-based charts matching recharts capabilities
+  - Bar, Line, Area, Pie, Donut charts
+  - Customizable axes, legends, tooltips
+  - Interactive features and responsive sizing
+- **Icons**: shadcn-icons crate - port of Lucide icons to Rust/Yew components
+- **Utilities**: Custom Rust implementations (no lodash equivalent needed)
+- **Touch Gestures**: Custom touch event handling for Drawer, Carousel, Tabs, Dialog
+
+## Testing Strategy
+- **Unit tests**: Test component logic and prop handling
+- **Integration tests**: wasm-bindgen-test for rendering and interactions
+- **Test coverage**: Every component must have tests covering:
+  - Default rendering
+  - All variants and sizes
+  - Event handler invocation
+  - Accessibility attributes
+  - Keyboard navigation
+- **Visual regression**: Consider future integration with Percy or similar
+
+## Examples
+- Each component gets a dedicated example in `examples/component-name/`
+- Examples demonstrate:
+  - Basic usage
+  - All variants
+  - Interactive features
+  - Accessibility features
+  - Common patterns
+
+## Documentation
+- Rustdoc comments for all public APIs
+- Component usage examples in docs
+- README with quick start guide
+- CONTRIBUTING.md for contributors
+- Component documentation matching shadcn/ui structure
+
+## Development Workflow
+1. Implement Tier 1 components sequentially to establish patterns
+2. Parallelize Tier 2+ implementation once patterns are established
+3. Each component includes (in order):
+   - API design (props, variants)
+   - Rustdoc documentation
+   - Implementation in `src/components/`
+   - Tests in `tests/`
+   - Example in `examples/`
+4. Build showcase app after all components complete
+5. Regular testing on major browsers
+
+## Publication Strategy
+- Publish to crates.io at v1.0.0 (after all components complete)
+- No early alpha/beta releases - wait for completeness
+- Semantic versioning (launch with 1.0.0)
+- Clear changelog
+- Stability guarantees from 1.0.0 onward
+- Documentation hosted on docs.rs
+- **Post-v1.0 additions**: Virtual scrolling, advanced positioning, TypeScript defs (v1.1+)
+
+## Browser Compatibility
+- **Desktop**: Last 2 versions of Chrome, Firefox, Safari, Edge
+- **Mobile**: iOS Safari 14+, Chrome Mobile (last 2 versions)
+- No IE11 support required
+- Supports modern web features (CSS Grid, Flexbox, Custom Properties, etc.)
+
+## Build Artifacts
+- **Library**: `shadcn-rs` crate on crates.io
+- **CSS**: Bundled CSS file in library
+- **Showcase**: WASM app deployable to static hosting
+- **Examples**: Compiled WASM examples
+
+## Success Metrics
+- All 59 components implemented and tested
+- Icon library with Lucide icons ported
+- 100% test coverage for component logic
+- Accessibility audit passes (WCAG 2.1 AA)
+- Full-featured charting system complete
+- Touch gestures working on mobile
+- Documentation complete for all components
+- Showcase app demonstrates all components
+- Published at v1.0.0 on crates.io
+
+## Technical Implementation Details
+
+### Positioning System (v1.0)
+- CSS-based positioning using `position: absolute` and transforms
+- Support for top, right, bottom, left positioning
+- Basic viewport awareness (manual calculations)
+- Advanced features (collision detection, auto-flip) deferred to v1.1+
+
+### Animation System
+- Pure CSS animations and transitions
+- Class-based triggers (`.enter`, `.exit`, `.active`)
+- Common animations: slide, fade, expand, collapse
+- Configurable timing and easing via CSS variables
+
+### Portal Implementation
+- Use web-sys to append to `document.body`
+- Clean up on component unmount
+- Support custom target containers
+- Handle z-index stacking
+
+### Touch Gesture System
+- Touch event listeners (touchstart, touchmove, touchend)
+- Swipe detection with configurable thresholds
+- Components with touch support: Drawer, Carousel, Tabs, Dialog
+- Fall back to click/tap on desktop
+
+### Chart System
+- SVG-based rendering for scalability
+- Components: BarChart, LineChart, AreaChart, PieChart, DonutChart
+- Features: Custom axes, legends, tooltips, responsive sizing
+- Interactive: Hover effects, click handlers
+- Data-driven with flexible configuration

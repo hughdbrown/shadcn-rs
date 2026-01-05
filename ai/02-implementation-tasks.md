@@ -1,0 +1,997 @@
+# Implementation Task List - shadcn-rs
+
+## Phase 0: Project Setup & Infrastructure
+
+### 0.1 Workspace Configuration
+- [ ] Create Cargo workspace with three members: `shadcn-rs` (lib), `shadcn-showcase` (bin), `shadcn-icons` (lib)
+- [ ] Set up workspace dependencies in root Cargo.toml
+- [ ] Configure workspace metadata (authors, license, repository)
+- [ ] Ensure edition = "2024" is set in workspace.package
+
+### 0.2 Library Crate Setup (shadcn-rs)
+- [ ] Convert src/main.rs to src/lib.rs
+- [ ] Add core Yew dependencies (yew, web-sys, wasm-bindgen)
+- [ ] Add development dependencies (wasm-bindgen-test)
+- [ ] Configure crate-type = ["cdylib", "rlib"] for WASM
+- [ ] Set up lib.rs with module structure
+
+### 0.3 Icons Crate Setup (shadcn-icons)
+- [ ] Create shadcn-icons directory with Cargo.toml
+- [ ] Set up lib.rs module structure
+- [ ] Add Yew dependency
+- [ ] Create script to port Lucide SVG icons to Rust components
+- [ ] Generate initial set of common icons (Check, X, ChevronDown, etc.)
+- [ ] Write documentation for icon usage
+
+### 0.4 Showcase Crate Setup (shadcn-showcase)
+- [ ] Create shadcn-showcase directory with Cargo.toml
+- [ ] Set up main.rs with Yew app entry point
+- [ ] Add dependency on shadcn-rs library
+- [ ] Create index.html for WASM loading
+- [ ] Set up trunk for development server
+
+### 0.5 CSS Infrastructure
+- [ ] Create styles/ directory for CSS source files
+- [ ] Design CSS variable system for theming
+- [ ] Create base utility classes (Tailwind-inspired)
+- [ ] Set up light and dark theme variables
+- [ ] CSS will be shipped as static file with library
+- [ ] Document how users include CSS in their projects
+
+### 0.6 Component Module Structure
+- [ ] Create src/components/ directory
+- [ ] Create src/components/mod.rs with component exports
+- [ ] Set up component subdirectories by tier
+- [ ] Create src/types/ for shared enums (Size, Variant, Color, etc.)
+- [ ] Create src/hooks/ for custom Yew hooks
+- [ ] Create src/utils/ for helper functions (Portal, touch gestures, etc.)
+
+### 0.7 Development Tooling
+- [ ] Create .gitignore for Rust/WASM projects
+- [ ] Set up rustfmt.toml with formatting rules
+- [ ] Set up clippy.toml with linting rules
+- [ ] Create justfile or Makefile for common tasks
+- [ ] Set up CI/CD workflow (GitHub Actions)
+- [ ] Configure wasm-pack for building
+
+### 0.8 Testing Infrastructure
+- [ ] Set up wasm-bindgen-test configuration
+- [ ] Create tests/ directory structure
+- [ ] Write example test for infrastructure validation
+- [ ] Set up test runner scripts
+- [ ] Configure code coverage tools
+
+### 0.9 Documentation Foundation
+- [ ] Create README.md with project overview
+- [ ] Create CONTRIBUTING.md
+- [ ] Create LICENSE file (MIT or Apache-2.0)
+- [ ] Create CHANGELOG.md
+- [ ] Set up docs/ directory for guides
+- [ ] Configure rustdoc settings
+
+## Phase 1: Core Types & Utilities
+
+### 1.1 Shared Types
+- [ ] Define Size enum (XS, SM, MD, LG, XL, 2XL, etc.)
+- [ ] Define Variant enum (Default, Primary, Secondary, Destructive, Outline, Ghost, Link)
+- [ ] Define Color enum (Default, Primary, Secondary, Success, Warning, Danger, Info)
+- [ ] Define Position enum (Top, Right, Bottom, Left, TopLeft, TopRight, BottomLeft, BottomRight)
+- [ ] Define Alignment enum (Start, Center, End, Stretch)
+- [ ] Create conversion traits for enums to CSS class names
+
+### 1.2 Accessibility Utilities
+- [ ] Create ARIA attribute helpers
+- [ ] Create keyboard event handlers (useKeyboard hook)
+- [ ] Create focus trap utility for modals
+- [ ] Create focus restoration utility
+- [ ] Create screen reader announcement utility
+- [ ] Create unique ID generator for aria-labelledby/aria-describedby
+
+### 1.3 Style Utilities
+- [ ] Create className merger utility (combine classes)
+- [ ] Create conditional class utility
+- [ ] Create variant class generator
+- [ ] Create theme context provider
+- [ ] Create useTheme hook
+
+### 1.4 Common Hooks
+- [ ] useToggle - boolean state toggle
+- [ ] useClickOutside - detect clicks outside element
+- [ ] useEscapeKey - handle Escape key press
+- [ ] useMediaQuery - responsive breakpoints
+- [ ] useControllableState - controlled/uncontrolled pattern
+
+### 1.5 Portal Utility
+- [ ] Implement Portal component using web-sys
+- [ ] Support rendering to document.body
+- [ ] Support custom target containers
+- [ ] Handle cleanup on unmount
+- [ ] Write tests
+
+### 1.6 Touch Gesture Utilities
+- [ ] Create touch event handler utilities
+- [ ] Implement swipe detection (left, right, up, down)
+- [ ] Configurable swipe thresholds
+- [ ] Touch state tracking (start, move, end)
+- [ ] Write tests for gesture detection
+
+## Phase 2: Tier 1 Components (Foundational)
+
+### 2.1 Badge Component
+- [ ] Implement Badge component with variants
+- [ ] Add size support
+- [ ] Add color customization
+- [ ] Write unit tests
+- [ ] Write integration tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 2.2 Button Component
+- [ ] Implement Button component
+- [ ] Add all variants (default, primary, secondary, destructive, outline, ghost, link)
+- [ ] Add size support
+- [ ] Add disabled state
+- [ ] Add loading state with spinner
+- [ ] Add icon support (left/right)
+- [ ] Add accessibility attributes
+- [ ] Handle keyboard events
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 2.3 Label Component
+- [ ] Implement Label component
+- [ ] Add htmlFor prop
+- [ ] Add required indicator
+- [ ] Add accessibility attributes
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 2.4 Separator Component
+- [ ] Implement Separator (horizontal/vertical)
+- [ ] Add orientation support
+- [ ] Add ARIA role
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 2.5 Skeleton Component
+- [ ] Implement Skeleton with loading animation
+- [ ] Add shape variants (text, circle, rectangle)
+- [ ] Add size support
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 2.6 Spinner Component
+- [ ] Implement Spinner with CSS animation
+- [ ] Add size support
+- [ ] Add color customization
+- [ ] Add ARIA label for screen readers
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 2.7 Kbd Component
+- [ ] Implement Kbd for keyboard shortcuts
+- [ ] Add size support
+- [ ] Add multi-key support (Ctrl+S)
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 2.8 Typography Component
+- [ ] Implement typography variants (h1-h6, p, blockquote, code, etc.)
+- [ ] Add semantic HTML mapping
+- [ ] Add text alignment
+- [ ] Add text colors
+- [ ] Add font weights
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 2.9 Avatar Component
+- [ ] Implement Avatar with image support
+- [ ] Add fallback initials
+- [ ] Add fallback icon
+- [ ] Add size support
+- [ ] Add shape variants (circle, square)
+- [ ] Add alt text support
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 2.10 Alert Component
+- [ ] Implement Alert component
+- [ ] Add variants (default, info, warning, error, success)
+- [ ] Add title and description support
+- [ ] Add icon support
+- [ ] Add dismissible option
+- [ ] Add ARIA role
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+## Phase 3: Tier 2 Components (Form Components)
+
+### 3.1 Input Component
+- [ ] Implement Input component
+- [ ] Add all input types (text, email, password, number, etc.)
+- [ ] Add size support
+- [ ] Add disabled state
+- [ ] Add error state
+- [ ] Add prefix/suffix support
+- [ ] Add accessibility attributes
+- [ ] Support controlled/uncontrolled pattern
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 3.2 Textarea Component
+- [ ] Implement Textarea
+- [ ] Add auto-resize option
+- [ ] Add max length with counter
+- [ ] Add disabled/error states
+- [ ] Add accessibility attributes
+- [ ] Support controlled/uncontrolled pattern
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 3.3 Checkbox Component
+- [ ] Implement Checkbox
+- [ ] Add indeterminate state
+- [ ] Add disabled state
+- [ ] Add error state
+- [ ] Add label integration
+- [ ] Add ARIA attributes
+- [ ] Support controlled/uncontrolled pattern
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 3.4 Switch Component
+- [ ] Implement Switch toggle
+- [ ] Add size support
+- [ ] Add disabled state
+- [ ] Add ARIA attributes (role="switch")
+- [ ] Add keyboard navigation
+- [ ] Support controlled/uncontrolled pattern
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 3.5 Radio Group Component
+- [ ] Implement RadioGroup container
+- [ ] Implement Radio item
+- [ ] Add orientation (horizontal/vertical)
+- [ ] Add disabled state
+- [ ] Add ARIA attributes (role="radiogroup")
+- [ ] Add keyboard navigation (arrow keys)
+- [ ] Support controlled/uncontrolled pattern
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 3.6 Native Select Component
+- [ ] Implement Select wrapper
+- [ ] Add size support
+- [ ] Add disabled state
+- [ ] Add error state
+- [ ] Add placeholder option
+- [ ] Add ARIA attributes
+- [ ] Support controlled/uncontrolled pattern
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 3.7 Slider Component
+- [ ] Implement Slider with range input
+- [ ] Add single/dual handle support
+- [ ] Add step support
+- [ ] Add marks/labels
+- [ ] Add disabled state
+- [ ] Add ARIA attributes (role="slider")
+- [ ] Add keyboard navigation
+- [ ] Support controlled/uncontrolled pattern
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 3.8 Progress Component
+- [ ] Implement Progress bar
+- [ ] Add determinate/indeterminate modes
+- [ ] Add size support
+- [ ] Add color variants
+- [ ] Add ARIA attributes (role="progressbar")
+- [ ] Add label support
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+## Phase 4: Tier 3 Components (Layout & Structure)
+
+### 4.1 Card Component
+- [ ] Implement Card container
+- [ ] Implement CardHeader, CardTitle, CardDescription
+- [ ] Implement CardContent
+- [ ] Implement CardFooter
+- [ ] Add variant support
+- [ ] Add hover effects
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 4.2 Aspect Ratio Component
+- [ ] Implement AspectRatio wrapper
+- [ ] Add ratio prop (16/9, 4/3, 1/1, etc.)
+- [ ] Add CSS implementation
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 4.3 Scroll Area Component
+- [ ] Implement ScrollArea with custom scrollbars
+- [ ] Add horizontal/vertical/both scrolling
+- [ ] Add scroll shadow effects
+- [ ] Add ARIA attributes
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 4.4 Resizable Component
+- [ ] Implement Resizable panels
+- [ ] Add ResizablePanel component
+- [ ] Add ResizableHandle component
+- [ ] Add orientation support
+- [ ] Add collapse support
+- [ ] Add accessibility attributes
+- [ ] Add keyboard resizing
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 4.5 Tabs Component
+- [ ] Implement Tabs container
+- [ ] Implement TabsList
+- [ ] Implement TabsTrigger
+- [ ] Implement TabsContent
+- [ ] Add orientation support
+- [ ] Add ARIA attributes (role="tablist", "tab", "tabpanel")
+- [ ] Add keyboard navigation (arrow keys)
+- [ ] Support controlled/uncontrolled pattern
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 4.6 Table Component
+- [ ] Implement Table container
+- [ ] Implement TableHeader, TableBody, TableFooter
+- [ ] Implement TableRow, TableHead, TableCell
+- [ ] Add caption support
+- [ ] Add responsive overflow
+- [ ] Add ARIA attributes
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 4.7 Empty Component
+- [ ] Implement Empty state display
+- [ ] Add icon support
+- [ ] Add title and description
+- [ ] Add action button support
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 4.8 Item Component
+- [ ] Implement generic Item component
+- [ ] Add selectable state
+- [ ] Add disabled state
+- [ ] Add icon support
+- [ ] Add description support
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+## Phase 5: Tier 4 Components (Interactive)
+
+### 5.1 Button Group Component
+- [ ] Implement ButtonGroup container
+- [ ] Add orientation support
+- [ ] Add spacing control
+- [ ] Add connected appearance
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 5.2 Input Group Component
+- [ ] Implement InputGroup container
+- [ ] Add prefix/suffix support
+- [ ] Add add-on support
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 5.3 Field Component
+- [ ] Implement Field wrapper
+- [ ] Integrate Label, Input, and error message
+- [ ] Add required indicator
+- [ ] Add help text
+- [ ] Add error message
+- [ ] Add ARIA associations
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 5.4 Collapsible Component
+- [ ] Implement Collapsible container
+- [ ] Implement CollapsibleTrigger
+- [ ] Implement CollapsibleContent
+- [ ] Add animation support
+- [ ] Add ARIA attributes
+- [ ] Add keyboard support
+- [ ] Support controlled/uncontrolled pattern
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 5.5 Accordion Component
+- [ ] Implement Accordion container
+- [ ] Implement AccordionItem
+- [ ] Implement AccordionTrigger
+- [ ] Implement AccordionContent
+- [ ] Add single/multiple expand modes
+- [ ] Add animation support
+- [ ] Add ARIA attributes
+- [ ] Add keyboard navigation
+- [ ] Support controlled/uncontrolled pattern
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 5.6 Toggle Component
+- [ ] Implement Toggle button
+- [ ] Add pressed state
+- [ ] Add size support
+- [ ] Add variant support
+- [ ] Add ARIA attributes (aria-pressed)
+- [ ] Support controlled/uncontrolled pattern
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 5.7 Toggle Group Component
+- [ ] Implement ToggleGroup container
+- [ ] Add single/multiple selection modes
+- [ ] Add orientation support
+- [ ] Add ARIA attributes
+- [ ] Add keyboard navigation
+- [ ] Support controlled/uncontrolled pattern
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+## Phase 6: Tier 5 Components (Overlays & Popups)
+
+### 6.1 Portal Component (internal utility)
+- [ ] Implement Portal for rendering to document.body
+- [ ] Add target container support
+- [ ] Handle cleanup on unmount
+- [ ] Write tests
+
+### 6.2 Dialog Component
+- [ ] Implement Dialog (modal)
+- [ ] Implement DialogTrigger
+- [ ] Implement DialogContent
+- [ ] Implement DialogHeader, DialogTitle, DialogDescription
+- [ ] Implement DialogFooter
+- [ ] Add overlay/backdrop
+- [ ] Add focus trap
+- [ ] Add scroll lock
+- [ ] Add close on overlay click
+- [ ] Add close on Escape key
+- [ ] Add ARIA attributes (role="dialog", aria-modal)
+- [ ] Add keyboard navigation
+- [ ] Support controlled/uncontrolled pattern
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 6.3 Alert Dialog Component
+- [ ] Implement AlertDialog (extends Dialog)
+- [ ] Implement AlertDialogTrigger
+- [ ] Implement AlertDialogContent
+- [ ] Implement AlertDialogHeader, AlertDialogTitle, AlertDialogDescription
+- [ ] Implement AlertDialogFooter
+- [ ] Implement AlertDialogAction, AlertDialogCancel
+- [ ] Add ARIA attributes (role="alertdialog")
+- [ ] Prevent close on overlay click
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 6.4 Popover Component
+- [ ] Implement Popover
+- [ ] Implement PopoverTrigger
+- [ ] Implement PopoverContent
+- [ ] Add positioning logic (top, right, bottom, left)
+- [ ] Add auto-positioning (flip when near edge)
+- [ ] Add arrow/pointer
+- [ ] Add close on outside click
+- [ ] Add close on Escape key
+- [ ] Add ARIA attributes
+- [ ] Support controlled/uncontrolled pattern
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 6.5 Tooltip Component
+- [ ] Implement Tooltip
+- [ ] Implement TooltipTrigger
+- [ ] Implement TooltipContent
+- [ ] Add positioning logic
+- [ ] Add delay support
+- [ ] Add arrow
+- [ ] Add ARIA attributes (role="tooltip")
+- [ ] Support keyboard trigger (focus)
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 6.6 Hover Card Component
+- [ ] Implement HoverCard (rich tooltip)
+- [ ] Implement HoverCardTrigger
+- [ ] Implement HoverCardContent
+- [ ] Add positioning logic
+- [ ] Add delay support
+- [ ] Add arrow
+- [ ] Add ARIA attributes
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 6.7 Sheet Component
+- [ ] Implement Sheet (side panel)
+- [ ] Implement SheetTrigger
+- [ ] Implement SheetContent
+- [ ] Implement SheetHeader, SheetTitle, SheetDescription
+- [ ] Implement SheetFooter
+- [ ] Add side support (top, right, bottom, left)
+- [ ] Add overlay/backdrop
+- [ ] Add focus trap
+- [ ] Add scroll lock
+- [ ] Add slide animation
+- [ ] Add close on overlay click
+- [ ] Add close on Escape key
+- [ ] Add ARIA attributes
+- [ ] Support controlled/uncontrolled pattern
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 6.8 Drawer Component
+- [ ] Implement Drawer (mobile-friendly sheet)
+- [ ] Implement DrawerTrigger
+- [ ] Implement DrawerContent
+- [ ] Implement DrawerHeader, DrawerTitle, DrawerDescription
+- [ ] Implement DrawerFooter
+- [ ] Add swipe to close gesture
+- [ ] Add snap points
+- [ ] Add overlay/backdrop
+- [ ] Add focus trap
+- [ ] Add scroll lock
+- [ ] Add ARIA attributes
+- [ ] Support controlled/uncontrolled pattern
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+## Phase 7: Tier 6 Components (Navigation)
+
+### 7.1 Breadcrumb Component
+- [ ] Implement Breadcrumb container
+- [ ] Implement BreadcrumbList
+- [ ] Implement BreadcrumbItem
+- [ ] Implement BreadcrumbLink
+- [ ] Implement BreadcrumbPage (current page)
+- [ ] Implement BreadcrumbSeparator
+- [ ] Add ARIA attributes (aria-label, aria-current)
+- [ ] Add truncation support
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 7.2 Navigation Menu Component
+- [ ] Implement NavigationMenu container
+- [ ] Implement NavigationMenuList
+- [ ] Implement NavigationMenuItem
+- [ ] Implement NavigationMenuTrigger
+- [ ] Implement NavigationMenuContent
+- [ ] Implement NavigationMenuLink
+- [ ] Add orientation support
+- [ ] Add hover/click triggers
+- [ ] Add ARIA attributes (role="navigation")
+- [ ] Add keyboard navigation
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 7.3 Menubar Component
+- [ ] Implement Menubar container
+- [ ] Implement MenubarMenu
+- [ ] Implement MenubarTrigger
+- [ ] Implement MenubarContent
+- [ ] Implement MenubarItem
+- [ ] Implement MenubarSeparator
+- [ ] Implement MenubarCheckboxItem
+- [ ] Implement MenubarRadioGroup, MenubarRadioItem
+- [ ] Implement MenubarSub (nested menus)
+- [ ] Add ARIA attributes (role="menubar")
+- [ ] Add keyboard navigation
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 7.4 Dropdown Menu Component
+- [ ] Implement DropdownMenu
+- [ ] Implement DropdownMenuTrigger
+- [ ] Implement DropdownMenuContent
+- [ ] Implement DropdownMenuItem
+- [ ] Implement DropdownMenuSeparator
+- [ ] Implement DropdownMenuLabel
+- [ ] Implement DropdownMenuCheckboxItem
+- [ ] Implement DropdownMenuRadioGroup, DropdownMenuRadioItem
+- [ ] Implement DropdownMenuSub (nested menus)
+- [ ] Add positioning logic
+- [ ] Add ARIA attributes (role="menu")
+- [ ] Add keyboard navigation
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 7.5 Context Menu Component
+- [ ] Implement ContextMenu
+- [ ] Implement ContextMenuTrigger (right-click)
+- [ ] Implement ContextMenuContent
+- [ ] Implement ContextMenuItem
+- [ ] Implement ContextMenuSeparator
+- [ ] Implement ContextMenuLabel
+- [ ] Implement ContextMenuCheckboxItem
+- [ ] Implement ContextMenuRadioGroup, ContextMenuRadioItem
+- [ ] Implement ContextMenuSub (nested menus)
+- [ ] Add positioning at cursor
+- [ ] Add ARIA attributes
+- [ ] Add keyboard navigation
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 7.6 Pagination Component
+- [ ] Implement Pagination container
+- [ ] Implement PaginationContent
+- [ ] Implement PaginationItem
+- [ ] Implement PaginationLink
+- [ ] Implement PaginationPrevious, PaginationNext
+- [ ] Implement PaginationEllipsis
+- [ ] Add ARIA attributes (role="navigation")
+- [ ] Add current page indication
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 7.7 Sidebar Component
+- [ ] Implement Sidebar container
+- [ ] Implement SidebarHeader, SidebarContent, SidebarFooter
+- [ ] Implement SidebarGroup
+- [ ] Implement SidebarGroupLabel
+- [ ] Implement SidebarGroupContent
+- [ ] Implement SidebarMenu, SidebarMenuItem, SidebarMenuButton
+- [ ] Add collapsible support
+- [ ] Add mobile responsive behavior
+- [ ] Add ARIA attributes
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+## Phase 8: Tier 7 Components (Advanced Forms)
+
+### 8.1 Form Component
+- [ ] Design form validation system
+- [ ] Implement Form container
+- [ ] Implement FormField wrapper
+- [ ] Implement FormItem wrapper
+- [ ] Implement FormLabel
+- [ ] Implement FormControl
+- [ ] Implement FormDescription
+- [ ] Implement FormMessage (error display)
+- [ ] Add validation integration
+- [ ] Add submit handling
+- [ ] Add ARIA attributes
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 8.2 Select Component (Advanced)
+- [ ] Implement Select container
+- [ ] Implement SelectTrigger
+- [ ] Implement SelectValue
+- [ ] Implement SelectContent
+- [ ] Implement SelectItem
+- [ ] Implement SelectGroup, SelectLabel
+- [ ] Implement SelectSeparator
+- [ ] Add search/filter capability
+- [ ] Add multi-select support
+- [ ] Add positioning logic
+- [ ] Add ARIA attributes (role="listbox")
+- [ ] Add keyboard navigation
+- [ ] Support controlled/uncontrolled pattern
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 8.3 Combobox Component
+- [ ] Implement Combobox (searchable select)
+- [ ] Add search input
+- [ ] Add filtering logic
+- [ ] Add virtual scrolling for large lists
+- [ ] Add create new item support
+- [ ] Add ARIA attributes (role="combobox")
+- [ ] Add keyboard navigation
+- [ ] Support controlled/uncontrolled pattern
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 8.4 Command Component
+- [ ] Implement Command (command palette)
+- [ ] Implement CommandInput (search)
+- [ ] Implement CommandList
+- [ ] Implement CommandEmpty
+- [ ] Implement CommandGroup
+- [ ] Implement CommandItem
+- [ ] Implement CommandSeparator
+- [ ] Add fuzzy search
+- [ ] Add keyboard shortcuts display
+- [ ] Add ARIA attributes
+- [ ] Add keyboard navigation
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 8.5 Input OTP Component
+- [ ] Implement InputOTP container
+- [ ] Implement OTP input fields
+- [ ] Add auto-focus next field
+- [ ] Add paste support (split code)
+- [ ] Add validation
+- [ ] Add ARIA attributes
+- [ ] Add keyboard navigation (arrow keys, backspace)
+- [ ] Support controlled/uncontrolled pattern
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 8.6 Date Picker Component
+- [ ] Add chrono dependency
+- [ ] Implement DatePicker
+- [ ] Integrate with Calendar component
+- [ ] Add input field
+- [ ] Add format support
+- [ ] Add min/max date validation
+- [ ] Add disabled dates
+- [ ] Add ARIA attributes
+- [ ] Support controlled/uncontrolled pattern
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 8.7 Calendar Component
+- [ ] Implement Calendar (date grid)
+- [ ] Add month/year navigation
+- [ ] Add date selection (single/range)
+- [ ] Add disabled dates
+- [ ] Add min/max date constraints
+- [ ] Add multiple months view
+- [ ] Add ARIA attributes (role="grid")
+- [ ] Add keyboard navigation (arrow keys)
+- [ ] Support controlled/uncontrolled pattern
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+## Phase 9: Tier 8 Components (Complex)
+
+### 9.1 Carousel Component
+- [ ] Implement Carousel container
+- [ ] Implement CarouselContent
+- [ ] Implement CarouselItem
+- [ ] Implement CarouselPrevious, CarouselNext
+- [ ] Add auto-play support
+- [ ] Add loop support
+- [ ] Add touch/swipe gestures
+- [ ] Add indicators/dots
+- [ ] Add ARIA attributes
+- [ ] Add keyboard navigation
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 9.2 Data Table Component
+- [ ] Implement DataTable container
+- [ ] Add column definitions
+- [ ] Add sorting (single/multi-column)
+- [ ] Add filtering
+- [ ] Add pagination integration
+- [ ] Add row selection (single/multi)
+- [ ] Add expandable rows
+- [ ] Add column resizing
+- [ ] Add column reordering
+- [ ] Add ARIA attributes
+- [ ] Add keyboard navigation
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 9.3 Chart Component (Full-Featured like recharts)
+- [ ] Design comprehensive SVG-based chart system
+- [ ] Implement Chart container with responsive sizing
+- [ ] Implement BarChart (vertical, horizontal, stacked variants)
+- [ ] Implement LineChart (single-line, multi-line support)
+- [ ] Implement AreaChart (filled line charts)
+- [ ] Implement PieChart with customizable slices
+- [ ] Implement DonutChart (pie with center cutout)
+- [ ] Implement XAxis and YAxis components (customizable)
+- [ ] Implement Legend component (positioning, styling)
+- [ ] Implement Tooltip component (hover interactions)
+- [ ] Add data-driven rendering with flexible configuration
+- [ ] Add interactive features (hover effects, click handlers)
+- [ ] Add animation support (optional transitions)
+- [ ] Add grid lines and reference lines
+- [ ] Add data labels and value displays
+- [ ] Add color schemes and theming
+- [ ] Add ARIA attributes for accessibility
+- [ ] Write comprehensive tests for all chart types
+- [ ] Create example for each chart type
+- [ ] Write detailed documentation with chart customization guide
+
+### 9.4 Toast Component
+- [ ] Implement Toast notification
+- [ ] Implement ToastProvider (context)
+- [ ] Implement toast() function
+- [ ] Add positioning (top/bottom, left/right/center)
+- [ ] Add auto-dismiss with timer
+- [ ] Add action button support
+- [ ] Add queue management
+- [ ] Add animation (enter/exit)
+- [ ] Add ARIA attributes (role="status")
+- [ ] Add screen reader announcements
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+### 9.5 Sonner Component
+- [ ] Implement Sonner (advanced toast system)
+- [ ] Add rich content support
+- [ ] Add promise-based toasts (loading → success/error)
+- [ ] Add swipe to dismiss
+- [ ] Add expand/collapse
+- [ ] Add custom components
+- [ ] Add positioning options
+- [ ] Add ARIA attributes
+- [ ] Write tests
+- [ ] Create example
+- [ ] Write documentation
+
+## Phase 10: Showcase Application
+
+### 10.1 Showcase Structure
+- [ ] Design showcase app layout
+- [ ] Implement navigation sidebar
+- [ ] Implement component page template
+- [ ] Add syntax highlighting for code examples
+- [ ] Add copy code button
+- [ ] Add theme toggle (light/dark)
+
+### 10.2 Component Pages
+- [ ] Create page for each component showing:
+  - Live demo
+  - All variants
+  - Interactive props controls
+  - Code example
+  - Installation instructions
+  - API documentation
+
+### 10.3 Getting Started Pages
+- [ ] Create installation guide
+- [ ] Create quick start tutorial
+- [ ] Create theming guide
+- [ ] Create accessibility guide
+- [ ] Create migration guide (from shadcn/ui)
+
+### 10.4 Showcase Deployment
+- [ ] Build for production
+- [ ] Set up static hosting (GitHub Pages, Vercel, Netlify)
+- [ ] Configure custom domain
+- [ ] Add analytics (optional)
+
+## Phase 11: Documentation & Publishing
+
+### 11.1 API Documentation
+- [ ] Complete rustdoc comments for all components
+- [ ] Add examples to documentation
+- [ ] Generate docs with cargo doc
+- [ ] Verify docs.rs will build correctly
+
+### 11.2 User Guides
+- [ ] Write installation guide
+- [ ] Write theming guide
+- [ ] Write accessibility guide
+- [ ] Write component composition guide
+- [ ] Write migration guide from React shadcn/ui
+
+### 11.3 README
+- [ ] Write comprehensive README with:
+  - Project description
+  - Features list
+  - Installation instructions
+  - Quick example
+  - Link to showcase
+  - Link to documentation
+  - Contributing guide
+  - License
+
+### 11.4 Publishing
+- [ ] Verify all tests pass
+- [ ] Run clippy with no warnings
+- [ ] Run rustfmt
+- [ ] Update version to 0.1.0
+- [ ] Update CHANGELOG
+- [ ] Create git tag
+- [ ] Publish to crates.io
+- [ ] Announce on relevant forums/communities
+
+## Phase 12: Quality Assurance
+
+### 12.1 Testing
+- [ ] Achieve 100% test coverage for component logic
+- [ ] Run all tests in CI
+- [ ] Test in multiple browsers (Chrome, Firefox, Safari, Edge)
+- [ ] Test on mobile devices
+- [ ] Test with screen readers
+
+### 12.2 Performance
+- [ ] Measure WASM bundle size
+- [ ] Optimize bundle size
+- [ ] Test performance with many components
+- [ ] Profile rendering performance
+
+### 12.3 Accessibility Audit
+- [ ] Run automated accessibility tests (axe, lighthouse)
+- [ ] Manual keyboard navigation testing
+- [ ] Screen reader testing
+- [ ] Color contrast verification
+- [ ] Fix any accessibility issues
+
+### 12.4 Code Quality
+- [ ] Address all clippy warnings
+- [ ] Ensure consistent code style
+- [ ] Review for unsafe code (minimize or justify)
+- [ ] Review error handling
+- [ ] Review documentation completeness
+
+## Success Criteria Checklist
+
+- [ ] All 59 components from shadcn/ui implemented
+- [ ] All components have comprehensive tests
+- [ ] All components have working examples
+- [ ] All components have complete documentation
+- [ ] Showcase application deployed and accessible
+- [ ] Library published to crates.io
+- [ ] Documentation published to docs.rs
+- [ ] Accessibility audit passes
+- [ ] No clippy warnings
+- [ ] CI/CD pipeline passing
+- [ ] README and guides complete
+- [ ] License and contributing guidelines in place
