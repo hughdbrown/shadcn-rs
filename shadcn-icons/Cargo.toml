@@ -1,0 +1,15 @@
+[package]
+name = "shadcn-icons"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Lucide icon library for shadcn-rs - SVG icons as Yew components"
+keywords = ["icons", "svg", "lucide", "yew", "wasm"]
+categories = ["wasm", "web-programming", "gui"]
+
+[dependencies]
+yew = { workspace = true }
+wasm-bindgen = { workspace = true }

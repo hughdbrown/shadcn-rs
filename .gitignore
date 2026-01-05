@@ -1,1 +1,39 @@
-/target
+# Rust
+/target/
+**/*.rs.bk
+*.pdb
+
+# WASM
+/dist/
+/pkg/
+wasm-pack.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Trunk (WASM dev server)
+.trunk/
+
+# Node (if using any JS tooling)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Build artifacts
+*.wasm
+
+# Test coverage
+/coverage/
+lcov.info
+
+# Documentation
+/target/doc/
+
+# Environment
+.env
+.env.local

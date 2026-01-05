@@ -1,0 +1,257 @@
+/**
+ * Utility classes for shadcn-rs
+ */
+
+/* Size utilities */
+.size-xs {
+  height: 1.5rem;
+  font-size: var(--text-xs);
+}
+
+.size-sm {
+  height: 2rem;
+  font-size: var(--text-sm);
+}
+
+.size-md {
+  height: 2.5rem;
+  font-size: var(--text-base);
+}
+
+.size-lg {
+  height: 3rem;
+  font-size: var(--text-lg);
+}
+
+.size-xl {
+  height: 3.5rem;
+  font-size: var(--text-xl);
+}
+
+.size-2xl {
+  height: 4rem;
+  font-size: var(--text-2xl);
+}
+
+/* Variant utilities */
+.variant-default {
+  background-color: hsl(var(--color-background));
+  color: hsl(var(--color-foreground));
+  border: 1px solid hsl(var(--color-border));
+}
+
+.variant-primary {
+  background-color: hsl(var(--color-primary));
+  color: hsl(var(--color-primary-foreground));
+}
+
+.variant-secondary {
+  background-color: hsl(var(--color-secondary));
+  color: hsl(var(--color-secondary-foreground));
+}
+
+.variant-destructive {
+  background-color: hsl(var(--color-destructive));
+  color: hsl(var(--color-destructive-foreground));
+}
+
+.variant-outline {
+  border: 1px solid hsl(var(--color-border));
+  background-color: transparent;
+  color: hsl(var(--color-foreground));
+}
+
+.variant-ghost {
+  background-color: transparent;
+  color: hsl(var(--color-foreground));
+}
+
+.variant-link {
+  background-color: transparent;
+  color: hsl(var(--color-primary));
+  text-decoration: underline;
+}
+
+/* Color utilities */
+.color-default {
+  color: hsl(var(--color-foreground));
+}
+
+.color-primary {
+  color: hsl(var(--color-primary));
+}
+
+.color-secondary {
+  color: hsl(var(--color-secondary-foreground));
+}
+
+.color-success {
+  color: hsl(var(--color-success));
+}
+
+.color-warning {
+  color: hsl(var(--color-warning));
+}
+
+.color-danger {
+  color: hsl(var(--color-destructive));
+}
+
+.color-info {
+  color: hsl(var(--color-info));
+}
+
+/* Position utilities */
+.position-top {
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.position-right {
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.position-bottom {
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.position-left {
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.position-top-left {
+  top: 0;
+  left: 0;
+}
+
+.position-top-right {
+  top: 0;
+  right: 0;
+}
+
+.position-bottom-left {
+  bottom: 0;
+  left: 0;
+}
+
+.position-bottom-right {
+  bottom: 0;
+  right: 0;
+}
+
+.position-center {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Alignment utilities */
+.align-start {
+  align-items: flex-start;
+}
+
+.align-center {
+  align-items: center;
+}
+
+.align-end {
+  align-items: flex-end;
+}
+
+.align-stretch {
+  align-items: stretch;
+}
+
+/* Animation utilities */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes slide-in-up {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-down {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in var(--transition-base);
+}
+
+.animate-fade-out {
+  animation: fade-out var(--transition-base);
+}
+
+.animate-slide-in-up {
+  animation: slide-in-up var(--transition-base);
+}
+
+.animate-slide-in-down {
+  animation: slide-in-down var(--transition-base);
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left var(--transition-base);
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right var(--transition-base);
+}

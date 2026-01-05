@@ -1,0 +1,8 @@
+/**
+ * shadcn-rs - Complete stylesheet
+ * Import this file in your HTML to use shadcn-rs components
+ */
+
+@import url('./base.css');
+@import url('./utilities.css');
+/* Component styles will be added here as components are implemented */

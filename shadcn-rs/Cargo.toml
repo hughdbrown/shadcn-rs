@@ -1,0 +1,49 @@
+[package]
+name = "shadcn-rs"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+description = "A comprehensive UI component library for Rust/WebAssembly inspired by shadcn/ui"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+yew = { workspace = true }
+wasm-bindgen = { workspace = true }
+web-sys = { workspace = true, features = [
+    "Window",
+    "Document",
+    "Element",
+    "HtmlElement",
+    "HtmlInputElement",
+    "HtmlTextAreaElement",
+    "HtmlSelectElement",
+    "HtmlButtonElement",
+    "MouseEvent",
+    "KeyboardEvent",
+    "InputEvent",
+    "FocusEvent",
+    "TouchEvent",
+    "TouchList",
+    "Touch",
+    "EventTarget",
+    "Node",
+    "NodeList",
+    "DomTokenList",
+] }
+gloo = { workspace = true }
+serde = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+
+[dev-dependencies]
+wasm-bindgen-test = { workspace = true }
+
+[features]
+default = []
+serde = ["dep:serde", "dep:serde_json"]

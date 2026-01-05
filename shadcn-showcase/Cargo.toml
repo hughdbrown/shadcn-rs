@@ -1,0 +1,16 @@
+[package]
+name = "shadcn-showcase"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Interactive showcase for shadcn-rs components"
+
+[dependencies]
+yew = { workspace = true, features = ["csr"] }
+wasm-bindgen = { workspace = true }
+web-sys = { workspace = true, features = ["Window", "Document", "Element", "HtmlElement"] }
+gloo = { workspace = true }
+shadcn-rs = { path = "../shadcn-rs" }
+shadcn-icons = { path = "../shadcn-icons" }
