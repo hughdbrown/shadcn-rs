@@ -36,6 +36,7 @@ web-sys = { workspace = true, features = [
     "Node",
     "NodeList",
     "DomTokenList",
+    "Performance",
 ] }
 gloo = { workspace = true }
 serde = { workspace = true, optional = true }
