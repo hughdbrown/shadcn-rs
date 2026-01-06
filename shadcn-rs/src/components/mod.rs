@@ -31,6 +31,14 @@ pub mod popover;
 pub mod tabs;
 pub mod tooltip;
 
+// Tier 6 - Navigation components
+pub mod breadcrumb;
+pub mod context_menu;
+pub mod menubar;
+pub mod navigation_menu;
+pub mod pagination;
+pub mod sidebar;
+
 // Re-export Tier 1 components
 pub use alert::{Alert, AlertDescription, AlertTitle};
 pub use badge::Badge;
@@ -68,3 +76,30 @@ pub use dropdown_menu::{
 pub use popover::{Popover, PopoverContent, PopoverTrigger};
 pub use tabs::{Tabs, TabsContent, TabsList, TabsOrientation, TabsTrigger};
 pub use tooltip::{Tooltip, TooltipContent, TooltipTrigger};
+
+// Re-export Tier 6 components
+pub use breadcrumb::{
+    Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage,
+    BreadcrumbSeparator,
+};
+pub use context_menu::{
+    ContextMenu, ContextMenuCheckboxItem, ContextMenuContent, ContextMenuItem,
+    ContextMenuRadioGroup, ContextMenuRadioItem, ContextMenuSeparator, ContextMenuSub,
+    ContextMenuTrigger,
+};
+pub use menubar::{
+    Menubar, MenubarCheckboxItem, MenubarContent, MenubarItem, MenubarMenu, MenubarRadioGroup,
+    MenubarRadioItem, MenubarSeparator, MenubarSub, MenubarTrigger,
+};
+pub use navigation_menu::{
+    NavigationMenu, NavigationMenuContent, NavigationMenuIndicator, NavigationMenuItem,
+    NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger,
+};
+pub use pagination::{
+    Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink,
+    PaginationNext, PaginationPrevious,
+};
+pub use sidebar::{
+    Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarHeader, SidebarMenu,
+    SidebarMenuButton, SidebarMenuItem, SidebarSeparator,
+};
