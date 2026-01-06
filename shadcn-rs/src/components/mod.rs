@@ -65,6 +65,13 @@ pub mod combobox;
 pub mod command;
 pub mod date_picker;
 
+// Tier 8 - Complex Components
+pub mod carousel;
+pub mod chart;
+pub mod data_table;
+pub mod sonner;
+pub mod toast;
+
 // Re-export Tier 1 components
 pub use alert::{Alert, AlertDescription, AlertTitle};
 pub use avatar::{Avatar, AvatarShape};
@@ -164,3 +171,10 @@ pub use command::{
     CommandShortcut,
 };
 pub use date_picker::DatePicker;
+
+// Re-export Tier 8 components
+pub use carousel::{Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious};
+pub use chart::{Chart, ChartData, ChartType};
+pub use data_table::{DataTable, SelectionMode, SortDirection};
+pub use sonner::{Sonner, SonnerPosition, SonnerToast, SonnerType};
+pub use toast::{Toast, ToastPosition, ToastVariant};
