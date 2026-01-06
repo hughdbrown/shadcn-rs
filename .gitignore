@@ -19,6 +19,8 @@ wasm-pack.log
 # Trunk (WASM dev server)
 .trunk/
 
+shadcn-showcase/dist/
+
 # Node (if using any JS tooling)
 node_modules/
 npm-debug.log

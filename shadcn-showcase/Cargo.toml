@@ -9,8 +9,19 @@ description = "Interactive showcase for shadcn-rs components"
 
 [dependencies]
 yew = { workspace = true, features = ["csr"] }
+yew-router = { workspace = true }
 wasm-bindgen = { workspace = true }
-web-sys = { workspace = true, features = ["Window", "Document", "Element", "HtmlElement"] }
+web-sys = { workspace = true, features = [
+    "Window",
+    "Document",
+    "Element",
+    "HtmlElement",
+    "Navigator",
+    "Clipboard",
+    "Storage",
+    "MediaQueryList",
+] }
 gloo = { workspace = true }
+wasm-bindgen-futures = { workspace = true }
 shadcn-rs = { path = "../shadcn-rs" }
 shadcn-icons = { path = "../shadcn-icons" }

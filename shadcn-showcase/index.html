@@ -3,67 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="shadcn-rs - Beautiful, accessible UI components for Rust and WebAssembly">
     <title>shadcn-rs Showcase</title>
-    <link rel="stylesheet" href="styles.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
 
-        body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.6;
-            background-color: #fafafa;
-            color: #222;
-        }
+    <!-- Trunk will automatically inject WASM loading scripts -->
+    <link data-trunk rel="rust" data-wasm-opt="z" />
 
-        .showcase-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
+    <!-- Copy CSS files to dist -->
+    <link data-trunk rel="copy-file" href="showcase.css" />
+    <link data-trunk rel="copy-dir" href="../shadcn-rs/styles" />
 
-        .showcase-header {
-            text-align: center;
-            padding: 3rem 0;
-            border-bottom: 1px solid #e0e0e0;
-            margin-bottom: 2rem;
-        }
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="styles/shadcn-rs.css">
+    <link rel="stylesheet" href="showcase.css">
 
-        .showcase-header h1 {
-            font-size: 3rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-
-        .showcase-header p {
-            font-size: 1.25rem;
-            color: #666;
-        }
-
-        .showcase-main {
-            padding: 2rem 0;
-        }
-
-        .welcome {
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .welcome h2 {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-        }
-
-        .welcome p {
-            margin-bottom: 1rem;
-            color: #555;
-        }
-    </style>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦀</text></svg>">
 </head>
 <body>
 </body>

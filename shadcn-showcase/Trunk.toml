@@ -1,0 +1,26 @@
+# Trunk build configuration for shadcn-rs showcase
+
+[build]
+# Output directory for built files
+dist = "dist"
+# Public URL base path (update for GitHub Pages if needed)
+# For GitHub Pages: public_url = "/shadcn-rs/"
+public_url = "/"
+
+[watch]
+# Files/directories to watch for changes
+watch = ["src", "index.html", "showcase.css"]
+# Files to ignore
+ignore = ["dist"]
+
+[serve]
+# Development server configuration
+addresses = ["127.0.0.1"]
+port = 8080
+open = false
+
+[[hooks]]
+# Clean dist directory before build
+stage = "pre_build"
+command = "sh"
+command_arguments = ["-c", "rm -rf dist/*"]
