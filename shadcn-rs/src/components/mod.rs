@@ -49,7 +49,10 @@ pub use skeleton::{Skeleton, SkeletonShape};
 
 // Re-export Tier 2 components
 pub use checkbox::Checkbox;
-pub use form::{Form, FormField, FormMessage, FormMessageType};
+pub use form::{
+    Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage,
+    FormMessageType,
+};
 pub use input::Input;
 pub use label::Label;
 pub use progress::Progress;

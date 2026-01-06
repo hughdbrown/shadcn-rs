@@ -6,10 +6,12 @@
 //!
 //! ```rust,no_run
 //! use yew::prelude::*;
-//! use shadcn_rs::{Form, FormField, Label, Input, Button};
+//! use shadcn_rs::{Form, FormItem, FormLabel, FormControl, FormDescription, FormMessage, FormMessageType, Input, Button};
 //!
 //! #[function_component(App)]
 //! fn app() -> Html {
+//!     let has_error = use_state(|| false);
+//!
 //!     let onsubmit = Callback::from(|e: SubmitEvent| {
 //!         e.prevent_default();
 //!         web_sys::console::log_1(&"Form submitted!".into());
@@ -17,10 +19,20 @@
 //!
 //!     html! {
 //!         <Form {onsubmit}>
-//!             <FormField>
-//!                 <Label html_for="email">{ "Email" }</Label>
-//!                 <Input id="email" r#type="email" required=true />
-//!             </FormField>
+//!             <FormItem>
+//!                 <FormLabel html_for="email" required=true>{ "Email" }</FormLabel>
+//!                 <FormControl error={*has_error}>
+//!                     <Input id="email" r#type="email" required=true />
+//!                 </FormControl>
+//!                 <FormDescription id="email-desc">
+//!                     { "We'll never share your email with anyone." }
+//!                 </FormDescription>
+//!                 if *has_error {
+//!                     <FormMessage message_type={FormMessageType::Error}>
+//!                         { "Please enter a valid email address." }
+//!                     </FormMessage>
+//!                 }
+//!             </FormItem>
 //!             <Button r#type="submit">{ "Submit" }</Button>
 //!         </Form>
 //!     }
@@ -181,6 +193,205 @@ pub fn form_field(props: &FormFieldProps) -> Html {
         <div class={classes} style={style}>
             { children }
         </div>
+    }
+}
+
+/// Form item properties
+#[derive(Properties, PartialEq, Clone)]
+pub struct FormItemProps {
+    /// Additional CSS classes
+    #[prop_or_default]
+    pub class: Classes,
+
+    /// Additional inline styles
+    #[prop_or_default]
+    pub style: Option<AttrValue>,
+
+    /// ID attribute
+    #[prop_or_default]
+    pub id: Option<AttrValue>,
+
+    /// Children elements
+    pub children: Children,
+}
+
+/// Form item component
+///
+/// A wrapper for form field elements providing consistent spacing and layout.
+///
+/// # Usage
+/// Use FormItem to wrap a complete form field including label, control, description, and message.
+#[function_component(FormItem)]
+pub fn form_item(props: &FormItemProps) -> Html {
+    let FormItemProps {
+        class,
+        style,
+        id,
+        children,
+    } = props.clone();
+
+    let classes: Classes = vec![Classes::from("form-item"), class]
+        .into_iter()
+        .collect();
+
+    html! {
+        <div class={classes} style={style} id={id}>
+            { children }
+        </div>
+    }
+}
+
+/// Form label properties
+#[derive(Properties, PartialEq, Clone)]
+pub struct FormLabelProps {
+    /// ID of the form control this label is for
+    #[prop_or_default]
+    pub html_for: Option<AttrValue>,
+
+    /// Whether the associated field is required
+    #[prop_or(false)]
+    pub required: bool,
+
+    /// Additional CSS classes
+    #[prop_or_default]
+    pub class: Classes,
+
+    /// ID attribute
+    #[prop_or_default]
+    pub id: Option<AttrValue>,
+
+    /// Children elements
+    pub children: Children,
+}
+
+/// Form label component
+///
+/// A label specifically designed for form fields with consistent styling.
+///
+/// # Usage
+/// Use FormLabel instead of regular Label for form fields to ensure consistent styling.
+#[function_component(FormLabel)]
+pub fn form_label(props: &FormLabelProps) -> Html {
+    let FormLabelProps {
+        html_for,
+        required,
+        class,
+        id,
+        children,
+    } = props.clone();
+
+    let classes: Classes = vec![
+        Classes::from("form-label"),
+        if required {
+            Classes::from("form-label-required")
+        } else {
+            Classes::new()
+        },
+        class,
+    ]
+    .into_iter()
+    .collect();
+
+    html! {
+        <label
+            class={classes}
+            for={html_for}
+            id={id}
+        >
+            { children }
+            if required {
+                <span class="form-label-required-indicator" aria-hidden="true">{ " *" }</span>
+            }
+        </label>
+    }
+}
+
+/// Form control properties
+#[derive(Properties, PartialEq, Clone)]
+pub struct FormControlProps {
+    /// Additional CSS classes
+    #[prop_or_default]
+    pub class: Classes,
+
+    /// Additional inline styles
+    #[prop_or_default]
+    pub style: Option<AttrValue>,
+
+    /// Whether the control has an error
+    #[prop_or(false)]
+    pub error: bool,
+
+    /// Children elements
+    pub children: Children,
+}
+
+/// Form control component
+///
+/// A wrapper for form input elements that provides consistent styling and error states.
+///
+/// # Usage
+/// Wrap your input components with FormControl to apply form-specific styling.
+#[function_component(FormControl)]
+pub fn form_control(props: &FormControlProps) -> Html {
+    let FormControlProps {
+        class,
+        style,
+        error,
+        children,
+    } = props.clone();
+
+    let classes: Classes = vec![
+        Classes::from("form-control"),
+        if error {
+            Classes::from("form-control-error")
+        } else {
+            Classes::new()
+        },
+        class,
+    ]
+    .into_iter()
+    .collect();
+
+    html! {
+        <div class={classes} style={style}>
+            { children }
+        </div>
+    }
+}
+
+/// Form description properties
+#[derive(Properties, PartialEq, Clone)]
+pub struct FormDescriptionProps {
+    /// Additional CSS classes
+    #[prop_or_default]
+    pub class: Classes,
+
+    /// ID attribute (used for aria-describedby)
+    #[prop_or_default]
+    pub id: Option<AttrValue>,
+
+    /// Children elements
+    pub children: Children,
+}
+
+/// Form description component
+///
+/// Displays helpful text or instructions for a form field.
+///
+/// # Usage
+/// Use FormDescription to provide additional context or instructions for form fields.
+#[function_component(FormDescription)]
+pub fn form_description(props: &FormDescriptionProps) -> Html {
+    let FormDescriptionProps { class, id, children } = props.clone();
+
+    let classes: Classes = vec![Classes::from("form-description"), class]
+        .into_iter()
+        .collect();
+
+    html! {
+        <p class={classes} id={id}>
+            { children }
+        </p>
     }
 }
 
@@ -382,5 +593,79 @@ mod tests {
         };
 
         assert_eq!(props.message_type, FormMessageType::Error);
+    }
+
+    #[test]
+    fn test_form_item_props() {
+        let props = FormItemProps {
+            class: Classes::new(),
+            style: None,
+            id: Some(AttrValue::from("item-1")),
+            children: Children::new(vec![]),
+        };
+
+        assert_eq!(props.id, Some(AttrValue::from("item-1")));
+    }
+
+    #[test]
+    fn test_form_label_required() {
+        let props = FormLabelProps {
+            html_for: Some(AttrValue::from("input-1")),
+            required: true,
+            class: Classes::new(),
+            id: None,
+            children: Children::new(vec![]),
+        };
+
+        assert!(props.required);
+        assert_eq!(props.html_for, Some(AttrValue::from("input-1")));
+    }
+
+    #[test]
+    fn test_form_label_optional() {
+        let props = FormLabelProps {
+            html_for: None,
+            required: false,
+            class: Classes::new(),
+            id: None,
+            children: Children::new(vec![]),
+        };
+
+        assert!(!props.required);
+    }
+
+    #[test]
+    fn test_form_control_error_state() {
+        let props = FormControlProps {
+            class: Classes::new(),
+            style: None,
+            error: true,
+            children: Children::new(vec![]),
+        };
+
+        assert!(props.error);
+    }
+
+    #[test]
+    fn test_form_control_normal_state() {
+        let props = FormControlProps {
+            class: Classes::new(),
+            style: None,
+            error: false,
+            children: Children::new(vec![]),
+        };
+
+        assert!(!props.error);
+    }
+
+    #[test]
+    fn test_form_description_with_id() {
+        let props = FormDescriptionProps {
+            class: Classes::new(),
+            id: Some(AttrValue::from("desc-1")),
+            children: Children::new(vec![]),
+        };
+
+        assert_eq!(props.id, Some(AttrValue::from("desc-1")));
     }
 }
