@@ -26,7 +26,15 @@ pub mod slider;
 pub mod switch;
 pub mod textarea;
 
-// Tier 3 - Overlay & Interactive components
+// Tier 3 - Layout & Structure components
+pub mod aspect_ratio;
+pub mod empty;
+pub mod item;
+pub mod resizable;
+pub mod scroll_area;
+pub mod table;
+
+// Tier 4 - Overlay & Interactive components
 pub mod accordion;
 pub mod dialog;
 pub mod drawer;
@@ -77,6 +85,14 @@ pub use switch::Switch;
 pub use textarea::{Textarea, TextareaResize};
 
 // Re-export Tier 3 components
+pub use aspect_ratio::AspectRatio;
+pub use empty::Empty;
+pub use item::Item;
+pub use resizable::{Resizable, ResizableHandle, ResizableOrientation, ResizablePanel};
+pub use scroll_area::{ScrollArea, ScrollDirection};
+pub use table::{Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow};
+
+// Re-export Tier 4 components
 pub use accordion::{Accordion, AccordionContent, AccordionItem, AccordionTrigger, AccordionType};
 pub use dialog::{
     Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
