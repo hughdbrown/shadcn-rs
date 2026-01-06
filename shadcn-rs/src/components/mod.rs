@@ -39,6 +39,12 @@ pub mod navigation_menu;
 pub mod pagination;
 pub mod sidebar;
 
+// Tier 7 - Advanced Forms
+pub mod calendar;
+pub mod combobox;
+pub mod command;
+pub mod date_picker;
+
 // Re-export Tier 1 components
 pub use alert::{Alert, AlertDescription, AlertTitle};
 pub use badge::Badge;
@@ -106,3 +112,15 @@ pub use sidebar::{
     Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarHeader, SidebarMenu,
     SidebarMenuButton, SidebarMenuItem, SidebarSeparator,
 };
+
+// Re-export Tier 7 components
+pub use calendar::{Calendar, CalendarMode};
+pub use combobox::{
+    Combobox, ComboboxContent, ComboboxEmpty, ComboboxGroup, ComboboxInput, ComboboxItem,
+    ComboboxSeparator, ComboboxTrigger,
+};
+pub use command::{
+    Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator,
+    CommandShortcut,
+};
+pub use date_picker::DatePicker;
