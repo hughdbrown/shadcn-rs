@@ -20,6 +20,15 @@ pub mod select;
 pub mod switch;
 pub mod textarea;
 
+// Tier 3 - Overlay & Interactive components
+pub mod accordion;
+pub mod dialog;
+pub mod drawer;
+pub mod dropdown_menu;
+pub mod popover;
+pub mod tabs;
+pub mod tooltip;
+
 // Re-export Tier 1 components
 pub use alert::{Alert, AlertDescription, AlertTitle};
 pub use badge::Badge;
@@ -37,3 +46,21 @@ pub use radio::{Radio, RadioGroup};
 pub use select::Select;
 pub use switch::Switch;
 pub use textarea::{Textarea, TextareaResize};
+
+// Re-export Tier 3 components
+pub use accordion::{Accordion, AccordionContent, AccordionItem, AccordionTrigger, AccordionType};
+pub use dialog::{
+    Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+    DialogTrigger,
+};
+pub use drawer::{
+    Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle,
+    DrawerTrigger,
+};
+pub use dropdown_menu::{
+    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator,
+    DropdownMenuTrigger,
+};
+pub use popover::{Popover, PopoverContent, PopoverTrigger};
+pub use tabs::{Tabs, TabsContent, TabsList, TabsOrientation, TabsTrigger};
+pub use tooltip::{Tooltip, TooltipContent, TooltipTrigger};
