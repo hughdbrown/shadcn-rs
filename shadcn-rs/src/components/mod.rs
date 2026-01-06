@@ -67,6 +67,7 @@ pub mod calendar;
 pub mod combobox;
 pub mod command;
 pub mod date_picker;
+pub mod input_otp;
 
 // Tier 8 - Complex Components
 pub mod carousel;
@@ -97,7 +98,10 @@ pub use input::Input;
 pub use label::Label;
 pub use progress::Progress;
 pub use radio::{Radio, RadioGroup};
-pub use select::Select;
+pub use select::{
+    Select, SelectAdvanced, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator,
+    SelectTrigger, SelectValue,
+};
 pub use slider::Slider;
 pub use switch::Switch;
 pub use textarea::{Textarea, TextareaResize};
@@ -184,6 +188,7 @@ pub use command::{
     CommandShortcut,
 };
 pub use date_picker::DatePicker;
+pub use input_otp::InputOTP;
 
 // Re-export Tier 8 components
 pub use carousel::{Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious};

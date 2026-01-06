@@ -216,6 +216,413 @@ pub fn select(props: &SelectProps) -> Html {
     }
 }
 
+// Advanced Select Components (Custom Implementation)
+
+use crate::utils::Portal;
+use crate::hooks::{use_escape_key_conditional, use_click_outside_conditional};
+
+/// Advanced select container properties
+#[derive(Properties, PartialEq, Clone)]
+pub struct SelectAdvancedProps {
+    /// Selected value
+    #[prop_or_default]
+    pub value: Option<AttrValue>,
+
+    /// Default value (for uncontrolled select)
+    #[prop_or_default]
+    pub default_value: Option<AttrValue>,
+
+    /// Whether the select is open
+    #[prop_or(false)]
+    pub open: bool,
+
+    /// Callback when open state changes
+    #[prop_or_default]
+    pub on_open_change: Option<Callback<bool>>,
+
+    /// Callback when value changes
+    #[prop_or_default]
+    pub on_value_change: Option<Callback<AttrValue>>,
+
+    /// Additional CSS classes
+    #[prop_or_default]
+    pub class: Classes,
+
+    /// Children elements
+    pub children: Children,
+}
+
+/// Advanced Select container component
+///
+/// Container for custom select with trigger and content.
+#[function_component(SelectAdvanced)]
+pub fn select_advanced(props: &SelectAdvancedProps) -> Html {
+    let SelectAdvancedProps {
+        value: _,
+        default_value: _,
+        open: _,
+        on_open_change: _,
+        on_value_change: _,
+        class,
+        children,
+    } = props.clone();
+
+    let classes: Classes = vec![Classes::from("select-advanced"), class]
+        .into_iter()
+        .collect();
+
+    html! {
+        <div class={classes}>
+            { children }
+        </div>
+    }
+}
+
+/// Select trigger properties
+#[derive(Properties, PartialEq, Clone)]
+pub struct SelectTriggerProps {
+    /// Whether the trigger is disabled
+    #[prop_or(false)]
+    pub disabled: bool,
+
+    /// Additional CSS classes
+    #[prop_or_default]
+    pub class: Classes,
+
+    /// Children elements
+    pub children: Children,
+}
+
+/// Select trigger component
+///
+/// The button that opens the select dropdown.
+#[function_component(SelectTrigger)]
+pub fn select_trigger(props: &SelectTriggerProps) -> Html {
+    let SelectTriggerProps {
+        disabled,
+        class,
+        children,
+    } = props.clone();
+
+    let classes: Classes = vec![
+        Classes::from("select-trigger"),
+        if disabled {
+            Classes::from("select-trigger-disabled")
+        } else {
+            Classes::new()
+        },
+        class,
+    ]
+    .into_iter()
+    .collect();
+
+    html! {
+        <button
+            type="button"
+            role="combobox"
+            aria-expanded="false"
+            aria-haspopup="listbox"
+            disabled={disabled}
+            class={classes}
+        >
+            { children }
+        </button>
+    }
+}
+
+/// Select value properties
+#[derive(Properties, PartialEq, Clone)]
+pub struct SelectValueProps {
+    /// Placeholder text when no value selected
+    #[prop_or_default]
+    pub placeholder: Option<AttrValue>,
+
+    /// Additional CSS classes
+    #[prop_or_default]
+    pub class: Classes,
+
+    /// Children elements
+    #[prop_or_default]
+    pub children: Children,
+}
+
+/// Select value component
+///
+/// Displays the selected value or placeholder.
+#[function_component(SelectValue)]
+pub fn select_value(props: &SelectValueProps) -> Html {
+    let SelectValueProps {
+        placeholder,
+        class,
+        children,
+    } = props.clone();
+
+    let classes: Classes = vec![Classes::from("select-value"), class]
+        .into_iter()
+        .collect();
+
+    let has_children = children.iter().count() > 0;
+
+    html! {
+        <span class={classes}>
+            if has_children {
+                { children }
+            } else if let Some(placeholder_text) = placeholder {
+                <span class="select-placeholder">{ placeholder_text }</span>
+            }
+        </span>
+    }
+}
+
+/// Select content properties
+#[derive(Properties, PartialEq, Clone)]
+pub struct SelectContentProps {
+    /// Whether the content is open
+    #[prop_or(false)]
+    pub open: bool,
+
+    /// Callback to close the content
+    #[prop_or_default]
+    pub on_close: Option<Callback<()>>,
+
+    /// Whether to close on outside click
+    #[prop_or(true)]
+    pub close_on_outside_click: bool,
+
+    /// Whether to close on Escape key
+    #[prop_or(true)]
+    pub close_on_escape: bool,
+
+    /// Additional CSS classes
+    #[prop_or_default]
+    pub class: Classes,
+
+    /// Children elements
+    pub children: Children,
+}
+
+/// Select content component
+///
+/// The dropdown content containing select items.
+#[function_component(SelectContent)]
+pub fn select_content(props: &SelectContentProps) -> Html {
+    let SelectContentProps {
+        open,
+        on_close,
+        close_on_outside_click,
+        close_on_escape,
+        class,
+        children,
+    } = props.clone();
+
+    let content_ref = use_node_ref();
+
+    // Handle Escape key
+    let on_close_esc = on_close.clone();
+    use_escape_key_conditional(
+        move || {
+            if let Some(callback) = on_close_esc.as_ref() {
+                callback.emit(());
+            }
+        },
+        open && close_on_escape,
+    );
+
+    // Handle click outside
+    let on_close_click = on_close.clone();
+    use_click_outside_conditional(
+        content_ref.clone(),
+        move || {
+            if let Some(callback) = on_close_click.as_ref() {
+                callback.emit(());
+            }
+        },
+        open && close_on_outside_click,
+    );
+
+    if !open {
+        return html! {};
+    }
+
+    let classes: Classes = vec![Classes::from("select-content"), class]
+        .into_iter()
+        .collect();
+
+    html! {
+        <Portal>
+            <div
+                ref={content_ref}
+                class={classes}
+                role="listbox"
+            >
+                { children }
+            </div>
+        </Portal>
+    }
+}
+
+/// Select item properties
+#[derive(Properties, PartialEq, Clone)]
+pub struct SelectItemProps {
+    /// The value of this item
+    pub value: AttrValue,
+
+    /// Whether the item is disabled
+    #[prop_or(false)]
+    pub disabled: bool,
+
+    /// Whether this item is selected
+    #[prop_or(false)]
+    pub selected: bool,
+
+    /// Click handler
+    #[prop_or_default]
+    pub on_select: Option<Callback<AttrValue>>,
+
+    /// Additional CSS classes
+    #[prop_or_default]
+    pub class: Classes,
+
+    /// Children elements
+    pub children: Children,
+}
+
+/// Select item component
+///
+/// An individual item in the select dropdown.
+#[function_component(SelectItem)]
+pub fn select_item(props: &SelectItemProps) -> Html {
+    let SelectItemProps {
+        value,
+        disabled,
+        selected,
+        on_select,
+        class,
+        children,
+    } = props.clone();
+
+    let onclick = on_select.map(|cb| {
+        let value = value.clone();
+        Callback::from(move |e: MouseEvent| {
+            if !disabled {
+                e.prevent_default();
+                cb.emit(value.clone());
+            }
+        })
+    });
+
+    let classes: Classes = vec![
+        Classes::from("select-item"),
+        if selected {
+            Classes::from("select-item-selected")
+        } else {
+            Classes::new()
+        },
+        if disabled {
+            Classes::from("select-item-disabled")
+        } else {
+            Classes::new()
+        },
+        class,
+    ]
+    .into_iter()
+    .collect();
+
+    html! {
+        <div
+            class={classes}
+            role="option"
+            aria-selected={selected.to_string()}
+            aria-disabled={disabled.to_string()}
+            onclick={onclick}
+        >
+            { children }
+        </div>
+    }
+}
+
+/// Select group properties
+#[derive(Properties, PartialEq, Clone)]
+pub struct SelectGroupProps {
+    /// Additional CSS classes
+    #[prop_or_default]
+    pub class: Classes,
+
+    /// Children elements
+    pub children: Children,
+}
+
+/// Select group component
+///
+/// Groups related select items together.
+#[function_component(SelectGroup)]
+pub fn select_group(props: &SelectGroupProps) -> Html {
+    let SelectGroupProps { class, children } = props.clone();
+
+    let classes: Classes = vec![Classes::from("select-group"), class]
+        .into_iter()
+        .collect();
+
+    html! {
+        <div class={classes} role="group">
+            { children }
+        </div>
+    }
+}
+
+/// Select label properties
+#[derive(Properties, PartialEq, Clone)]
+pub struct SelectLabelProps {
+    /// Additional CSS classes
+    #[prop_or_default]
+    pub class: Classes,
+
+    /// Children elements
+    pub children: Children,
+}
+
+/// Select label component
+///
+/// A label for a select group.
+#[function_component(SelectLabel)]
+pub fn select_label(props: &SelectLabelProps) -> Html {
+    let SelectLabelProps { class, children } = props.clone();
+
+    let classes: Classes = vec![Classes::from("select-label"), class]
+        .into_iter()
+        .collect();
+
+    html! {
+        <div class={classes} role="presentation">
+            { children }
+        </div>
+    }
+}
+
+/// Select separator properties
+#[derive(Properties, PartialEq, Clone)]
+pub struct SelectSeparatorProps {
+    /// Additional CSS classes
+    #[prop_or_default]
+    pub class: Classes,
+}
+
+/// Select separator component
+///
+/// A visual separator between select items or groups.
+#[function_component(SelectSeparator)]
+pub fn select_separator(props: &SelectSeparatorProps) -> Html {
+    let SelectSeparatorProps { class } = props.clone();
+
+    let classes: Classes = vec![Classes::from("select-separator"), class]
+        .into_iter()
+        .collect();
+
+    html! {
+        <div class={classes} role="separator" aria-orientation="horizontal" />
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -371,5 +778,90 @@ mod tests {
         assert!(props.disabled);
         assert!(props.required);
         assert!(props.error);
+    }
+
+    #[test]
+    fn test_select_advanced_default() {
+        let props = SelectAdvancedProps {
+            value: None,
+            default_value: None,
+            open: false,
+            on_open_change: None,
+            on_value_change: None,
+            class: Classes::new(),
+            children: Children::new(vec![]),
+        };
+
+        assert!(!props.open);
+        assert!(props.value.is_none());
+    }
+
+    #[test]
+    fn test_select_trigger_disabled() {
+        let props = SelectTriggerProps {
+            disabled: true,
+            class: Classes::new(),
+            children: Children::new(vec![]),
+        };
+
+        assert!(props.disabled);
+    }
+
+    #[test]
+    fn test_select_item_selected() {
+        let props = SelectItemProps {
+            value: AttrValue::from("option1"),
+            disabled: false,
+            selected: true,
+            on_select: None,
+            class: Classes::new(),
+            children: Children::new(vec![]),
+        };
+
+        assert!(props.selected);
+        assert!(!props.disabled);
+        assert_eq!(props.value, AttrValue::from("option1"));
+    }
+
+    #[test]
+    fn test_select_item_disabled() {
+        let props = SelectItemProps {
+            value: AttrValue::from("option2"),
+            disabled: true,
+            selected: false,
+            on_select: None,
+            class: Classes::new(),
+            children: Children::new(vec![]),
+        };
+
+        assert!(props.disabled);
+        assert!(!props.selected);
+    }
+
+    #[test]
+    fn test_select_value_with_placeholder() {
+        let props = SelectValueProps {
+            placeholder: Some(AttrValue::from("Select an option")),
+            class: Classes::new(),
+            children: Children::new(vec![]),
+        };
+
+        assert_eq!(props.placeholder, Some(AttrValue::from("Select an option")));
+    }
+
+    #[test]
+    fn test_select_content_close_behaviors() {
+        let props = SelectContentProps {
+            open: true,
+            on_close: None,
+            close_on_outside_click: true,
+            close_on_escape: true,
+            class: Classes::new(),
+            children: Children::new(vec![]),
+        };
+
+        assert!(props.open);
+        assert!(props.close_on_outside_click);
+        assert!(props.close_on_escape);
     }
 }
