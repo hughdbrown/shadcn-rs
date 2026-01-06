@@ -58,8 +58,8 @@ pub use hooks::{
     use_toggle, use_click_outside, use_escape_key, use_controllable_state,
 };
 
-// Re-export components for convenience
-// pub use components::*;
+// Re-export all components
+pub use components::*;
 
 /// Library version
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
