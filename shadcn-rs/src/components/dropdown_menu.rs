@@ -61,9 +61,9 @@ pub struct DropdownMenuProps {
 #[function_component(DropdownMenu)]
 pub fn dropdown_menu(props: &DropdownMenuProps) -> Html {
     let DropdownMenuProps {
-        open,
-        default_open,
-        on_open_change,
+        open: _,
+        default_open: _,
+        on_open_change: _,
         children,
     } = props.clone();
 

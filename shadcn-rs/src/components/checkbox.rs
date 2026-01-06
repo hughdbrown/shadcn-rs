@@ -134,7 +134,7 @@ pub struct CheckboxProps {
 pub fn checkbox(props: &CheckboxProps) -> Html {
     let CheckboxProps {
         checked,
-        default_checked,
+        default_checked: _,
         indeterminate,
         size,
         disabled,

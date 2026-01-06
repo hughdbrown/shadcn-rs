@@ -62,9 +62,9 @@ pub struct PopoverProps {
 #[function_component(Popover)]
 pub fn popover(props: &PopoverProps) -> Html {
     let PopoverProps {
-        open,
-        default_open,
-        on_open_change,
+        open: _,
+        default_open: _,
+        on_open_change: _,
         children,
     } = props.clone();
 
@@ -148,7 +148,7 @@ pub fn popover_content(props: &PopoverContentProps) -> Html {
         open,
         on_close,
         position,
-        align,
+        align: _,
         close_on_outside_click,
         close_on_escape,
         class,

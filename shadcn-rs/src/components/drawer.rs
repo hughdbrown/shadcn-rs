@@ -80,10 +80,10 @@ pub struct DrawerProps {
 #[function_component(Drawer)]
 pub fn drawer(props: &DrawerProps) -> Html {
     let DrawerProps {
-        open,
-        default_open,
-        on_open_change,
-        side,
+        open: _,
+        default_open: _,
+        on_open_change: _,
+        side: _,
         children,
     } = props.clone();
 

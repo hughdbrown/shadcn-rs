@@ -84,11 +84,11 @@ pub struct AccordionProps {
 #[function_component(Accordion)]
 pub fn accordion(props: &AccordionProps) -> Html {
     let AccordionProps {
-        accordion_type,
-        collapsible,
-        default_value,
-        value,
-        on_value_change,
+        accordion_type: _,
+        collapsible: _,
+        default_value: _,
+        value: _,
+        on_value_change: _,
         class,
         children,
     } = props.clone();

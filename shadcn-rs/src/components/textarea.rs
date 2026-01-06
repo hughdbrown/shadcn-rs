@@ -35,7 +35,6 @@
 //! ```
 
 use yew::prelude::*;
-use web_sys::HtmlTextAreaElement;
 use crate::types::Size;
 use crate::utils::class_names;
 
@@ -198,7 +197,7 @@ pub struct TextareaProps {
 pub fn textarea(props: &TextareaProps) -> Html {
     let TextareaProps {
         value,
-        default_value,
+        default_value: _,
         placeholder,
         size,
         rows,

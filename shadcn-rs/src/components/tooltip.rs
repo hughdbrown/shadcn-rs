@@ -53,12 +53,12 @@ pub struct TooltipProps {
 #[function_component(Tooltip)]
 pub fn tooltip(props: &TooltipProps) -> Html {
     let TooltipProps {
-        delay_duration,
-        disabled,
+        delay_duration: _,
+        disabled: _,
         children,
     } = props.clone();
 
-    let is_open = use_state(|| false);
+    let _is_open = use_state(|| false);
 
     html! {
         <div class="tooltip-root">

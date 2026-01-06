@@ -95,9 +95,9 @@ pub struct TabsProps {
 #[function_component(Tabs)]
 pub fn tabs(props: &TabsProps) -> Html {
     let TabsProps {
-        value,
-        default_value,
-        on_value_change,
+        value: _,
+        default_value: _,
+        on_value_change: _,
         orientation,
         class,
         children,

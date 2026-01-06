@@ -36,7 +36,6 @@
 //! ```
 
 use yew::prelude::*;
-use web_sys::HtmlInputElement;
 use crate::types::Size;
 use crate::utils::class_names;
 
@@ -172,7 +171,7 @@ pub fn input(props: &InputProps) -> Html {
     let InputProps {
         r#type,
         value,
-        default_value,
+        default_value: _,
         placeholder,
         size,
         disabled,

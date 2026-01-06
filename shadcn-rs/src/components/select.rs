@@ -35,7 +35,6 @@
 //! ```
 
 use yew::prelude::*;
-use web_sys::HtmlSelectElement;
 use crate::types::Size;
 use crate::utils::class_names;
 
@@ -150,7 +149,7 @@ pub struct SelectProps {
 pub fn select(props: &SelectProps) -> Html {
     let SelectProps {
         value,
-        default_value,
+        default_value: _,
         placeholder,
         size,
         multiple,

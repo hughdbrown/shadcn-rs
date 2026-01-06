@@ -123,7 +123,7 @@ pub struct SwitchProps {
 pub fn switch(props: &SwitchProps) -> Html {
     let SwitchProps {
         checked,
-        default_checked,
+        default_checked: _,
         size,
         disabled,
         required,

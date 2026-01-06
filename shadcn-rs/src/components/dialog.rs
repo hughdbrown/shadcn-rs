@@ -81,9 +81,9 @@ pub struct DialogProps {
 #[function_component(Dialog)]
 pub fn dialog(props: &DialogProps) -> Html {
     let DialogProps {
-        open,
-        default_open,
-        on_open_change,
+        open: _,
+        default_open: _,
+        on_open_change: _,
         children,
     } = props.clone();
 

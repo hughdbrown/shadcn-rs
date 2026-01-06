@@ -48,7 +48,6 @@
 //! ```
 
 use yew::prelude::*;
-use web_sys::HtmlInputElement;
 use crate::types::Size;
 use crate::utils::class_names;
 
@@ -151,7 +150,7 @@ pub struct RadioProps {
 pub fn radio(props: &RadioProps) -> Html {
     let RadioProps {
         checked,
-        default_checked,
+        default_checked: _,
         size,
         disabled,
         required,
@@ -255,12 +254,12 @@ pub struct RadioGroupProps {
 #[function_component(RadioGroup)]
 pub fn radio_group(props: &RadioGroupProps) -> Html {
     let RadioGroupProps {
-        name,
-        value,
-        default_value,
-        disabled,
-        required,
-        onchange,
+        name: _,
+        value: _,
+        default_value: _,
+        disabled: _,
+        required: _,
+        onchange: _,
         class,
         aria_label,
         children,

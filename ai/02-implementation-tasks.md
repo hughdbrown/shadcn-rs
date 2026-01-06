@@ -1,168 +1,168 @@
 # Implementation Task List - shadcn-rs
 
-## Phase 0: Project Setup & Infrastructure
+## Phase 0: Project Setup & Infrastructure ✅ COMPLETE
 
-### 0.1 Workspace Configuration
-- [ ] Create Cargo workspace with three members: `shadcn-rs` (lib), `shadcn-showcase` (bin), `shadcn-icons` (lib)
-- [ ] Set up workspace dependencies in root Cargo.toml
-- [ ] Configure workspace metadata (authors, license, repository)
-- [ ] Ensure edition = "2024" is set in workspace.package
+### 0.1 Workspace Configuration ✅
+- [x] Create Cargo workspace with three members: `shadcn-rs` (lib), `shadcn-showcase` (bin), `shadcn-icons` (lib)
+- [x] Set up workspace dependencies in root Cargo.toml
+- [x] Configure workspace metadata (authors, license, repository)
+- [x] Ensure edition = "2024" is set in workspace.package
 
-### 0.2 Library Crate Setup (shadcn-rs)
-- [ ] Convert src/main.rs to src/lib.rs
-- [ ] Add core Yew dependencies (yew, web-sys, wasm-bindgen)
-- [ ] Add development dependencies (wasm-bindgen-test)
-- [ ] Configure crate-type = ["cdylib", "rlib"] for WASM
-- [ ] Set up lib.rs with module structure
+### 0.2 Library Crate Setup (shadcn-rs) ✅
+- [x] Convert src/main.rs to src/lib.rs
+- [x] Add core Yew dependencies (yew, web-sys, wasm-bindgen)
+- [x] Add development dependencies (wasm-bindgen-test)
+- [x] Configure crate-type = ["cdylib", "rlib"] for WASM
+- [x] Set up lib.rs with module structure
 
-### 0.3 Icons Crate Setup (shadcn-icons)
-- [ ] Create shadcn-icons directory with Cargo.toml
-- [ ] Set up lib.rs module structure
-- [ ] Add Yew dependency
-- [ ] Create script to port Lucide SVG icons to Rust components
-- [ ] Generate initial set of common icons (Check, X, ChevronDown, etc.)
-- [ ] Write documentation for icon usage
+### 0.3 Icons Crate Setup (shadcn-icons) ✅
+- [x] Create shadcn-icons directory with Cargo.toml
+- [x] Set up lib.rs module structure
+- [x] Add Yew dependency
+- [x] Create script to port Lucide SVG icons to Rust components
+- [x] Generate initial set of common icons (Check, X, ChevronDown, etc.)
+- [x] Write documentation for icon usage
 
-### 0.4 Showcase Crate Setup (shadcn-showcase)
-- [ ] Create shadcn-showcase directory with Cargo.toml
-- [ ] Set up main.rs with Yew app entry point
-- [ ] Add dependency on shadcn-rs library
-- [ ] Create index.html for WASM loading
-- [ ] Set up trunk for development server
+### 0.4 Showcase Crate Setup (shadcn-showcase) ✅
+- [x] Create shadcn-showcase directory with Cargo.toml
+- [x] Set up main.rs with Yew app entry point
+- [x] Add dependency on shadcn-rs library
+- [x] Create index.html for WASM loading
+- [x] Set up trunk for development server
 
-### 0.5 CSS Infrastructure
-- [ ] Create styles/ directory for CSS source files
-- [ ] Design CSS variable system for theming
-- [ ] Create base utility classes (Tailwind-inspired)
-- [ ] Set up light and dark theme variables
-- [ ] CSS will be shipped as static file with library
-- [ ] Document how users include CSS in their projects
+### 0.5 CSS Infrastructure ✅
+- [x] Create styles/ directory for CSS source files
+- [x] Design CSS variable system for theming
+- [x] Create base utility classes (Tailwind-inspired)
+- [x] Set up light and dark theme variables
+- [x] CSS will be shipped as static file with library
+- [x] Document how users include CSS in their projects
 
-### 0.6 Component Module Structure
-- [ ] Create src/components/ directory
-- [ ] Create src/components/mod.rs with component exports
-- [ ] Set up component subdirectories by tier
-- [ ] Create src/types/ for shared enums (Size, Variant, Color, etc.)
-- [ ] Create src/hooks/ for custom Yew hooks
-- [ ] Create src/utils/ for helper functions (Portal, touch gestures, etc.)
+### 0.6 Component Module Structure ✅
+- [x] Create src/components/ directory
+- [x] Create src/components/mod.rs with component exports
+- [x] Set up component subdirectories by tier
+- [x] Create src/types/ for shared enums (Size, Variant, Color, etc.)
+- [x] Create src/hooks/ for custom Yew hooks
+- [x] Create src/utils/ for helper functions (Portal, touch gestures, etc.)
 
-### 0.7 Development Tooling
-- [ ] Create .gitignore for Rust/WASM projects
-- [ ] Set up rustfmt.toml with formatting rules
-- [ ] Set up clippy.toml with linting rules
-- [ ] Create justfile or Makefile for common tasks
-- [ ] Set up CI/CD workflow (GitHub Actions)
-- [ ] Configure wasm-pack for building
+### 0.7 Development Tooling ✅
+- [x] Create .gitignore for Rust/WASM projects
+- [x] Set up rustfmt.toml with formatting rules
+- [x] Set up clippy.toml with linting rules
+- [x] Create justfile or Makefile for common tasks
+- [x] Set up CI/CD workflow (GitHub Actions)
+- [x] Configure wasm-pack for building
 
-### 0.8 Testing Infrastructure
-- [ ] Set up wasm-bindgen-test configuration
-- [ ] Create tests/ directory structure
-- [ ] Write example test for infrastructure validation
-- [ ] Set up test runner scripts
-- [ ] Configure code coverage tools
+### 0.8 Testing Infrastructure ✅
+- [x] Set up wasm-bindgen-test configuration
+- [x] Create tests/ directory structure
+- [x] Write example test for infrastructure validation
+- [x] Set up test runner scripts
+- [x] Configure code coverage tools
 
-### 0.9 Documentation Foundation
-- [ ] Create README.md with project overview
-- [ ] Create CONTRIBUTING.md
-- [ ] Create LICENSE file (MIT or Apache-2.0)
-- [ ] Create CHANGELOG.md
-- [ ] Set up docs/ directory for guides
-- [ ] Configure rustdoc settings
+### 0.9 Documentation Foundation ✅
+- [x] Create README.md with project overview
+- [x] Create CONTRIBUTING.md
+- [x] Create LICENSE file (MIT or Apache-2.0)
+- [x] Create CHANGELOG.md
+- [x] Set up docs/ directory for guides
+- [x] Configure rustdoc settings
 
-## Phase 1: Core Types & Utilities
+## Phase 1: Core Types & Utilities ✅ COMPLETE
 
-### 1.1 Shared Types
-- [ ] Define Size enum (XS, SM, MD, LG, XL, 2XL, etc.)
-- [ ] Define Variant enum (Default, Primary, Secondary, Destructive, Outline, Ghost, Link)
-- [ ] Define Color enum (Default, Primary, Secondary, Success, Warning, Danger, Info)
-- [ ] Define Position enum (Top, Right, Bottom, Left, TopLeft, TopRight, BottomLeft, BottomRight)
-- [ ] Define Alignment enum (Start, Center, End, Stretch)
-- [ ] Create conversion traits for enums to CSS class names
+### 1.1 Shared Types ✅
+- [x] Define Size enum (XS, SM, MD, LG, XL, 2XL, etc.)
+- [x] Define Variant enum (Default, Primary, Secondary, Destructive, Outline, Ghost, Link)
+- [x] Define Color enum (Default, Primary, Secondary, Success, Warning, Danger, Info)
+- [x] Define Position enum (Top, Right, Bottom, Left, TopLeft, TopRight, BottomLeft, BottomRight)
+- [x] Define Alignment enum (Start, Center, End, Stretch)
+- [x] Create conversion traits for enums to CSS class names
 
-### 1.2 Accessibility Utilities
-- [ ] Create ARIA attribute helpers
-- [ ] Create keyboard event handlers (useKeyboard hook)
-- [ ] Create focus trap utility for modals
-- [ ] Create focus restoration utility
-- [ ] Create screen reader announcement utility
-- [ ] Create unique ID generator for aria-labelledby/aria-describedby
+### 1.2 Accessibility Utilities ✅
+- [x] Create ARIA attribute helpers
+- [x] Create keyboard event handlers (useKeyboard hook)
+- [x] Create focus trap utility for modals
+- [x] Create focus restoration utility
+- [x] Create screen reader announcement utility
+- [x] Create unique ID generator for aria-labelledby/aria-describedby
 
-### 1.3 Style Utilities
-- [ ] Create className merger utility (combine classes)
-- [ ] Create conditional class utility
-- [ ] Create variant class generator
-- [ ] Create theme context provider
-- [ ] Create useTheme hook
+### 1.3 Style Utilities ✅
+- [x] Create className merger utility (combine classes)
+- [x] Create conditional class utility
+- [x] Create variant class generator
+- [x] Create theme context provider
+- [x] Create useTheme hook
 
-### 1.4 Common Hooks
-- [ ] useToggle - boolean state toggle
-- [ ] useClickOutside - detect clicks outside element
-- [ ] useEscapeKey - handle Escape key press
-- [ ] useMediaQuery - responsive breakpoints
-- [ ] useControllableState - controlled/uncontrolled pattern
+### 1.4 Common Hooks ✅
+- [x] useToggle - boolean state toggle
+- [x] useClickOutside - detect clicks outside element
+- [x] useEscapeKey - handle Escape key press
+- [x] useMediaQuery - responsive breakpoints
+- [x] useControllableState - controlled/uncontrolled pattern
 
-### 1.5 Portal Utility
-- [ ] Implement Portal component using web-sys
-- [ ] Support rendering to document.body
-- [ ] Support custom target containers
-- [ ] Handle cleanup on unmount
-- [ ] Write tests
+### 1.5 Portal Utility ✅
+- [x] Implement Portal component using web-sys
+- [x] Support rendering to document.body
+- [x] Support custom target containers
+- [x] Handle cleanup on unmount
+- [x] Write tests
 
-### 1.6 Touch Gesture Utilities
-- [ ] Create touch event handler utilities
-- [ ] Implement swipe detection (left, right, up, down)
-- [ ] Configurable swipe thresholds
-- [ ] Touch state tracking (start, move, end)
-- [ ] Write tests for gesture detection
+### 1.6 Touch Gesture Utilities ✅
+- [x] Create touch event handler utilities
+- [x] Implement swipe detection (left, right, up, down)
+- [x] Configurable swipe thresholds
+- [x] Touch state tracking (start, move, end)
+- [x] Write tests for gesture detection
 
-## Phase 2: Tier 1 Components (Foundational)
+## Phase 2: Tier 1 Components (Foundational) - 60% COMPLETE
 
-### 2.1 Badge Component
-- [ ] Implement Badge component with variants
-- [ ] Add size support
-- [ ] Add color customization
-- [ ] Write unit tests
-- [ ] Write integration tests
-- [ ] Create example
-- [ ] Write documentation
+### 2.1 Badge Component ✅
+- [x] Implement Badge component with variants
+- [x] Add size support
+- [x] Add color customization
+- [x] Write unit tests
+- [x] Write integration tests
+- [x] Create example
+- [x] Write documentation
 
-### 2.2 Button Component
-- [ ] Implement Button component
-- [ ] Add all variants (default, primary, secondary, destructive, outline, ghost, link)
-- [ ] Add size support
-- [ ] Add disabled state
-- [ ] Add loading state with spinner
-- [ ] Add icon support (left/right)
-- [ ] Add accessibility attributes
-- [ ] Handle keyboard events
-- [ ] Write tests
-- [ ] Create example
-- [ ] Write documentation
+### 2.2 Button Component ✅
+- [x] Implement Button component
+- [x] Add all variants (default, primary, secondary, destructive, outline, ghost, link)
+- [x] Add size support
+- [x] Add disabled state
+- [x] Add loading state with spinner
+- [x] Add icon support (left/right)
+- [x] Add accessibility attributes
+- [x] Handle keyboard events
+- [x] Write tests
+- [x] Create example
+- [x] Write documentation
 
-### 2.3 Label Component
-- [ ] Implement Label component
-- [ ] Add htmlFor prop
-- [ ] Add required indicator
-- [ ] Add accessibility attributes
-- [ ] Write tests
-- [ ] Create example
-- [ ] Write documentation
+### 2.3 Label Component ✅
+- [x] Implement Label component
+- [x] Add htmlFor prop
+- [x] Add required indicator
+- [x] Add accessibility attributes
+- [x] Write tests
+- [x] Create example
+- [x] Write documentation
 
-### 2.4 Separator Component
-- [ ] Implement Separator (horizontal/vertical)
-- [ ] Add orientation support
-- [ ] Add ARIA role
-- [ ] Write tests
-- [ ] Create example
-- [ ] Write documentation
+### 2.4 Separator Component ✅
+- [x] Implement Separator (horizontal/vertical)
+- [x] Add orientation support
+- [x] Add ARIA role
+- [x] Write tests
+- [x] Create example
+- [x] Write documentation
 
-### 2.5 Skeleton Component
-- [ ] Implement Skeleton with loading animation
-- [ ] Add shape variants (text, circle, rectangle)
-- [ ] Add size support
-- [ ] Write tests
-- [ ] Create example
-- [ ] Write documentation
+### 2.5 Skeleton Component ✅
+- [x] Implement Skeleton with loading animation
+- [x] Add shape variants (text, circle, rectangle)
+- [x] Add size support
+- [x] Write tests
+- [x] Create example
+- [x] Write documentation
 
 ### 2.6 Spinner Component
 - [ ] Implement Spinner with CSS animation
@@ -202,89 +202,89 @@
 - [ ] Create example
 - [ ] Write documentation
 
-### 2.10 Alert Component
-- [ ] Implement Alert component
-- [ ] Add variants (default, info, warning, error, success)
-- [ ] Add title and description support
-- [ ] Add icon support
-- [ ] Add dismissible option
-- [ ] Add ARIA role
-- [ ] Write tests
-- [ ] Create example
-- [ ] Write documentation
+### 2.10 Alert Component ✅
+- [x] Implement Alert component
+- [x] Add variants (default, info, warning, error, success)
+- [x] Add title and description support
+- [x] Add icon support
+- [x] Add dismissible option
+- [x] Add ARIA role
+- [x] Write tests
+- [x] Create example
+- [x] Write documentation
 
-## Phase 3: Tier 2 Components (Form Components)
+## Phase 3: Tier 2 Components (Form Components) - 80% COMPLETE
 
-### 3.1 Input Component
-- [ ] Implement Input component
-- [ ] Add all input types (text, email, password, number, etc.)
-- [ ] Add size support
-- [ ] Add disabled state
-- [ ] Add error state
-- [ ] Add prefix/suffix support
-- [ ] Add accessibility attributes
-- [ ] Support controlled/uncontrolled pattern
-- [ ] Write tests
-- [ ] Create example
-- [ ] Write documentation
+### 3.1 Input Component ✅
+- [x] Implement Input component
+- [x] Add all input types (text, email, password, number, etc.)
+- [x] Add size support
+- [x] Add disabled state
+- [x] Add error state
+- [x] Add prefix/suffix support
+- [x] Add accessibility attributes
+- [x] Support controlled/uncontrolled pattern
+- [x] Write tests
+- [x] Create example
+- [x] Write documentation
 
-### 3.2 Textarea Component
-- [ ] Implement Textarea
-- [ ] Add auto-resize option
-- [ ] Add max length with counter
-- [ ] Add disabled/error states
-- [ ] Add accessibility attributes
-- [ ] Support controlled/uncontrolled pattern
-- [ ] Write tests
-- [ ] Create example
-- [ ] Write documentation
+### 3.2 Textarea Component ✅
+- [x] Implement Textarea
+- [x] Add auto-resize option
+- [x] Add max length with counter
+- [x] Add disabled/error states
+- [x] Add accessibility attributes
+- [x] Support controlled/uncontrolled pattern
+- [x] Write tests
+- [x] Create example
+- [x] Write documentation
 
-### 3.3 Checkbox Component
-- [ ] Implement Checkbox
-- [ ] Add indeterminate state
-- [ ] Add disabled state
-- [ ] Add error state
-- [ ] Add label integration
-- [ ] Add ARIA attributes
-- [ ] Support controlled/uncontrolled pattern
-- [ ] Write tests
-- [ ] Create example
-- [ ] Write documentation
+### 3.3 Checkbox Component ✅
+- [x] Implement Checkbox
+- [x] Add indeterminate state
+- [x] Add disabled state
+- [x] Add error state
+- [x] Add label integration
+- [x] Add ARIA attributes
+- [x] Support controlled/uncontrolled pattern
+- [x] Write tests
+- [x] Create example
+- [x] Write documentation
 
-### 3.4 Switch Component
-- [ ] Implement Switch toggle
-- [ ] Add size support
-- [ ] Add disabled state
-- [ ] Add ARIA attributes (role="switch")
-- [ ] Add keyboard navigation
-- [ ] Support controlled/uncontrolled pattern
-- [ ] Write tests
-- [ ] Create example
-- [ ] Write documentation
+### 3.4 Switch Component ✅
+- [x] Implement Switch toggle
+- [x] Add size support
+- [x] Add disabled state
+- [x] Add ARIA attributes (role="switch")
+- [x] Add keyboard navigation
+- [x] Support controlled/uncontrolled pattern
+- [x] Write tests
+- [x] Create example
+- [x] Write documentation
 
-### 3.5 Radio Group Component
-- [ ] Implement RadioGroup container
-- [ ] Implement Radio item
-- [ ] Add orientation (horizontal/vertical)
-- [ ] Add disabled state
-- [ ] Add ARIA attributes (role="radiogroup")
-- [ ] Add keyboard navigation (arrow keys)
-- [ ] Support controlled/uncontrolled pattern
-- [ ] Write tests
-- [ ] Create example
-- [ ] Write documentation
+### 3.5 Radio Group Component ✅
+- [x] Implement RadioGroup container
+- [x] Implement Radio item
+- [x] Add orientation (horizontal/vertical)
+- [x] Add disabled state
+- [x] Add ARIA attributes (role="radiogroup")
+- [x] Add keyboard navigation (arrow keys)
+- [x] Support controlled/uncontrolled pattern
+- [x] Write tests
+- [x] Create example
+- [x] Write documentation
 
-### 3.6 Native Select Component
-- [ ] Implement Select wrapper
-- [ ] Add size support
-- [ ] Add disabled state
-- [ ] Add error state
-- [ ] Add placeholder option
-- [ ] Add ARIA attributes
-- [ ] Support controlled/uncontrolled pattern
-- [ ] Write tests
-- [ ] Create example
-- [ ] Write documentation
+### 3.6 Native Select Component ✅
+- [x] Implement Select wrapper
+- [x] Add size support
+- [x] Add disabled state
+- [x] Add error state
+- [x] Add placeholder option
+- [x] Add ARIA attributes
+- [x] Support controlled/uncontrolled pattern
+- [x] Write tests
+- [x] Create example
+- [x] Write documentation
 
 ### 3.7 Slider Component
 - [ ] Implement Slider with range input
@@ -310,18 +310,18 @@
 - [ ] Create example
 - [ ] Write documentation
 
-## Phase 4: Tier 3 Components (Layout & Structure)
+## Phase 4: Tier 3 Components (Layout & Structure) - 25% COMPLETE
 
-### 4.1 Card Component
-- [ ] Implement Card container
-- [ ] Implement CardHeader, CardTitle, CardDescription
-- [ ] Implement CardContent
-- [ ] Implement CardFooter
-- [ ] Add variant support
-- [ ] Add hover effects
-- [ ] Write tests
-- [ ] Create example
-- [ ] Write documentation
+### 4.1 Card Component ✅
+- [x] Implement Card container
+- [x] Implement CardHeader, CardTitle, CardDescription
+- [x] Implement CardContent
+- [x] Implement CardFooter
+- [x] Add variant support
+- [x] Add hover effects
+- [x] Write tests
+- [x] Create example
+- [x] Write documentation
 
 ### 4.2 Aspect Ratio Component
 - [ ] Implement AspectRatio wrapper
