@@ -121,7 +121,7 @@ fn highlight_rust(code: &str) -> String {
                         result.push_str("</span>\n");
                         break;
                     }
-                    result.push(escape_html_char(ch));
+                    push_escaped(&mut result, ch);
                 }
                 continue;
             }
@@ -145,7 +145,7 @@ fn highlight_rust(code: &str) -> String {
         }
 
         if in_string {
-            result.push(escape_html_char(c));
+            push_escaped(&mut result, c);
             continue;
         }
 
@@ -195,7 +195,7 @@ fn highlight_rust(code: &str) -> String {
             result.push_str("<span class=\"hljs-meta\">#");
             let mut depth = 0;
             while let Some(ch) = chars.next() {
-                result.push(escape_html_char(ch));
+                push_escaped(&mut result, ch);
                 if ch == '[' {
                     depth += 1;
                 } else if ch == ']' {
@@ -209,16 +209,32 @@ fn highlight_rust(code: &str) -> String {
             continue;
         }
 
-        result.push(escape_html_char(c));
+        push_escaped(&mut result, c);
     }
 
     result
 }
 
 fn escape_html(s: &str) -> String {
-    s.chars().map(escape_html_char).collect()
+    let mut result = String::with_capacity(s.len());
+    for c in s.chars() {
+        match c {
+            '<' => result.push_str("&lt;"),
+            '>' => result.push_str("&gt;"),
+            '&' => result.push_str("&amp;"),
+            '"' => result.push_str("&quot;"),
+            _ => result.push(c),
+        }
+    }
+    result
 }
 
-fn escape_html_char(c: char) -> char {
-    c // For simplicity, we'll handle escaping in the template
+fn push_escaped(result: &mut String, c: char) {
+    match c {
+        '<' => result.push_str("&lt;"),
+        '>' => result.push_str("&gt;"),
+        '&' => result.push_str("&amp;"),
+        '"' => result.push_str("&quot;"),
+        _ => result.push(c),
+    }
 }

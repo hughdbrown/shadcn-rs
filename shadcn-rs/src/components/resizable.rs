@@ -25,6 +25,9 @@
 //! ```
 
 use yew::prelude::*;
+use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsCast;
+use web_sys::{MouseEvent, Element};
 
 /// Resizable orientation
 #[derive(Debug, Clone, PartialEq)]
@@ -33,6 +36,23 @@ pub enum ResizableOrientation {
     Horizontal,
     /// Vertical layout (top and bottom)
     Vertical,
+}
+
+/// Context for sharing resizable state between components
+#[derive(Clone, PartialEq)]
+pub struct ResizableContext {
+    /// Layout orientation
+    pub orientation: ResizableOrientation,
+    /// Panel sizes as percentages
+    pub sizes: Vec<f64>,
+    /// Callback to update panel sizes
+    pub set_sizes: Callback<Vec<f64>>,
+    /// Whether currently dragging
+    pub is_dragging: bool,
+    /// Set dragging state
+    pub set_dragging: Callback<bool>,
+    /// The container node ref
+    pub container_ref: NodeRef,
 }
 
 /// Resizable container properties
@@ -65,6 +85,33 @@ pub fn resizable(props: &ResizableProps) -> Html {
         children,
     } = props.clone();
 
+    let container_ref = use_node_ref();
+    let sizes = use_state(|| vec![50.0, 50.0]);
+    let is_dragging = use_state(|| false);
+
+    let set_sizes = {
+        let sizes = sizes.clone();
+        Callback::from(move |new_sizes: Vec<f64>| {
+            sizes.set(new_sizes);
+        })
+    };
+
+    let set_dragging = {
+        let is_dragging = is_dragging.clone();
+        Callback::from(move |dragging: bool| {
+            is_dragging.set(dragging);
+        })
+    };
+
+    let context = ResizableContext {
+        orientation: orientation.clone(),
+        sizes: (*sizes).clone(),
+        set_sizes,
+        is_dragging: *is_dragging,
+        set_dragging,
+        container_ref: container_ref.clone(),
+    };
+
     let orientation_class = match orientation {
         ResizableOrientation::Horizontal => "resizable-horizontal",
         ResizableOrientation::Vertical => "resizable-vertical",
@@ -73,21 +120,32 @@ pub fn resizable(props: &ResizableProps) -> Html {
     let classes: Classes = vec![
         Classes::from("resizable"),
         Classes::from(orientation_class),
+        if *is_dragging {
+            Classes::from("resizable-dragging")
+        } else {
+            Classes::new()
+        },
         class,
     ]
     .into_iter()
     .collect();
 
     html! {
-        <div class={classes}>
-            { children }
-        </div>
+        <ContextProvider<ResizableContext> context={context}>
+            <div ref={container_ref} class={classes}>
+                { children }
+            </div>
+        </ContextProvider<ResizableContext>>
     }
 }
 
 /// Resizable panel properties
 #[derive(Properties, PartialEq, Clone)]
 pub struct ResizablePanelProps {
+    /// Panel index (0 or 1 for two-panel layout)
+    #[prop_or(0)]
+    pub index: usize,
+
     /// Default size percentage (0-100)
     #[prop_or(50.0)]
     pub default_size: f64,
@@ -118,6 +176,7 @@ pub struct ResizablePanelProps {
 #[function_component(ResizablePanel)]
 pub fn resizable_panel(props: &ResizablePanelProps) -> Html {
     let ResizablePanelProps {
+        index,
         default_size,
         min_size: _,
         max_size: _,
@@ -126,14 +185,30 @@ pub fn resizable_panel(props: &ResizablePanelProps) -> Html {
         children,
     } = props.clone();
 
+    let context = use_context::<ResizableContext>();
+
+    // Get size from context or use default
+    let size = context
+        .as_ref()
+        .and_then(|ctx| ctx.sizes.get(index).copied())
+        .unwrap_or(default_size);
+
+    let orientation = context
+        .as_ref()
+        .map(|ctx| ctx.orientation.clone())
+        .unwrap_or(ResizableOrientation::Horizontal);
+
     let classes: Classes = vec![Classes::from("resizable-panel"), class]
         .into_iter()
         .collect();
 
-    let style = format!("flex-basis: {}%", default_size);
+    let style = match orientation {
+        ResizableOrientation::Horizontal => format!("flex-basis: {}%; width: {}%", size, size),
+        ResizableOrientation::Vertical => format!("flex-basis: {}%; height: {}%", size, size),
+    };
 
     html! {
-        <div class={classes} style={style}>
+        <div class={classes} style={style} data-panel-index={index.to_string()}>
             { children }
         </div>
     }
@@ -159,16 +234,137 @@ pub struct ResizableHandleProps {
 pub fn resizable_handle(props: &ResizableHandleProps) -> Html {
     let ResizableHandleProps { class } = props.clone();
 
-    let classes: Classes = vec![Classes::from("resizable-handle"), class]
-        .into_iter()
-        .collect();
+    let context = use_context::<ResizableContext>();
+    let is_active = use_state(|| false);
+
+    let orientation = context
+        .as_ref()
+        .map(|ctx| ctx.orientation.clone())
+        .unwrap_or(ResizableOrientation::Horizontal);
+
+    // Handle mouse down to start dragging
+    let onmousedown = {
+        let context = context.clone();
+        let is_active = is_active.clone();
+        Callback::from(move |e: MouseEvent| {
+            e.prevent_default();
+            is_active.set(true);
+
+            if let Some(ctx) = context.as_ref() {
+                ctx.set_dragging.emit(true);
+            }
+
+            // Set up global mouse move and up handlers
+            let context_move = context.clone();
+            let context_up = context.clone();
+            let is_active_clone = is_active.clone();
+
+            // Handle mouse move
+            let mousemove_closure = Closure::<dyn Fn(MouseEvent)>::new(move |e: MouseEvent| {
+                if let Some(ctx) = context_move.as_ref() {
+                    if let Some(container) = ctx.container_ref.cast::<Element>() {
+                        let rect = container.get_bounding_client_rect();
+
+                        let percentage = match ctx.orientation {
+                            ResizableOrientation::Horizontal => {
+                                let x = e.client_x() as f64 - rect.left();
+                                let width = rect.width();
+                                (x / width * 100.0).max(10.0).min(90.0)
+                            }
+                            ResizableOrientation::Vertical => {
+                                let y = e.client_y() as f64 - rect.top();
+                                let height = rect.height();
+                                (y / height * 100.0).max(10.0).min(90.0)
+                            }
+                        };
+
+                        ctx.set_sizes.emit(vec![percentage, 100.0 - percentage]);
+                    }
+                }
+            });
+
+            // Handle mouse up
+            let mousemove_closure_rc = std::rc::Rc::new(std::cell::RefCell::new(Some(mousemove_closure)));
+            let mouseup_closure_rc: std::rc::Rc<std::cell::RefCell<Option<Closure<dyn Fn(MouseEvent)>>>> = std::rc::Rc::new(std::cell::RefCell::new(None));
+            let mouseup_closure_rc_clone = mouseup_closure_rc.clone();
+            let mousemove_rc_for_up = mousemove_closure_rc.clone();
+
+            let mouseup_closure = Closure::<dyn Fn(MouseEvent)>::new(move |_e: MouseEvent| {
+                is_active_clone.set(false);
+
+                if let Some(ctx) = context_up.as_ref() {
+                    ctx.set_dragging.emit(false);
+                }
+
+                // Remove event listeners
+                if let Some(window) = web_sys::window() {
+                    if let Some(closure) = mousemove_rc_for_up.borrow_mut().take() {
+                        let _ = window.remove_event_listener_with_callback(
+                            "mousemove",
+                            closure.as_ref().unchecked_ref()
+                        );
+                    }
+                    if let Some(closure) = mouseup_closure_rc_clone.borrow_mut().take() {
+                        let _ = window.remove_event_listener_with_callback(
+                            "mouseup",
+                            closure.as_ref().unchecked_ref()
+                        );
+                    }
+                }
+            });
+
+            *mouseup_closure_rc.borrow_mut() = Some(mouseup_closure);
+
+            // Add event listeners to window
+            if let Some(window) = web_sys::window() {
+                if let Some(closure) = mousemove_closure_rc.borrow().as_ref() {
+                    let _ = window.add_event_listener_with_callback(
+                        "mousemove",
+                        closure.as_ref().unchecked_ref()
+                    );
+                }
+                if let Some(closure) = mouseup_closure_rc.borrow().as_ref() {
+                    let _ = window.add_event_listener_with_callback(
+                        "mouseup",
+                        closure.as_ref().unchecked_ref()
+                    );
+                }
+            }
+
+            // Keep closures alive by leaking them (they'll be cleaned up on mouseup)
+            if let Some(closure) = mousemove_closure_rc.borrow_mut().take() {
+                closure.forget();
+            }
+            if let Some(closure) = mouseup_closure_rc.borrow_mut().take() {
+                closure.forget();
+            }
+        })
+    };
+
+    let aria_orientation = match orientation {
+        ResizableOrientation::Horizontal => "vertical",
+        ResizableOrientation::Vertical => "horizontal",
+    };
+
+    let classes: Classes = vec![
+        Classes::from("resizable-handle"),
+        if *is_active {
+            Classes::from("resizable-handle-active")
+        } else {
+            Classes::new()
+        },
+        class,
+    ]
+    .into_iter()
+    .collect();
 
     html! {
         <div
             class={classes}
             role="separator"
-            aria-orientation="vertical"
+            aria-orientation={aria_orientation}
             tabindex="0"
+            {onmousedown}
         >
             <div class="resizable-handle-icon" />
         </div>
@@ -204,6 +400,7 @@ mod tests {
     #[test]
     fn test_resizable_panel_default_size() {
         let props = ResizablePanelProps {
+            index: 0,
             default_size: 50.0,
             min_size: 10.0,
             max_size: 90.0,
@@ -220,6 +417,7 @@ mod tests {
     #[test]
     fn test_resizable_panel_collapsible() {
         let props = ResizablePanelProps {
+            index: 0,
             default_size: 50.0,
             min_size: 10.0,
             max_size: 90.0,

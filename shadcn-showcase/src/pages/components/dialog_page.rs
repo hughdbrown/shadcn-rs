@@ -1,7 +1,7 @@
 //! Dialog component showcase page
 
 use yew::prelude::*;
-use shadcn_rs::{Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, Button, Variant, Input, Label};
+use shadcn_rs::{Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose, Button, Variant, Input, Label};
 
 use crate::components::{ComponentPage, Example, PropDoc};
 
@@ -34,7 +34,9 @@ pub fn dialog_page() -> Html {
                             </div>
                         </div>
                         <DialogFooter>
-                            <Button variant={Variant::Primary}>{ "Save changes" }</Button>
+                            <DialogClose>
+                                <Button variant={Variant::Primary}>{ "Save changes" }</Button>
+                            </DialogClose>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>

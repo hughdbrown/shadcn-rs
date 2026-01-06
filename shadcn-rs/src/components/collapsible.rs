@@ -10,10 +10,8 @@
 //!
 //! #[function_component(App)]
 //! fn app() -> Html {
-//!     let open = use_state(|| false);
-//!
 //!     html! {
-//!         <Collapsible open={*open}>
+//!         <Collapsible>
 //!             <CollapsibleTrigger>
 //!                 { "Show more" }
 //!             </CollapsibleTrigger>
@@ -26,7 +24,15 @@
 //! ```
 
 use yew::prelude::*;
-use crate::hooks::use_toggle;
+
+/// Context for sharing collapsible state with children
+#[derive(Clone, PartialEq)]
+pub struct CollapsibleContext {
+    /// Whether the collapsible content is currently visible
+    pub is_open: bool,
+    /// Callback to toggle the open/close state
+    pub toggle: Callback<()>,
+}
 
 /// Collapsible container properties
 #[derive(Properties, PartialEq, Clone)]
@@ -64,12 +70,33 @@ pub fn collapsible(props: &CollapsibleProps) -> Html {
     let CollapsibleProps {
         open,
         default_open,
-        on_open_change: _,
+        on_open_change,
         class,
         children,
     } = props.clone();
 
-    let (is_open, _toggle, _set_open) = use_toggle(open.unwrap_or(default_open));
+    // Internal state for uncontrolled mode
+    let internal_open = use_state(|| default_open);
+
+    // Use controlled value if provided, otherwise use internal state
+    let is_open = open.unwrap_or(*internal_open);
+
+    let toggle = {
+        let internal_open = internal_open.clone();
+        let on_open_change = on_open_change.clone();
+        Callback::from(move |_: ()| {
+            let new_state = !*internal_open;
+            internal_open.set(new_state);
+            if let Some(callback) = on_open_change.as_ref() {
+                callback.emit(new_state);
+            }
+        })
+    };
+
+    let context = CollapsibleContext {
+        is_open,
+        toggle,
+    };
 
     let classes: Classes = vec![
         Classes::from("collapsible"),
@@ -84,16 +111,18 @@ pub fn collapsible(props: &CollapsibleProps) -> Html {
     .collect();
 
     html! {
-        <div class={classes} data-state={if is_open { "open" } else { "closed" }}>
-            { children }
-        </div>
+        <ContextProvider<CollapsibleContext> context={context}>
+            <div class={classes} data-state={if is_open { "open" } else { "closed" }}>
+                { children }
+            </div>
+        </ContextProvider<CollapsibleContext>>
     }
 }
 
 /// Collapsible trigger properties
 #[derive(Properties, PartialEq, Clone)]
 pub struct CollapsibleTriggerProps {
-    /// Click handler
+    /// Click handler (optional, toggle is automatic)
     #[prop_or_default]
     pub onclick: Option<Callback<MouseEvent>>,
 
@@ -116,6 +145,23 @@ pub fn collapsible_trigger(props: &CollapsibleTriggerProps) -> Html {
         class,
     } = props.clone();
 
+    let context = use_context::<CollapsibleContext>();
+
+    let handle_click = {
+        let context = context.clone();
+        let onclick = onclick.clone();
+        Callback::from(move |e: MouseEvent| {
+            if let Some(ctx) = context.as_ref() {
+                ctx.toggle.emit(());
+            }
+            if let Some(cb) = onclick.as_ref() {
+                cb.emit(e);
+            }
+        })
+    };
+
+    let is_open = context.as_ref().map(|c| c.is_open).unwrap_or(false);
+
     let classes: Classes = vec![Classes::from("collapsible-trigger"), class]
         .into_iter()
         .collect();
@@ -124,8 +170,8 @@ pub fn collapsible_trigger(props: &CollapsibleTriggerProps) -> Html {
         <button
             type="button"
             class={classes}
-            onclick={onclick}
-            aria-expanded="false"
+            onclick={handle_click}
+            aria-expanded={is_open.to_string()}
         >
             { children }
         </button>
@@ -150,12 +196,19 @@ pub struct CollapsibleContentProps {
 pub fn collapsible_content(props: &CollapsibleContentProps) -> Html {
     let CollapsibleContentProps { class, children } = props.clone();
 
+    let context = use_context::<CollapsibleContext>();
+    let is_open = context.as_ref().map(|c| c.is_open).unwrap_or(false);
+
     let classes: Classes = vec![Classes::from("collapsible-content"), class]
         .into_iter()
         .collect();
 
+    if !is_open {
+        return html! {};
+    }
+
     html! {
-        <div class={classes} aria-hidden="false">
+        <div class={classes} aria-hidden={(!is_open).to_string()}>
             { children }
         </div>
     }

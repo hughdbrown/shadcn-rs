@@ -30,6 +30,17 @@ use yew::prelude::*;
 use crate::utils::Portal;
 use crate::hooks::{use_escape_key_conditional, use_click_outside_conditional};
 
+/// Context for sharing dropdown menu state between parent and children
+#[derive(Clone, PartialEq)]
+pub struct DropdownMenuContext {
+    /// Whether the dropdown menu is currently open
+    pub is_open: bool,
+    /// Callback to set open state
+    pub set_open: Callback<bool>,
+    /// Callback to toggle open state
+    pub toggle: Callback<()>,
+}
+
 /// Dropdown menu component properties
 #[derive(Properties, PartialEq, Clone)]
 pub struct DropdownMenuProps {
@@ -61,16 +72,53 @@ pub struct DropdownMenuProps {
 #[function_component(DropdownMenu)]
 pub fn dropdown_menu(props: &DropdownMenuProps) -> Html {
     let DropdownMenuProps {
-        open: _,
-        default_open: _,
-        on_open_change: _,
+        open,
+        default_open,
+        on_open_change,
         children,
     } = props.clone();
 
+    // Internal state for uncontrolled mode
+    let internal_open = use_state(|| default_open);
+
+    // Use controlled value if provided (open=true), otherwise use internal state
+    let is_open = if open { open } else { *internal_open };
+
+    let set_open = {
+        let internal_open = internal_open.clone();
+        let on_open_change = on_open_change.clone();
+        Callback::from(move |new_state: bool| {
+            internal_open.set(new_state);
+            if let Some(callback) = on_open_change.as_ref() {
+                callback.emit(new_state);
+            }
+        })
+    };
+
+    let toggle = {
+        let internal_open = internal_open.clone();
+        let on_open_change = on_open_change.clone();
+        Callback::from(move |_: ()| {
+            let new_state = !*internal_open;
+            internal_open.set(new_state);
+            if let Some(callback) = on_open_change.as_ref() {
+                callback.emit(new_state);
+            }
+        })
+    };
+
+    let context = DropdownMenuContext {
+        is_open,
+        set_open,
+        toggle,
+    };
+
     html! {
-        <div class="dropdown-menu-root">
-            { children }
-        </div>
+        <ContextProvider<DropdownMenuContext> context={context}>
+            <div class="dropdown-menu-root">
+                { children }
+            </div>
+        </ContextProvider<DropdownMenuContext>>
     }
 }
 
@@ -92,12 +140,23 @@ pub struct DropdownMenuTriggerProps {
 pub fn dropdown_menu_trigger(props: &DropdownMenuTriggerProps) -> Html {
     let DropdownMenuTriggerProps { class, children } = props.clone();
 
+    let context = use_context::<DropdownMenuContext>();
+
+    let handle_click = {
+        let context = context.clone();
+        Callback::from(move |_: MouseEvent| {
+            if let Some(ctx) = context.as_ref() {
+                ctx.toggle.emit(());
+            }
+        })
+    };
+
     let classes: Classes = vec![Classes::from("dropdown-menu-trigger"), class]
         .into_iter()
         .collect();
 
     html! {
-        <div class={classes}>
+        <div class={classes} onclick={handle_click}>
             { children }
         </div>
     }
@@ -136,7 +195,7 @@ pub struct DropdownMenuContentProps {
 #[function_component(DropdownMenuContent)]
 pub fn dropdown_menu_content(props: &DropdownMenuContentProps) -> Html {
     let DropdownMenuContentProps {
-        open,
+        open: prop_open,
         on_close,
         close_on_outside_click,
         close_on_escape,
@@ -144,32 +203,42 @@ pub fn dropdown_menu_content(props: &DropdownMenuContentProps) -> Html {
         children,
     } = props.clone();
 
+    let context = use_context::<DropdownMenuContext>();
     let content_ref = use_node_ref();
 
-    // Handle Escape key
+    // Use context open state if available, otherwise use prop
+    let is_open = context.as_ref().map(|ctx| ctx.is_open).unwrap_or(prop_open);
+
+    // Handle Escape key - close via context if available
+    let context_esc = context.clone();
     let on_close_esc = on_close.clone();
     use_escape_key_conditional(
         move || {
-            if let Some(callback) = on_close_esc.as_ref() {
+            if let Some(ctx) = context_esc.as_ref() {
+                ctx.set_open.emit(false);
+            } else if let Some(callback) = on_close_esc.as_ref() {
                 callback.emit(());
             }
         },
-        open && close_on_escape,
+        is_open && close_on_escape,
     );
 
-    // Handle click outside
+    // Handle click outside - close via context if available
+    let context_click = context.clone();
     let on_close_click = on_close.clone();
     use_click_outside_conditional(
         content_ref.clone(),
         move || {
-            if let Some(callback) = on_close_click.as_ref() {
+            if let Some(ctx) = context_click.as_ref() {
+                ctx.set_open.emit(false);
+            } else if let Some(callback) = on_close_click.as_ref() {
                 callback.emit(());
             }
         },
-        open && close_on_outside_click,
+        is_open && close_on_outside_click,
     );
 
-    if !open {
+    if !is_open {
         return html! {};
     }
 
@@ -222,6 +291,27 @@ pub fn dropdown_menu_item(props: &DropdownMenuItemProps) -> Html {
         children,
     } = props.clone();
 
+    let context = use_context::<DropdownMenuContext>();
+
+    let handle_click = {
+        let context = context.clone();
+        let onclick = onclick.clone();
+        let disabled = disabled;
+        Callback::from(move |e: MouseEvent| {
+            if disabled {
+                return;
+            }
+            // Call user's onclick
+            if let Some(callback) = onclick.as_ref() {
+                callback.emit(e);
+            }
+            // Close the menu
+            if let Some(ctx) = context.as_ref() {
+                ctx.set_open.emit(false);
+            }
+        })
+    };
+
     let classes: Classes = vec![
         Classes::from("dropdown-menu-item"),
         if disabled {
@@ -239,7 +329,7 @@ pub fn dropdown_menu_item(props: &DropdownMenuItemProps) -> Html {
             class={classes}
             role="menuitem"
             aria-disabled={disabled.to_string()}
-            onclick={onclick}
+            onclick={handle_click}
         >
             { children }
         </div>

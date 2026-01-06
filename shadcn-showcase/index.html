@@ -13,8 +13,11 @@
     <link data-trunk rel="copy-file" href="showcase.css" />
     <link data-trunk rel="copy-dir" href="../shadcn-rs/styles" />
 
-    <!-- Stylesheets -->
-    <link rel="stylesheet" href="styles/shadcn-rs.css">
+    <!-- Stylesheets - load all CSS directly to avoid @import chain issues -->
+    <link rel="stylesheet" href="styles/variables.css">
+    <link rel="stylesheet" href="styles/base.css">
+    <link rel="stylesheet" href="styles/utilities.css">
+    <link rel="stylesheet" href="styles/components.css">
     <link rel="stylesheet" href="showcase.css">
 
     <!-- Favicon -->

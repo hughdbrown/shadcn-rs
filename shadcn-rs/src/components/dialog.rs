@@ -49,6 +49,17 @@ use yew::prelude::*;
 use crate::utils::Portal;
 use crate::hooks::{use_escape_key_conditional, use_click_outside_conditional};
 
+/// Context for sharing dialog state between parent and children
+#[derive(Clone, PartialEq)]
+pub struct DialogContext {
+    /// Whether the dialog is currently open
+    pub is_open: bool,
+    /// Callback to set open state
+    pub set_open: Callback<bool>,
+    /// Callback to toggle open state
+    pub toggle: Callback<()>,
+}
+
 /// Dialog component properties
 #[derive(Properties, PartialEq, Clone)]
 pub struct DialogProps {
@@ -81,16 +92,53 @@ pub struct DialogProps {
 #[function_component(Dialog)]
 pub fn dialog(props: &DialogProps) -> Html {
     let DialogProps {
-        open: _,
-        default_open: _,
-        on_open_change: _,
+        open,
+        default_open,
+        on_open_change,
         children,
     } = props.clone();
 
+    // Internal state for uncontrolled mode
+    let internal_open = use_state(|| default_open);
+
+    // Use controlled value if provided (open=true), otherwise use internal state
+    let is_open = if open { open } else { *internal_open };
+
+    let set_open = {
+        let internal_open = internal_open.clone();
+        let on_open_change = on_open_change.clone();
+        Callback::from(move |new_state: bool| {
+            internal_open.set(new_state);
+            if let Some(callback) = on_open_change.as_ref() {
+                callback.emit(new_state);
+            }
+        })
+    };
+
+    let toggle = {
+        let internal_open = internal_open.clone();
+        let on_open_change = on_open_change.clone();
+        Callback::from(move |_: ()| {
+            let new_state = !*internal_open;
+            internal_open.set(new_state);
+            if let Some(callback) = on_open_change.as_ref() {
+                callback.emit(new_state);
+            }
+        })
+    };
+
+    let context = DialogContext {
+        is_open,
+        set_open,
+        toggle,
+    };
+
     html! {
-        <div class="dialog-root">
-            { children }
-        </div>
+        <ContextProvider<DialogContext> context={context}>
+            <div class="dialog-root">
+                { children }
+            </div>
+        </ContextProvider<DialogContext>>
     }
 }
 
@@ -108,8 +156,19 @@ pub struct DialogTriggerProps {
 pub fn dialog_trigger(props: &DialogTriggerProps) -> Html {
     let DialogTriggerProps { children } = props.clone();
 
+    let context = use_context::<DialogContext>();
+
+    let handle_click = {
+        let context = context.clone();
+        Callback::from(move |_: MouseEvent| {
+            if let Some(ctx) = context.as_ref() {
+                ctx.toggle.emit(());
+            }
+        })
+    };
+
     html! {
-        <div class="dialog-trigger">
+        <div class="dialog-trigger" onclick={handle_click}>
             { children }
         </div>
     }
@@ -148,7 +207,7 @@ pub struct DialogContentProps {
 #[function_component(DialogContent)]
 pub fn dialog_content(props: &DialogContentProps) -> Html {
     let DialogContentProps {
-        open,
+        open: prop_open,
         on_close,
         close_on_overlay_click,
         close_on_escape,
@@ -156,32 +215,42 @@ pub fn dialog_content(props: &DialogContentProps) -> Html {
         children,
     } = props.clone();
 
+    let context = use_context::<DialogContext>();
     let content_ref = use_node_ref();
 
-    // Handle Escape key
+    // Use context open state if available, otherwise use prop
+    let is_open = context.as_ref().map(|ctx| ctx.is_open).unwrap_or(prop_open);
+
+    // Handle Escape key - close via context if available
+    let context_esc = context.clone();
     let on_close_esc = on_close.clone();
     use_escape_key_conditional(
         move || {
-            if let Some(callback) = on_close_esc.as_ref() {
+            if let Some(ctx) = context_esc.as_ref() {
+                ctx.set_open.emit(false);
+            } else if let Some(callback) = on_close_esc.as_ref() {
                 callback.emit(());
             }
         },
-        open && close_on_escape,
+        is_open && close_on_escape,
     );
 
-    // Handle click outside
+    // Handle click outside - close via context if available
+    let context_click = context.clone();
     let on_close_click = on_close.clone();
     use_click_outside_conditional(
         content_ref.clone(),
         move || {
-            if let Some(callback) = on_close_click.as_ref() {
+            if let Some(ctx) = context_click.as_ref() {
+                ctx.set_open.emit(false);
+            } else if let Some(callback) = on_close_click.as_ref() {
                 callback.emit(());
             }
         },
-        open && close_on_overlay_click,
+        is_open && close_on_overlay_click,
     );
 
-    if !open {
+    if !is_open {
         return html! {};
     }
 
@@ -316,6 +385,46 @@ pub fn dialog_footer(props: &DialogFooterProps) -> Html {
 
     html! {
         <div class={classes}>
+            { children }
+        </div>
+    }
+}
+
+/// Dialog close properties
+#[derive(Properties, PartialEq, Clone)]
+pub struct DialogCloseProps {
+    /// Additional CSS classes
+    #[prop_or_default]
+    pub class: Classes,
+
+    /// Children elements
+    pub children: Children,
+}
+
+/// Dialog close component
+///
+/// Wraps a button or element to close the dialog when clicked.
+#[function_component(DialogClose)]
+pub fn dialog_close(props: &DialogCloseProps) -> Html {
+    let DialogCloseProps { class, children } = props.clone();
+
+    let context = use_context::<DialogContext>();
+
+    let handle_click = {
+        let context = context.clone();
+        Callback::from(move |_: MouseEvent| {
+            if let Some(ctx) = context.as_ref() {
+                ctx.set_open.emit(false);
+            }
+        })
+    };
+
+    let classes: Classes = vec![Classes::from("dialog-close"), class]
+        .into_iter()
+        .collect();
+
+    html! {
+        <div class={classes} onclick={handle_click}>
             { children }
         </div>
     }

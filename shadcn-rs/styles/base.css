@@ -29,10 +29,9 @@ body {
   font-feature-settings: normal;
 }
 
-/* Typography */
+/* Typography - only reset margins, preserve semantic sizing for non-styled headings */
 h1, h2, h3, h4, h5, h6 {
-  font-size: inherit;
-  font-weight: inherit;
+  margin: 0;
 }
 
 a {

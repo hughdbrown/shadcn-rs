@@ -110,7 +110,7 @@ pub use textarea::{Textarea, TextareaResize};
 pub use aspect_ratio::AspectRatio;
 pub use empty::Empty;
 pub use item::Item;
-pub use resizable::{Resizable, ResizableHandle, ResizableOrientation, ResizablePanel};
+pub use resizable::{Resizable, ResizableContext, ResizableHandle, ResizableOrientation, ResizablePanel};
 pub use scroll_area::{ScrollArea, ScrollDirection};
 pub use table::{Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow};
 
@@ -120,29 +120,29 @@ pub use collapsible::{Collapsible, CollapsibleContent, CollapsibleTrigger};
 pub use field::Field;
 pub use input_group::InputGroup;
 pub use toggle::{Toggle, ToggleVariant};
-pub use toggle_group::{ToggleGroup, ToggleGroupOrientation, ToggleGroupType};
+pub use toggle_group::{ToggleGroup, ToggleGroupContext, ToggleGroupItem, ToggleGroupOrientation, ToggleGroupType};
 
 // Re-export Tier 5 components
-pub use accordion::{Accordion, AccordionContent, AccordionItem, AccordionTrigger, AccordionType};
+pub use accordion::{Accordion, AccordionContext, AccordionContent, AccordionItem, AccordionItemContext, AccordionTrigger, AccordionType};
 pub use alert_dialog::{
-    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogContext,
     AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
     AlertDialogTrigger,
 };
 pub use dialog::{
-    Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
-    DialogTrigger,
+    Dialog, DialogClose, DialogContext, DialogContent, DialogDescription, DialogFooter, DialogHeader,
+    DialogTitle, DialogTrigger,
 };
 pub use drawer::{
-    Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle,
-    DrawerTrigger,
+    Drawer, DrawerClose, DrawerContext, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader,
+    DrawerTitle, DrawerTrigger,
 };
 pub use dropdown_menu::{
-    DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem,
-    DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator,
-    DropdownMenuSub, DropdownMenuTrigger,
+    DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuContext,
+    DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem,
+    DropdownMenuSeparator, DropdownMenuSub, DropdownMenuTrigger,
 };
-pub use hover_card::{HoverCard, HoverCardContent, HoverCardTrigger};
+pub use hover_card::{HoverCard, HoverCardContent, HoverCardContext, HoverCardTrigger};
 pub use popover::{Popover, PopoverContent, PopoverTrigger};
 pub use sheet::{
     Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger,

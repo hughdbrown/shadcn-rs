@@ -1,7 +1,7 @@
 //! Select component showcase page
 
 use yew::prelude::*;
-use shadcn_rs::{Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectGroup, SelectLabel};
+use shadcn_rs::{SelectAdvanced, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectGroup, SelectLabel};
 
 use crate::components::{ComponentPage, Example, PropDoc};
 
@@ -13,7 +13,7 @@ pub fn select_page() -> Html {
             title: "Default",
             description: "A basic select dropdown.",
             demo: html! {
-                <Select>
+                <SelectAdvanced>
                     <SelectTrigger class="w-[180px]">
                         <SelectValue placeholder="Select a fruit" />
                     </SelectTrigger>
@@ -23,9 +23,9 @@ pub fn select_page() -> Html {
                         <SelectItem value="orange">{ "Orange" }</SelectItem>
                         <SelectItem value="grape">{ "Grape" }</SelectItem>
                     </SelectContent>
-                </Select>
+                </SelectAdvanced>
             },
-            code: r#"<Select>
+            code: r#"<SelectAdvanced>
     <SelectTrigger class="w-[180px]">
         <SelectValue placeholder="Select a fruit" />
     </SelectTrigger>
@@ -34,13 +34,13 @@ pub fn select_page() -> Html {
         <SelectItem value="banana">{ "Banana" }</SelectItem>
         <SelectItem value="orange">{ "Orange" }</SelectItem>
     </SelectContent>
-</Select>"#,
+</SelectAdvanced>"#,
         },
         Example {
             title: "Disabled",
             description: "A disabled select.",
             demo: html! {
-                <Select disabled={true}>
+                <SelectAdvanced disabled={true}>
                     <SelectTrigger class="w-[180px]">
                         <SelectValue placeholder="Select..." />
                     </SelectTrigger>
@@ -48,20 +48,20 @@ pub fn select_page() -> Html {
                         <SelectItem value="1">{ "Option 1" }</SelectItem>
                         <SelectItem value="2">{ "Option 2" }</SelectItem>
                     </SelectContent>
-                </Select>
+                </SelectAdvanced>
             },
-            code: r#"<Select disabled={true}>
+            code: r#"<SelectAdvanced disabled={true}>
     <SelectTrigger>
         <SelectValue placeholder="Select..." />
     </SelectTrigger>
     ...
-</Select>"#,
+</SelectAdvanced>"#,
         },
         Example {
             title: "Grouped",
             description: "Select with grouped options.",
             demo: html! {
-                <Select>
+                <SelectAdvanced>
                     <SelectTrigger class="w-[280px]">
                         <SelectValue placeholder="Select a timezone" />
                     </SelectTrigger>
@@ -79,7 +79,7 @@ pub fn select_page() -> Html {
                             <SelectItem value="cet">{ "Central European Time (CET)" }</SelectItem>
                         </SelectGroup>
                     </SelectContent>
-                </Select>
+                </SelectAdvanced>
             },
             code: r#"<Select>
     <SelectTrigger>

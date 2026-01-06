@@ -55,7 +55,9 @@ pub struct ComponentPageProps {
 #[function_component(ComponentPage)]
 pub fn component_page(props: &ComponentPageProps) -> Html {
     let import_code = props.import_code.clone().unwrap_or_else(|| {
-        format!("use shadcn_rs::{};", props.name).into()
+        // Remove spaces from component name for valid Rust import
+        let component_name: String = props.name.chars().filter(|c| !c.is_whitespace()).collect();
+        format!("use shadcn_rs::{};", component_name).into()
     });
 
     html! {

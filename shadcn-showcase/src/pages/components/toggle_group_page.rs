@@ -1,7 +1,7 @@
 //! ToggleGroup component showcase page
 
 use yew::prelude::*;
-use shadcn_rs::{ToggleGroup, Toggle, ToggleGroupType, ToggleGroupOrientation};
+use shadcn_rs::{ToggleGroup, ToggleGroupItem, ToggleGroupType, ToggleGroupOrientation};
 
 use crate::components::{ComponentPage, Example, PropDoc};
 
@@ -13,15 +13,15 @@ pub fn toggle_group_page() -> Html {
             description: "Toggle group with single selection.",
             demo: html! {
                 <ToggleGroup r#type={ToggleGroupType::Single}>
-                    <Toggle>{ "Left" }</Toggle>
-                    <Toggle>{ "Center" }</Toggle>
-                    <Toggle>{ "Right" }</Toggle>
+                    <ToggleGroupItem value="left">{ "Left" }</ToggleGroupItem>
+                    <ToggleGroupItem value="center">{ "Center" }</ToggleGroupItem>
+                    <ToggleGroupItem value="right">{ "Right" }</ToggleGroupItem>
                 </ToggleGroup>
             },
             code: r##"<ToggleGroup r#type={ToggleGroupType::Single}>
-    <Toggle>{ "Left" }</Toggle>
-    <Toggle>{ "Center" }</Toggle>
-    <Toggle>{ "Right" }</Toggle>
+    <ToggleGroupItem value="left">{ "Left" }</ToggleGroupItem>
+    <ToggleGroupItem value="center">{ "Center" }</ToggleGroupItem>
+    <ToggleGroupItem value="right">{ "Right" }</ToggleGroupItem>
 </ToggleGroup>"##,
         },
         Example {
@@ -29,15 +29,15 @@ pub fn toggle_group_page() -> Html {
             description: "Toggle group with multiple selection.",
             demo: html! {
                 <ToggleGroup r#type={ToggleGroupType::Multiple}>
-                    <Toggle><strong>{ "B" }</strong></Toggle>
-                    <Toggle><em>{ "I" }</em></Toggle>
-                    <Toggle><u>{ "U" }</u></Toggle>
+                    <ToggleGroupItem value="bold"><strong>{ "B" }</strong></ToggleGroupItem>
+                    <ToggleGroupItem value="italic"><em>{ "I" }</em></ToggleGroupItem>
+                    <ToggleGroupItem value="underline"><u>{ "U" }</u></ToggleGroupItem>
                 </ToggleGroup>
             },
             code: r##"<ToggleGroup r#type={ToggleGroupType::Multiple}>
-    <Toggle><strong>{ "B" }</strong></Toggle>
-    <Toggle><em>{ "I" }</em></Toggle>
-    <Toggle><u>{ "U" }</u></Toggle>
+    <ToggleGroupItem value="bold"><strong>{ "B" }</strong></ToggleGroupItem>
+    <ToggleGroupItem value="italic"><em>{ "I" }</em></ToggleGroupItem>
+    <ToggleGroupItem value="underline"><u>{ "U" }</u></ToggleGroupItem>
 </ToggleGroup>"##,
         },
         Example {
@@ -48,18 +48,18 @@ pub fn toggle_group_page() -> Html {
                     r#type={ToggleGroupType::Single}
                     orientation={ToggleGroupOrientation::Vertical}
                 >
-                    <Toggle>{ "Top" }</Toggle>
-                    <Toggle>{ "Middle" }</Toggle>
-                    <Toggle>{ "Bottom" }</Toggle>
+                    <ToggleGroupItem value="top">{ "Top" }</ToggleGroupItem>
+                    <ToggleGroupItem value="middle">{ "Middle" }</ToggleGroupItem>
+                    <ToggleGroupItem value="bottom">{ "Bottom" }</ToggleGroupItem>
                 </ToggleGroup>
             },
             code: r##"<ToggleGroup
     r#type={ToggleGroupType::Single}
     orientation={ToggleGroupOrientation::Vertical}
 >
-    <Toggle>{ "Top" }</Toggle>
-    <Toggle>{ "Middle" }</Toggle>
-    <Toggle>{ "Bottom" }</Toggle>
+    <ToggleGroupItem value="top">{ "Top" }</ToggleGroupItem>
+    <ToggleGroupItem value="middle">{ "Middle" }</ToggleGroupItem>
+    <ToggleGroupItem value="bottom">{ "Bottom" }</ToggleGroupItem>
 </ToggleGroup>"##,
         },
     ];

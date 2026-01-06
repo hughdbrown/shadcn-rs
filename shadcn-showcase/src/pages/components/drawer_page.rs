@@ -1,7 +1,7 @@
 //! Drawer component showcase page
 
 use yew::prelude::*;
-use shadcn_rs::{Drawer, DrawerTrigger, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter, Button, Variant};
+use shadcn_rs::{Drawer, DrawerTrigger, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter, DrawerClose, Button, Variant};
 
 use crate::components::{ComponentPage, Example, PropDoc};
 
@@ -25,8 +25,12 @@ pub fn drawer_page() -> Html {
                             <p>{ "Drawer content goes here..." }</p>
                         </div>
                         <DrawerFooter>
-                            <Button>{ "Submit" }</Button>
-                            <Button variant={Variant::Outline}>{ "Cancel" }</Button>
+                            <DrawerClose>
+                                <Button>{ "Submit" }</Button>
+                            </DrawerClose>
+                            <DrawerClose>
+                                <Button variant={Variant::Outline}>{ "Cancel" }</Button>
+                            </DrawerClose>
                         </DrawerFooter>
                     </DrawerContent>
                 </Drawer>

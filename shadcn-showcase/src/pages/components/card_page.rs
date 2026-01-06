@@ -1,7 +1,7 @@
 //! Card component showcase page
 
 use yew::prelude::*;
-use shadcn_rs::{Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Button, Variant};
+use shadcn_rs::{Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Button, Variant, Input, Label};
 
 use crate::components::{ComponentPage, Example, PropDoc};
 
@@ -10,32 +10,54 @@ use crate::components::{ComponentPage, Example, PropDoc};
 pub fn card_page() -> Html {
     let examples = vec![
         Example {
-            title: "Default",
-            description: "A simple card with header, content, and footer.",
+            title: "Login Form",
+            description: "A card with a login form, similar to shadcn/ui example.",
             demo: html! {
                 <Card class="w-[350px]">
                     <CardHeader>
-                        <CardTitle>{ "Card Title" }</CardTitle>
-                        <CardDescription>{ "Card description goes here." }</CardDescription>
+                        <CardTitle>{ "Login" }</CardTitle>
+                        <CardDescription>{ "Enter your email below to login to your account." }</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <p>{ "Card content goes here." }</p>
+                        <div class="grid gap-4">
+                            <div class="grid gap-2">
+                                <Label html_for="email">{ "Email" }</Label>
+                                <Input id="email" r#type="email" placeholder="m@example.com" />
+                            </div>
+                            <div class="grid gap-2">
+                                <Label html_for="password">{ "Password" }</Label>
+                                <Input id="password" r#type="password" />
+                            </div>
+                        </div>
                     </CardContent>
-                    <CardFooter>
-                        <Button>{ "Action" }</Button>
+                    <CardFooter class="flex-col gap-2">
+                        <Button class="w-full">{ "Sign in" }</Button>
+                        <Button variant={Variant::Outline} class="w-full">{ "Sign in with Google" }</Button>
                     </CardFooter>
                 </Card>
             },
             code: r#"<Card>
     <CardHeader>
-        <CardTitle>{ "Card Title" }</CardTitle>
-        <CardDescription>{ "Card description goes here." }</CardDescription>
+        <CardTitle>{ "Login" }</CardTitle>
+        <CardDescription>{ "Enter your email below to login." }</CardDescription>
     </CardHeader>
     <CardContent>
-        <p>{ "Card content goes here." }</p>
+        <div class="grid gap-4">
+            <div class="grid gap-2">
+                <Label html_for="email">{ "Email" }</Label>
+                <Input id="email" r#type="email" placeholder="m@example.com" />
+            </div>
+            <div class="grid gap-2">
+                <Label html_for="password">{ "Password" }</Label>
+                <Input id="password" r#type="password" />
+            </div>
+        </div>
     </CardContent>
-    <CardFooter>
-        <Button>{ "Action" }</Button>
+    <CardFooter class="flex-col gap-2">
+        <Button class="w-full">{ "Sign in" }</Button>
+        <Button variant={Variant::Outline} class="w-full">
+            { "Sign in with Google" }
+        </Button>
     </CardFooter>
 </Card>"#,
         },

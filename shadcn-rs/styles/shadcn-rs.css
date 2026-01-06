@@ -5,4 +5,4 @@
 
 @import url('./base.css');
 @import url('./utilities.css');
-/* Component styles will be added here as components are implemented */
+@import url('./components.css');

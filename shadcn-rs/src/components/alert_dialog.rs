@@ -49,6 +49,17 @@ use yew::prelude::*;
 use crate::utils::Portal;
 use crate::hooks::{use_escape_key_conditional, use_click_outside_conditional};
 
+/// Context for sharing alert dialog state between parent and children
+#[derive(Clone, PartialEq)]
+pub struct AlertDialogContext {
+    /// Whether the alert dialog is currently open
+    pub is_open: bool,
+    /// Callback to set open state
+    pub set_open: Callback<bool>,
+    /// Callback to toggle open state
+    pub toggle: Callback<()>,
+}
+
 /// Alert Dialog component properties
 #[derive(Properties, PartialEq, Clone)]
 pub struct AlertDialogProps {
@@ -82,16 +93,53 @@ pub struct AlertDialogProps {
 #[function_component(AlertDialog)]
 pub fn alert_dialog(props: &AlertDialogProps) -> Html {
     let AlertDialogProps {
-        open: _,
-        default_open: _,
-        on_open_change: _,
+        open,
+        default_open,
+        on_open_change,
         children,
     } = props.clone();
 
+    // Internal state for uncontrolled mode
+    let internal_open = use_state(|| default_open);
+
+    // Use controlled value if provided (open=true), otherwise use internal state
+    let is_open = if open { open } else { *internal_open };
+
+    let set_open = {
+        let internal_open = internal_open.clone();
+        let on_open_change = on_open_change.clone();
+        Callback::from(move |new_state: bool| {
+            internal_open.set(new_state);
+            if let Some(callback) = on_open_change.as_ref() {
+                callback.emit(new_state);
+            }
+        })
+    };
+
+    let toggle = {
+        let internal_open = internal_open.clone();
+        let on_open_change = on_open_change.clone();
+        Callback::from(move |_: ()| {
+            let new_state = !*internal_open;
+            internal_open.set(new_state);
+            if let Some(callback) = on_open_change.as_ref() {
+                callback.emit(new_state);
+            }
+        })
+    };
+
+    let context = AlertDialogContext {
+        is_open,
+        set_open,
+        toggle,
+    };
+
     html! {
-        <div class="alert-dialog-root">
-            { children }
-        </div>
+        <ContextProvider<AlertDialogContext> context={context}>
+            <div class="alert-dialog-root">
+                { children }
+            </div>
+        </ContextProvider<AlertDialogContext>>
     }
 }
 
@@ -109,8 +157,19 @@ pub struct AlertDialogTriggerProps {
 pub fn alert_dialog_trigger(props: &AlertDialogTriggerProps) -> Html {
     let AlertDialogTriggerProps { children } = props.clone();
 
+    let context = use_context::<AlertDialogContext>();
+
+    let handle_click = {
+        let context = context.clone();
+        Callback::from(move |_: MouseEvent| {
+            if let Some(ctx) = context.as_ref() {
+                ctx.toggle.emit(());
+            }
+        })
+    };
+
     html! {
-        <div class="alert-dialog-trigger">
+        <div class="alert-dialog-trigger" onclick={handle_click}>
             { children }
         </div>
     }
@@ -149,7 +208,7 @@ pub struct AlertDialogContentProps {
 #[function_component(AlertDialogContent)]
 pub fn alert_dialog_content(props: &AlertDialogContentProps) -> Html {
     let AlertDialogContentProps {
-        open,
+        open: prop_open,
         on_close,
         close_on_overlay_click,
         close_on_escape,
@@ -157,32 +216,42 @@ pub fn alert_dialog_content(props: &AlertDialogContentProps) -> Html {
         children,
     } = props.clone();
 
+    let context = use_context::<AlertDialogContext>();
     let content_ref = use_node_ref();
 
-    // Handle Escape key
+    // Use context open state if available, otherwise use prop
+    let is_open = context.as_ref().map(|ctx| ctx.is_open).unwrap_or(prop_open);
+
+    // Handle Escape key - close via context if available
+    let context_esc = context.clone();
     let on_close_esc = on_close.clone();
     use_escape_key_conditional(
         move || {
-            if let Some(callback) = on_close_esc.as_ref() {
+            if let Some(ctx) = context_esc.as_ref() {
+                ctx.set_open.emit(false);
+            } else if let Some(callback) = on_close_esc.as_ref() {
                 callback.emit(());
             }
         },
-        open && close_on_escape,
+        is_open && close_on_escape,
     );
 
-    // Handle click outside
+    // Handle click outside - close via context if available
+    let context_click = context.clone();
     let on_close_click = on_close.clone();
     use_click_outside_conditional(
         content_ref.clone(),
         move || {
-            if let Some(callback) = on_close_click.as_ref() {
+            if let Some(ctx) = context_click.as_ref() {
+                ctx.set_open.emit(false);
+            } else if let Some(callback) = on_close_click.as_ref() {
                 callback.emit(());
             }
         },
-        open && close_on_overlay_click,
+        is_open && close_on_overlay_click,
     );
 
-    if !open {
+    if !is_open {
         return html! {};
     }
 
@@ -348,6 +417,23 @@ pub fn alert_dialog_action(props: &AlertDialogActionProps) -> Html {
         children,
     } = props.clone();
 
+    let context = use_context::<AlertDialogContext>();
+
+    let handle_click = {
+        let context = context.clone();
+        let onclick = onclick.clone();
+        Callback::from(move |e: MouseEvent| {
+            // Call user's onclick first
+            if let Some(callback) = onclick.as_ref() {
+                callback.emit(e);
+            }
+            // Then close the dialog
+            if let Some(ctx) = context.as_ref() {
+                ctx.set_open.emit(false);
+            }
+        })
+    };
+
     let classes: Classes = vec![Classes::from("alert-dialog-action"), class]
         .into_iter()
         .collect();
@@ -356,7 +442,7 @@ pub fn alert_dialog_action(props: &AlertDialogActionProps) -> Html {
         <button
             type="button"
             class={classes}
-            onclick={onclick}
+            onclick={handle_click}
         >
             { children }
         </button>
@@ -389,6 +475,23 @@ pub fn alert_dialog_cancel(props: &AlertDialogCancelProps) -> Html {
         children,
     } = props.clone();
 
+    let context = use_context::<AlertDialogContext>();
+
+    let handle_click = {
+        let context = context.clone();
+        let onclick = onclick.clone();
+        Callback::from(move |e: MouseEvent| {
+            // Call user's onclick first
+            if let Some(callback) = onclick.as_ref() {
+                callback.emit(e);
+            }
+            // Then close the dialog
+            if let Some(ctx) = context.as_ref() {
+                ctx.set_open.emit(false);
+            }
+        })
+    };
+
     let classes: Classes = vec![Classes::from("alert-dialog-cancel"), class]
         .into_iter()
         .collect();
@@ -397,7 +500,7 @@ pub fn alert_dialog_cancel(props: &AlertDialogCancelProps) -> Html {
         <button
             type="button"
             class={classes}
-            onclick={onclick}
+            onclick={handle_click}
         >
             { children }
         </button>

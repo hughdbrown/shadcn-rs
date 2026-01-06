@@ -98,7 +98,26 @@ pub fn toggle(props: &ToggleProps) -> Html {
         children,
     } = props.clone();
 
-    let is_pressed = pressed.unwrap_or(default_pressed);
+    // Internal state for uncontrolled mode
+    let internal_pressed = use_state(|| default_pressed);
+
+    // Use controlled value if provided, otherwise use internal state
+    let is_pressed = pressed.unwrap_or(*internal_pressed);
+
+    // Handle click events
+    let onclick = {
+        let internal_pressed = internal_pressed.clone();
+        let ontoggle = ontoggle.clone();
+        Callback::from(move |e: MouseEvent| {
+            if !disabled {
+                let new_state = !*internal_pressed;
+                internal_pressed.set(new_state);
+                if let Some(callback) = ontoggle.as_ref() {
+                    callback.emit(e);
+                }
+            }
+        })
+    };
 
     let size_class = match size {
         Size::Xs => "toggle-xs",
@@ -137,7 +156,7 @@ pub fn toggle(props: &ToggleProps) -> Html {
         <button
             type="button"
             class={classes}
-            onclick={ontoggle}
+            onclick={onclick}
             disabled={disabled}
             aria-pressed={is_pressed.to_string()}
         >

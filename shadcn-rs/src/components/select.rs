@@ -216,15 +216,31 @@ pub fn select(props: &SelectProps) -> Html {
     }
 }
 
-// Advanced Select Components (Custom Implementation)
+// Advanced Select Components (Custom Implementation with Context)
 
-use crate::utils::Portal;
 use crate::hooks::{use_escape_key_conditional, use_click_outside_conditional};
 
-/// Advanced select container properties
+/// Context for sharing select state with children
+#[derive(Clone, PartialEq)]
+pub struct SelectContext {
+    /// Whether the dropdown is open
+    pub is_open: bool,
+    /// Currently selected value
+    pub selected_value: Option<AttrValue>,
+    /// Display label for the selected value
+    pub selected_label: Option<AttrValue>,
+    /// Callback to toggle open/close state
+    pub toggle_open: Callback<()>,
+    /// Callback to select a value (value, label)
+    pub select_value: Callback<(AttrValue, AttrValue)>,
+    /// Whether the select is disabled
+    pub disabled: bool,
+}
+
+/// Advanced select container properties (also used as the main Select when using compound components)
 #[derive(Properties, PartialEq, Clone)]
 pub struct SelectAdvancedProps {
-    /// Selected value
+    /// Selected value (controlled)
     #[prop_or_default]
     pub value: Option<AttrValue>,
 
@@ -232,9 +248,13 @@ pub struct SelectAdvancedProps {
     #[prop_or_default]
     pub default_value: Option<AttrValue>,
 
-    /// Whether the select is open
+    /// Whether the select is open (controlled)
+    #[prop_or_default]
+    pub open: Option<bool>,
+
+    /// Whether the select is disabled
     #[prop_or(false)]
-    pub open: bool,
+    pub disabled: bool,
 
     /// Callback when open state changes
     #[prop_or_default]
@@ -255,26 +275,84 @@ pub struct SelectAdvancedProps {
 /// Advanced Select container component
 ///
 /// Container for custom select with trigger and content.
+/// This component manages the open/close state and selected value.
 #[function_component(SelectAdvanced)]
 pub fn select_advanced(props: &SelectAdvancedProps) -> Html {
     let SelectAdvancedProps {
-        value: _,
-        default_value: _,
-        open: _,
-        on_open_change: _,
-        on_value_change: _,
+        value,
+        default_value,
+        open,
+        disabled,
+        on_open_change,
+        on_value_change,
         class,
         children,
     } = props.clone();
 
-    let classes: Classes = vec![Classes::from("select-advanced"), class]
-        .into_iter()
-        .collect();
+    // Internal state for open/close
+    let internal_open = use_state(|| false);
+    let is_open = open.unwrap_or(*internal_open);
+
+    // Internal state for selected value
+    let internal_value = use_state(|| default_value.clone());
+    let internal_label = use_state(|| Option::<AttrValue>::None);
+    let selected_value = value.clone().or_else(|| (*internal_value).clone());
+    let selected_label = (*internal_label).clone();
+
+    let toggle_open = {
+        let internal_open = internal_open.clone();
+        let on_open_change = on_open_change.clone();
+        Callback::from(move |_: ()| {
+            let new_state = !*internal_open;
+            internal_open.set(new_state);
+            if let Some(callback) = on_open_change.as_ref() {
+                callback.emit(new_state);
+            }
+        })
+    };
+
+    let select_value = {
+        let internal_value = internal_value.clone();
+        let internal_label = internal_label.clone();
+        let internal_open = internal_open.clone();
+        let on_value_change = on_value_change.clone();
+        let on_open_change = on_open_change.clone();
+        Callback::from(move |(val, label): (AttrValue, AttrValue)| {
+            internal_value.set(Some(val.clone()));
+            internal_label.set(Some(label));
+            internal_open.set(false);
+            if let Some(callback) = on_value_change.as_ref() {
+                callback.emit(val);
+            }
+            if let Some(callback) = on_open_change.as_ref() {
+                callback.emit(false);
+            }
+        })
+    };
+
+    let context = SelectContext {
+        is_open,
+        selected_value,
+        selected_label,
+        toggle_open,
+        select_value,
+        disabled,
+    };
+
+    let classes: Classes = vec![
+        Classes::from("select-advanced"),
+        if is_open { Classes::from("select-open") } else { Classes::new() },
+        class
+    ]
+    .into_iter()
+    .collect();
 
     html! {
-        <div class={classes}>
-            { children }
-        </div>
+        <ContextProvider<SelectContext> context={context}>
+            <div class={classes}>
+                { children }
+            </div>
+        </ContextProvider<SelectContext>>
     }
 }
 
@@ -299,14 +377,29 @@ pub struct SelectTriggerProps {
 #[function_component(SelectTrigger)]
 pub fn select_trigger(props: &SelectTriggerProps) -> Html {
     let SelectTriggerProps {
-        disabled,
+        disabled: prop_disabled,
         class,
         children,
     } = props.clone();
 
+    let context = use_context::<SelectContext>();
+    let is_open = context.as_ref().map(|c| c.is_open).unwrap_or(false);
+    let is_disabled = prop_disabled || context.as_ref().map(|c| c.disabled).unwrap_or(false);
+
+    let onclick = {
+        let context = context.clone();
+        Callback::from(move |_: MouseEvent| {
+            if let Some(ctx) = context.as_ref() {
+                if !ctx.disabled {
+                    ctx.toggle_open.emit(());
+                }
+            }
+        })
+    };
+
     let classes: Classes = vec![
         Classes::from("select-trigger"),
-        if disabled {
+        if is_disabled {
             Classes::from("select-trigger-disabled")
         } else {
             Classes::new()
@@ -320,12 +413,16 @@ pub fn select_trigger(props: &SelectTriggerProps) -> Html {
         <button
             type="button"
             role="combobox"
-            aria-expanded="false"
+            aria-expanded={is_open.to_string()}
             aria-haspopup="listbox"
-            disabled={disabled}
+            disabled={is_disabled}
             class={classes}
+            onclick={onclick}
         >
             { children }
+            <svg class="select-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m6 9 6 6 6-6"/>
+            </svg>
         </button>
     }
 }
@@ -357,6 +454,9 @@ pub fn select_value(props: &SelectValueProps) -> Html {
         children,
     } = props.clone();
 
+    let context = use_context::<SelectContext>();
+    let selected_label = context.as_ref().and_then(|c| c.selected_label.clone());
+
     let classes: Classes = vec![Classes::from("select-value"), class]
         .into_iter()
         .collect();
@@ -365,7 +465,9 @@ pub fn select_value(props: &SelectValueProps) -> Html {
 
     html! {
         <span class={classes}>
-            if has_children {
+            if let Some(label) = selected_label {
+                { label }
+            } else if has_children {
                 { children }
             } else if let Some(placeholder_text) = placeholder {
                 <span class="select-placeholder">{ placeholder_text }</span>
@@ -377,9 +479,9 @@ pub fn select_value(props: &SelectValueProps) -> Html {
 /// Select content properties
 #[derive(Properties, PartialEq, Clone)]
 pub struct SelectContentProps {
-    /// Whether the content is open
-    #[prop_or(false)]
-    pub open: bool,
+    /// Whether the content is open (controlled, overrides context)
+    #[prop_or_default]
+    pub open: Option<bool>,
 
     /// Callback to close the content
     #[prop_or_default]
@@ -407,7 +509,7 @@ pub struct SelectContentProps {
 #[function_component(SelectContent)]
 pub fn select_content(props: &SelectContentProps) -> Html {
     let SelectContentProps {
-        open,
+        open: prop_open,
         on_close,
         close_on_outside_click,
         close_on_escape,
@@ -415,32 +517,42 @@ pub fn select_content(props: &SelectContentProps) -> Html {
         children,
     } = props.clone();
 
+    let context = use_context::<SelectContext>();
     let content_ref = use_node_ref();
 
+    // Use prop if provided, otherwise use context
+    let is_open = prop_open.unwrap_or_else(|| context.as_ref().map(|c| c.is_open).unwrap_or(false));
+
     // Handle Escape key
+    let toggle_open = context.as_ref().map(|c| c.toggle_open.clone());
     let on_close_esc = on_close.clone();
     use_escape_key_conditional(
         move || {
             if let Some(callback) = on_close_esc.as_ref() {
                 callback.emit(());
+            } else if let Some(toggle) = toggle_open.as_ref() {
+                toggle.emit(());
             }
         },
-        open && close_on_escape,
+        is_open && close_on_escape,
     );
 
     // Handle click outside
+    let toggle_open_click = context.as_ref().map(|c| c.toggle_open.clone());
     let on_close_click = on_close.clone();
     use_click_outside_conditional(
         content_ref.clone(),
         move || {
             if let Some(callback) = on_close_click.as_ref() {
                 callback.emit(());
+            } else if let Some(toggle) = toggle_open_click.as_ref() {
+                toggle.emit(());
             }
         },
-        open && close_on_outside_click,
+        is_open && close_on_outside_click,
     );
 
-    if !open {
+    if !is_open {
         return html! {};
     }
 
@@ -449,15 +561,13 @@ pub fn select_content(props: &SelectContentProps) -> Html {
         .collect();
 
     html! {
-        <Portal>
-            <div
-                ref={content_ref}
-                class={classes}
-                role="listbox"
-            >
-                { children }
-            </div>
-        </Portal>
+        <div
+            ref={content_ref}
+            class={classes}
+            role="listbox"
+        >
+            { children }
+        </div>
     }
 }
 
@@ -495,25 +605,51 @@ pub fn select_item(props: &SelectItemProps) -> Html {
     let SelectItemProps {
         value,
         disabled,
-        selected,
+        selected: prop_selected,
         on_select,
         class,
         children,
     } = props.clone();
 
-    let onclick = on_select.map(|cb| {
+    let context = use_context::<SelectContext>();
+    let label_ref = use_node_ref();
+
+    // Check if this item is selected via context
+    let is_selected = prop_selected || context.as_ref()
+        .and_then(|c| c.selected_value.as_ref())
+        .map(|v| *v == value)
+        .unwrap_or(false);
+
+    let onclick = {
         let value = value.clone();
+        let context = context.clone();
+        let on_select = on_select.clone();
+        let label_ref = label_ref.clone();
         Callback::from(move |e: MouseEvent| {
             if !disabled {
                 e.prevent_default();
-                cb.emit(value.clone());
+
+                // Get text content from the element for the label
+                let label_text = label_ref.cast::<web_sys::Element>()
+                    .and_then(|el| el.text_content())
+                    .unwrap_or_else(|| value.to_string());
+
+                // Notify context
+                if let Some(ctx) = context.as_ref() {
+                    ctx.select_value.emit((value.clone(), AttrValue::from(label_text)));
+                }
+
+                // Also call custom handler if provided
+                if let Some(cb) = on_select.as_ref() {
+                    cb.emit(value.clone());
+                }
             }
         })
-    });
+    };
 
     let classes: Classes = vec![
         Classes::from("select-item"),
-        if selected {
+        if is_selected {
             Classes::from("select-item-selected")
         } else {
             Classes::new()
@@ -530,12 +666,18 @@ pub fn select_item(props: &SelectItemProps) -> Html {
 
     html! {
         <div
+            ref={label_ref}
             class={classes}
             role="option"
-            aria-selected={selected.to_string()}
+            aria-selected={is_selected.to_string()}
             aria-disabled={disabled.to_string()}
             onclick={onclick}
         >
+            if is_selected {
+                <svg class="select-item-check" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+            }
             { children }
         </div>
     }
@@ -785,14 +927,15 @@ mod tests {
         let props = SelectAdvancedProps {
             value: None,
             default_value: None,
-            open: false,
+            open: None,
+            disabled: false,
             on_open_change: None,
             on_value_change: None,
             class: Classes::new(),
             children: Children::new(vec![]),
         };
 
-        assert!(!props.open);
+        assert!(props.open.is_none());
         assert!(props.value.is_none());
     }
 
@@ -852,7 +995,7 @@ mod tests {
     #[test]
     fn test_select_content_close_behaviors() {
         let props = SelectContentProps {
-            open: true,
+            open: Some(true),
             on_close: None,
             close_on_outside_click: true,
             close_on_escape: true,
@@ -860,7 +1003,7 @@ mod tests {
             children: Children::new(vec![]),
         };
 
-        assert!(props.open);
+        assert_eq!(props.open, Some(true));
         assert!(props.close_on_outside_click);
         assert!(props.close_on_escape);
     }

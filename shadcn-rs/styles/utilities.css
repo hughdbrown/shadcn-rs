@@ -1,76 +1,10 @@
 /**
  * Utility classes for shadcn-rs
+ *
+ * Note: Size and variant utilities are intentionally NOT defined here
+ * to avoid conflicts with component-specific styles in components.css.
+ * Components like Button define their own .btn.size-md, .btn.variant-primary etc.
  */
-
-/* Size utilities */
-.size-xs {
-  height: 1.5rem;
-  font-size: var(--text-xs);
-}
-
-.size-sm {
-  height: 2rem;
-  font-size: var(--text-sm);
-}
-
-.size-md {
-  height: 2.5rem;
-  font-size: var(--text-base);
-}
-
-.size-lg {
-  height: 3rem;
-  font-size: var(--text-lg);
-}
-
-.size-xl {
-  height: 3.5rem;
-  font-size: var(--text-xl);
-}
-
-.size-2xl {
-  height: 4rem;
-  font-size: var(--text-2xl);
-}
-
-/* Variant utilities */
-.variant-default {
-  background-color: hsl(var(--color-background));
-  color: hsl(var(--color-foreground));
-  border: 1px solid hsl(var(--color-border));
-}
-
-.variant-primary {
-  background-color: hsl(var(--color-primary));
-  color: hsl(var(--color-primary-foreground));
-}
-
-.variant-secondary {
-  background-color: hsl(var(--color-secondary));
-  color: hsl(var(--color-secondary-foreground));
-}
-
-.variant-destructive {
-  background-color: hsl(var(--color-destructive));
-  color: hsl(var(--color-destructive-foreground));
-}
-
-.variant-outline {
-  border: 1px solid hsl(var(--color-border));
-  background-color: transparent;
-  color: hsl(var(--color-foreground));
-}
-
-.variant-ghost {
-  background-color: transparent;
-  color: hsl(var(--color-foreground));
-}
-
-.variant-link {
-  background-color: transparent;
-  color: hsl(var(--color-primary));
-  text-decoration: underline;
-}
 
 /* Color utilities */
 .color-default {

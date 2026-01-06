@@ -34,6 +34,15 @@ use crate::types::Position;
 use crate::utils::Portal;
 use crate::hooks::use_escape_key_conditional;
 
+/// Context for sharing hover card state between parent and children
+#[derive(Clone, PartialEq)]
+pub struct HoverCardContext {
+    /// Whether the hover card is currently open
+    pub is_open: bool,
+    /// Callback to set open state
+    pub set_open: Callback<bool>,
+}
+
 /// Hover Card component properties
 #[derive(Properties, PartialEq, Clone)]
 pub struct HoverCardProps {
@@ -73,18 +82,42 @@ pub struct HoverCardProps {
 #[function_component(HoverCard)]
 pub fn hover_card(props: &HoverCardProps) -> Html {
     let HoverCardProps {
-        open: _,
-        default_open: _,
-        on_open_change: _,
+        open,
+        default_open,
+        on_open_change,
         open_delay: _,
         close_delay: _,
         children,
     } = props.clone();
 
+    // Internal state for uncontrolled mode
+    let internal_open = use_state(|| default_open);
+
+    // Use controlled value if provided (open=true), otherwise use internal state
+    let is_open = if open { open } else { *internal_open };
+
+    let set_open = {
+        let internal_open = internal_open.clone();
+        let on_open_change = on_open_change.clone();
+        Callback::from(move |new_state: bool| {
+            internal_open.set(new_state);
+            if let Some(callback) = on_open_change.as_ref() {
+                callback.emit(new_state);
+            }
+        })
+    };
+
+    let context = HoverCardContext {
+        is_open,
+        set_open,
+    };
+
     html! {
-        <div class="hover-card-root">
-            { children }
-        </div>
+        <ContextProvider<HoverCardContext> context={context}>
+            <div class="hover-card-root">
+                { children }
+            </div>
+        </ContextProvider<HoverCardContext>>
     }
 }
 
@@ -106,12 +139,57 @@ pub struct HoverCardTriggerProps {
 pub fn hover_card_trigger(props: &HoverCardTriggerProps) -> Html {
     let HoverCardTriggerProps { class, children } = props.clone();
 
+    let context = use_context::<HoverCardContext>();
+
+    let on_mouse_enter = {
+        let context = context.clone();
+        Callback::from(move |_: MouseEvent| {
+            if let Some(ctx) = context.as_ref() {
+                ctx.set_open.emit(true);
+            }
+        })
+    };
+
+    let on_mouse_leave = {
+        let context = context.clone();
+        Callback::from(move |_: MouseEvent| {
+            if let Some(ctx) = context.as_ref() {
+                ctx.set_open.emit(false);
+            }
+        })
+    };
+
+    let on_focus = {
+        let context = context.clone();
+        Callback::from(move |_: FocusEvent| {
+            if let Some(ctx) = context.as_ref() {
+                ctx.set_open.emit(true);
+            }
+        })
+    };
+
+    let on_blur = {
+        let context = context.clone();
+        Callback::from(move |_: FocusEvent| {
+            if let Some(ctx) = context.as_ref() {
+                ctx.set_open.emit(false);
+            }
+        })
+    };
+
     let classes: Classes = vec![Classes::from("hover-card-trigger"), class]
         .into_iter()
         .collect();
 
     html! {
-        <div class={classes} tabindex="0">
+        <div
+            class={classes}
+            tabindex="0"
+            onmouseenter={on_mouse_enter}
+            onmouseleave={on_mouse_leave}
+            onfocus={on_focus}
+            onblur={on_blur}
+        >
             { children }
         </div>
     }
@@ -158,7 +236,7 @@ pub struct HoverCardContentProps {
 #[function_component(HoverCardContent)]
 pub fn hover_card_content(props: &HoverCardContentProps) -> Html {
     let HoverCardContentProps {
-        open,
+        open: prop_open,
         on_close,
         position,
         align,
@@ -168,18 +246,26 @@ pub fn hover_card_content(props: &HoverCardContentProps) -> Html {
         children,
     } = props.clone();
 
-    // Handle Escape key
+    let context = use_context::<HoverCardContext>();
+
+    // Use context open state if available, otherwise use prop
+    let is_open = context.as_ref().map(|ctx| ctx.is_open).unwrap_or(prop_open);
+
+    // Handle Escape key - close via context if available
+    let context_esc = context.clone();
     let on_close_esc = on_close.clone();
     use_escape_key_conditional(
         move || {
-            if let Some(callback) = on_close_esc.as_ref() {
+            if let Some(ctx) = context_esc.as_ref() {
+                ctx.set_open.emit(false);
+            } else if let Some(callback) = on_close_esc.as_ref() {
                 callback.emit(());
             }
         },
-        open && close_on_escape,
+        is_open && close_on_escape,
     );
 
-    if !open {
+    if !is_open {
         return html! {};
     }
 

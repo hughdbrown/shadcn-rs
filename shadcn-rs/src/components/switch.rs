@@ -123,7 +123,7 @@ pub struct SwitchProps {
 pub fn switch(props: &SwitchProps) -> Html {
     let SwitchProps {
         checked,
-        default_checked: _,
+        default_checked,
         size,
         disabled,
         required,
@@ -140,37 +140,53 @@ pub fn switch(props: &SwitchProps) -> Html {
         node_ref,
     } = props.clone();
 
+    // Internal state for uncontrolled mode
+    let internal_checked = use_state(|| default_checked);
+
+    // Use controlled value if provided, otherwise use internal state
+    let is_checked = if checked { checked } else { *internal_checked };
+
     // Handle click events
-    let onclick = onchange.clone().map(|callback| {
+    let onclick = {
+        let internal_checked = internal_checked.clone();
+        let onchange = onchange.clone();
         Callback::from(move |e: MouseEvent| {
             if !disabled {
-                // Convert MouseEvent to Event
-                let event: Event = e.into();
-                callback.emit(event);
-            }
-        })
-    });
-
-    // Handle keyboard events (Space/Enter)
-    let onkeydown = onchange.map(|callback| {
-        Callback::from(move |e: KeyboardEvent| {
-            if !disabled {
-                let key = e.key();
-                if key == " " || key == "Enter" {
-                    e.prevent_default();
-                    // Convert KeyboardEvent to Event
+                let new_state = !*internal_checked;
+                internal_checked.set(new_state);
+                if let Some(callback) = onchange.as_ref() {
                     let event: Event = e.into();
                     callback.emit(event);
                 }
             }
         })
-    });
+    };
+
+    // Handle keyboard events (Space/Enter)
+    let onkeydown = {
+        let internal_checked = internal_checked.clone();
+        let onchange = onchange.clone();
+        Callback::from(move |e: KeyboardEvent| {
+            if !disabled {
+                let key = e.key();
+                if key == " " || key == "Enter" {
+                    e.prevent_default();
+                    let new_state = !*internal_checked;
+                    internal_checked.set(new_state);
+                    if let Some(callback) = onchange.as_ref() {
+                        let event: Event = e.into();
+                        callback.emit(event);
+                    }
+                }
+            }
+        })
+    };
 
     // Build class names
     let classes = class_names(&[
         Some("switch"),
         Some(size.to_class()),
-        if checked { Some("switch-checked") } else { None },
+        if is_checked { Some("switch-checked") } else { None },
         if disabled { Some("switch-disabled") } else { None },
     ]);
 
@@ -183,7 +199,7 @@ pub fn switch(props: &SwitchProps) -> Html {
             type="button"
             role="switch"
             class={final_classes}
-            aria-checked={checked.to_string()}
+            aria-checked={is_checked.to_string()}
             aria-label={aria_label}
             aria-describedby={aria_describedby}
             disabled={disabled}
@@ -201,7 +217,7 @@ pub fn switch(props: &SwitchProps) -> Html {
                     type="checkbox"
                     name={name_value}
                     value={value}
-                    checked={checked}
+                    checked={is_checked}
                     required={required}
                     tabindex="-1"
                     style="position: absolute; pointer-events: none; opacity: 0; margin: 0;"

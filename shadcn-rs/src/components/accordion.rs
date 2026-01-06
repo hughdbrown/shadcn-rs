@@ -30,7 +30,7 @@
 //! ```
 
 use yew::prelude::*;
-use crate::hooks::use_toggle;
+use std::collections::HashSet;
 
 /// Accordion type
 #[derive(Debug, Clone, PartialEq)]
@@ -39,6 +39,30 @@ pub enum AccordionType {
     Single,
     /// Multiple items can be open simultaneously
     Multiple,
+}
+
+/// Context for sharing accordion state between parent and children
+#[derive(Clone, PartialEq)]
+pub struct AccordionContext {
+    /// Currently open item values
+    pub open_items: HashSet<String>,
+    /// Callback to toggle an item
+    pub toggle_item: Callback<String>,
+    /// Accordion type (single or multiple)
+    pub accordion_type: AccordionType,
+    /// Whether items can be collapsed
+    pub collapsible: bool,
+}
+
+/// Context for sharing item value with trigger and content
+#[derive(Clone, PartialEq)]
+pub struct AccordionItemContext {
+    /// The value of this accordion item
+    pub value: String,
+    /// Whether this item is currently open
+    pub is_open: bool,
+    /// Callback to toggle this item
+    pub toggle: Callback<()>,
 }
 
 /// Accordion component properties
@@ -84,23 +108,89 @@ pub struct AccordionProps {
 #[function_component(Accordion)]
 pub fn accordion(props: &AccordionProps) -> Html {
     let AccordionProps {
-        accordion_type: _,
-        collapsible: _,
-        default_value: _,
-        value: _,
-        on_value_change: _,
+        accordion_type,
+        collapsible,
+        default_value,
+        value,
+        on_value_change,
         class,
         children,
     } = props.clone();
+
+    // Initialize open items from default_value or value
+    let initial_open: HashSet<String> = default_value
+        .as_ref()
+        .or(value.as_ref())
+        .map(|v| {
+            let mut set = HashSet::new();
+            set.insert(v.to_string());
+            set
+        })
+        .unwrap_or_default();
+
+    let open_items = use_state(|| initial_open);
+
+    // Sync with controlled value prop
+    {
+        let open_items = open_items.clone();
+        use_effect_with(value.clone(), move |value| {
+            if let Some(v) = value {
+                let mut set = HashSet::new();
+                set.insert(v.to_string());
+                open_items.set(set);
+            }
+        });
+    }
+
+    let toggle_item = {
+        let open_items = open_items.clone();
+        let accordion_type = accordion_type.clone();
+        let on_value_change = on_value_change.clone();
+        Callback::from(move |item_value: String| {
+            let mut new_items = (*open_items).clone();
+
+            if new_items.contains(&item_value) {
+                // Only remove if collapsible is true or there are multiple items
+                if collapsible || new_items.len() > 1 {
+                    new_items.remove(&item_value);
+                }
+            } else {
+                match accordion_type {
+                    AccordionType::Single => {
+                        new_items.clear();
+                        new_items.insert(item_value.clone());
+                    }
+                    AccordionType::Multiple => {
+                        new_items.insert(item_value.clone());
+                    }
+                }
+            }
+
+            open_items.set(new_items);
+
+            if let Some(callback) = on_value_change.as_ref() {
+                callback.emit(item_value);
+            }
+        })
+    };
+
+    let context = AccordionContext {
+        open_items: (*open_items).clone(),
+        toggle_item,
+        accordion_type: accordion_type.clone(),
+        collapsible,
+    };
 
     let classes: Classes = vec![Classes::from("accordion"), class]
         .into_iter()
         .collect();
 
     html! {
-        <div class={classes} data-orientation="vertical">
-            { children }
-        </div>
+        <ContextProvider<AccordionContext> context={context}>
+            <div class={classes} data-orientation="vertical">
+                { children }
+            </div>
+        </ContextProvider<AccordionContext>>
     }
 }
 
@@ -134,10 +224,39 @@ pub fn accordion_item(props: &AccordionItemProps) -> Html {
         children,
     } = props.clone();
 
+    let accordion_ctx = use_context::<AccordionContext>();
+    let is_open = accordion_ctx
+        .as_ref()
+        .map(|ctx| ctx.open_items.contains(&value.to_string()))
+        .unwrap_or(false);
+
+    let toggle = {
+        let value = value.to_string();
+        let accordion_ctx = accordion_ctx.clone();
+        Callback::from(move |_: ()| {
+            if let Some(ctx) = accordion_ctx.as_ref() {
+                if !disabled {
+                    ctx.toggle_item.emit(value.clone());
+                }
+            }
+        })
+    };
+
+    let item_context = AccordionItemContext {
+        value: value.to_string(),
+        is_open,
+        toggle,
+    };
+
     let classes: Classes = vec![
         Classes::from("accordion-item"),
         if disabled {
             Classes::from("accordion-item-disabled")
+        } else {
+            Classes::new()
+        },
+        if is_open {
+            Classes::from("accordion-item-open")
         } else {
             Classes::new()
         },
@@ -147,9 +266,11 @@ pub fn accordion_item(props: &AccordionItemProps) -> Html {
     .collect();
 
     html! {
-        <div class={classes} data-value={value}>
-            { children }
-        </div>
+        <ContextProvider<AccordionItemContext> context={item_context}>
+            <div class={classes} data-value={value.clone()} data-state={if is_open { "open" } else { "closed" }}>
+                { children }
+            </div>
+        </ContextProvider<AccordionItemContext>>
     }
 }
 
@@ -171,7 +292,17 @@ pub struct AccordionTriggerProps {
 pub fn accordion_trigger(props: &AccordionTriggerProps) -> Html {
     let AccordionTriggerProps { class, children } = props.clone();
 
-    let (is_open, toggle, _) = use_toggle(false);
+    let item_ctx = use_context::<AccordionItemContext>();
+    let is_open = item_ctx.as_ref().map(|ctx| ctx.is_open).unwrap_or(false);
+
+    let handle_click = {
+        let item_ctx = item_ctx.clone();
+        Callback::from(move |_: MouseEvent| {
+            if let Some(ctx) = item_ctx.as_ref() {
+                ctx.toggle.emit(());
+            }
+        })
+    };
 
     let classes: Classes = vec![
         Classes::from("accordion-trigger"),
@@ -190,7 +321,7 @@ pub fn accordion_trigger(props: &AccordionTriggerProps) -> Html {
             type="button"
             class={classes}
             aria-expanded={is_open.to_string()}
-            onclick={move |_| toggle.emit(())}
+            onclick={handle_click}
         >
             <span>{ children }</span>
             <span class="accordion-chevron" aria-hidden="true">
@@ -218,12 +349,19 @@ pub struct AccordionContentProps {
 pub fn accordion_content(props: &AccordionContentProps) -> Html {
     let AccordionContentProps { class, children } = props.clone();
 
+    let item_ctx = use_context::<AccordionItemContext>();
+    let is_open = item_ctx.as_ref().map(|ctx| ctx.is_open).unwrap_or(false);
+
+    if !is_open {
+        return html! {};
+    }
+
     let classes: Classes = vec![Classes::from("accordion-content"), class]
         .into_iter()
         .collect();
 
     html! {
-        <div class={classes} role="region">
+        <div class={classes} role="region" aria-hidden={(!is_open).to_string()}>
             <div class="accordion-content-text">
                 { children }
             </div>

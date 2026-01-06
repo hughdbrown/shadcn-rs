@@ -122,12 +122,23 @@ pub fn slider(props: &SliderProps) -> Html {
         value.clone().or_else(|| default_value.clone()).unwrap_or_else(|| vec![50.0])
     });
 
-    let current_value = value.unwrap_or_else(|| (*internal_value).clone());
+    // Sync with controlled value prop
+    {
+        let internal_value = internal_value.clone();
+        use_effect_with(value.clone(), move |value| {
+            if let Some(v) = value {
+                internal_value.set(v.clone());
+            }
+        });
+    }
+
+    let current_value = value.clone().unwrap_or_else(|| (*internal_value).clone());
     let num_handles = current_value.len();
 
     // Handle value change
     let handle_change = {
         let internal_value = internal_value.clone();
+        let onchange = onchange.clone();
         Callback::from(move |new_values: Vec<f64>| {
             internal_value.set(new_values.clone());
             if let Some(callback) = onchange.as_ref() {
@@ -182,6 +193,49 @@ pub fn slider(props: &SliderProps) -> Html {
         String::from("width: 0")
     };
 
+    // For a single value, use a simple native range input
+    if num_handles == 1 {
+        let current_val = current_value[0];
+        let handle_input = {
+            let handle_change = handle_change.clone();
+            Callback::from(move |e: InputEvent| {
+                if disabled {
+                    return;
+                }
+                let target: web_sys::HtmlInputElement = e.target_unchecked_into();
+                if let Ok(new_val) = target.value().parse::<f64>() {
+                    handle_change.emit(vec![new_val]);
+                }
+            })
+        };
+
+        return html! {
+            <div class={final_classes}>
+                <div class="slider-track">
+                    <div class="slider-track-fill" style={track_fill_style} />
+                    {marks}
+                </div>
+                <input
+                    type="range"
+                    class="slider-input"
+                    min={min.to_string()}
+                    max={max.to_string()}
+                    step={step.to_string()}
+                    value={current_val.to_string()}
+                    disabled={disabled}
+                    oninput={handle_input}
+                    aria-valuemin={min.to_string()}
+                    aria-valuemax={max.to_string()}
+                    aria-valuenow={current_val.to_string()}
+                    aria-label={aria_label.clone()}
+                    aria-labelledby={aria_labelledby.clone()}
+                    aria-disabled={disabled.to_string()}
+                />
+            </div>
+        };
+    }
+
+    // For dual-handle sliders, use two range inputs
     html! {
         <div class={final_classes}>
             <div class="slider-track">
@@ -190,7 +244,6 @@ pub fn slider(props: &SliderProps) -> Html {
             </div>
             {
                 current_value.iter().enumerate().map(|(index, &val)| {
-                    let percent = value_to_percent(val);
                     let handle_change = handle_change.clone();
                     let current_value = current_value.clone();
 
@@ -199,37 +252,31 @@ pub fn slider(props: &SliderProps) -> Html {
                             return;
                         }
                         let target: web_sys::HtmlInputElement = e.target_unchecked_into();
-                        let new_val = target.value().parse::<f64>().unwrap_or(min);
-
-                        let mut new_values = current_value.clone();
-                        new_values[index] = new_val;
-                        handle_change.emit(new_values);
+                        if let Ok(new_val) = target.value().parse::<f64>() {
+                            let mut new_values = current_value.clone();
+                            new_values[index] = new_val;
+                            handle_change.emit(new_values);
+                        }
                     });
 
                     html! {
-                        <div
+                        <input
                             key={index}
-                            class="slider-handle-wrapper"
-                            style={format!("left: {}%", percent)}
-                        >
-                            <input
-                                type="range"
-                                class="slider-handle"
-                                min={min.to_string()}
-                                max={max.to_string()}
-                                step={step.to_string()}
-                                value={val.to_string()}
-                                disabled={disabled}
-                                {oninput}
-                                role="slider"
-                                aria-valuemin={min.to_string()}
-                                aria-valuemax={max.to_string()}
-                                aria-valuenow={val.to_string()}
-                                aria-label={aria_label.clone()}
-                                aria-labelledby={aria_labelledby.clone()}
-                                aria-disabled={disabled.to_string()}
-                            />
-                        </div>
+                            type="range"
+                            class={format!("slider-input slider-input-{}", index)}
+                            min={min.to_string()}
+                            max={max.to_string()}
+                            step={step.to_string()}
+                            value={val.to_string()}
+                            disabled={disabled}
+                            {oninput}
+                            aria-valuemin={min.to_string()}
+                            aria-valuemax={max.to_string()}
+                            aria-valuenow={val.to_string()}
+                            aria-label={aria_label.clone()}
+                            aria-labelledby={aria_labelledby.clone()}
+                            aria-disabled={disabled.to_string()}
+                        />
                     }
                 }).collect::<Html>()
             }
