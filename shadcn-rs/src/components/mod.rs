@@ -34,7 +34,15 @@ pub mod resizable;
 pub mod scroll_area;
 pub mod table;
 
-// Tier 4 - Overlay & Interactive components
+// Tier 4 - Interactive components
+pub mod button_group;
+pub mod collapsible;
+pub mod field;
+pub mod input_group;
+pub mod toggle;
+pub mod toggle_group;
+
+// Tier 5 - Overlay & Interactive components
 pub mod accordion;
 pub mod dialog;
 pub mod drawer;
@@ -93,6 +101,14 @@ pub use scroll_area::{ScrollArea, ScrollDirection};
 pub use table::{Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow};
 
 // Re-export Tier 4 components
+pub use button_group::{ButtonGroup, ButtonGroupOrientation};
+pub use collapsible::{Collapsible, CollapsibleContent, CollapsibleTrigger};
+pub use field::Field;
+pub use input_group::InputGroup;
+pub use toggle::{Toggle, ToggleVariant};
+pub use toggle_group::{ToggleGroup, ToggleGroupOrientation, ToggleGroupType};
+
+// Re-export Tier 5 components
 pub use accordion::{Accordion, AccordionContent, AccordionItem, AccordionTrigger, AccordionType};
 pub use dialog::{
     Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
