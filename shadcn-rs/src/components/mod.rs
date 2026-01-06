@@ -4,11 +4,15 @@
 
 // Tier 1 - Foundational components
 pub mod alert;
+pub mod avatar;
 pub mod badge;
 pub mod button;
 pub mod card;
+pub mod kbd;
 pub mod separator;
 pub mod skeleton;
+pub mod spinner;
+pub mod typography;
 
 // Tier 2 - Form components
 pub mod checkbox;
@@ -47,11 +51,15 @@ pub mod date_picker;
 
 // Re-export Tier 1 components
 pub use alert::{Alert, AlertDescription, AlertTitle};
+pub use avatar::{Avatar, AvatarShape};
 pub use badge::Badge;
 pub use button::Button;
 pub use card::{Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle};
+pub use kbd::Kbd;
 pub use separator::{Separator, SeparatorOrientation};
 pub use skeleton::{Skeleton, SkeletonShape};
+pub use spinner::Spinner;
+pub use typography::{FontWeight, TextAlign, TextColor, Typography, TypographyVariant};
 
 // Re-export Tier 2 components
 pub use checkbox::Checkbox;
