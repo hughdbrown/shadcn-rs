@@ -15,8 +15,10 @@ pub mod checkbox;
 pub mod form;
 pub mod input;
 pub mod label;
+pub mod progress;
 pub mod radio;
 pub mod select;
+pub mod slider;
 pub mod switch;
 pub mod textarea;
 
@@ -42,8 +44,10 @@ pub use checkbox::Checkbox;
 pub use form::{Form, FormField, FormMessage, FormMessageType};
 pub use input::Input;
 pub use label::Label;
+pub use progress::Progress;
 pub use radio::{Radio, RadioGroup};
 pub use select::Select;
+pub use slider::Slider;
 pub use switch::Switch;
 pub use textarea::{Textarea, TextareaResize};
 
