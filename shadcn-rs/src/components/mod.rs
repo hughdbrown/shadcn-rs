@@ -44,10 +44,13 @@ pub mod toggle_group;
 
 // Tier 5 - Overlay & Interactive components
 pub mod accordion;
+pub mod alert_dialog;
 pub mod dialog;
 pub mod drawer;
 pub mod dropdown_menu;
+pub mod hover_card;
 pub mod popover;
+pub mod sheet;
 pub mod tabs;
 pub mod tooltip;
 
@@ -117,6 +120,11 @@ pub use toggle_group::{ToggleGroup, ToggleGroupOrientation, ToggleGroupType};
 
 // Re-export Tier 5 components
 pub use accordion::{Accordion, AccordionContent, AccordionItem, AccordionTrigger, AccordionType};
+pub use alert_dialog::{
+    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+    AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+    AlertDialogTrigger,
+};
 pub use dialog::{
     Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
     DialogTrigger,
@@ -129,7 +137,11 @@ pub use dropdown_menu::{
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator,
     DropdownMenuTrigger,
 };
+pub use hover_card::{HoverCard, HoverCardContent, HoverCardTrigger};
 pub use popover::{Popover, PopoverContent, PopoverTrigger};
+pub use sheet::{
+    Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger,
+};
 pub use tabs::{Tabs, TabsContent, TabsList, TabsOrientation, TabsTrigger};
 pub use tooltip::{Tooltip, TooltipContent, TooltipTrigger};
 
