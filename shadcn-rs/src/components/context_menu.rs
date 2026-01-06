@@ -213,6 +213,35 @@ pub fn context_menu_separator(props: &ContextMenuSeparatorProps) -> Html {
     }
 }
 
+/// Context menu label properties
+#[derive(Properties, PartialEq, Clone)]
+pub struct ContextMenuLabelProps {
+    /// Additional CSS classes
+    #[prop_or_default]
+    pub class: Classes,
+
+    /// Children elements
+    pub children: Children,
+}
+
+/// Context menu label component
+///
+/// A label for a group of context menu items.
+#[function_component(ContextMenuLabel)]
+pub fn context_menu_label(props: &ContextMenuLabelProps) -> Html {
+    let ContextMenuLabelProps { class, children } = props.clone();
+
+    let classes: Classes = vec![Classes::from("context-menu-label"), class]
+        .into_iter()
+        .collect();
+
+    html! {
+        <div class={classes} role="presentation">
+            { children }
+        </div>
+    }
+}
+
 /// Context menu checkbox item properties
 #[derive(Properties, PartialEq, Clone)]
 pub struct ContextMenuCheckboxItemProps {
@@ -463,5 +492,15 @@ mod tests {
 
         assert_eq!(props.value, AttrValue::from("option1"));
         assert!(!props.disabled);
+    }
+
+    #[test]
+    fn test_context_menu_label_default() {
+        let props = ContextMenuLabelProps {
+            class: Classes::new(),
+            children: Children::new(vec![]),
+        };
+
+        assert_eq!(props.class, Classes::new());
     }
 }

@@ -299,6 +299,252 @@ pub fn dropdown_menu_label(props: &DropdownMenuLabelProps) -> Html {
     }
 }
 
+/// Dropdown menu checkbox item properties
+#[derive(Properties, PartialEq, Clone)]
+pub struct DropdownMenuCheckboxItemProps {
+    /// Whether the checkbox is checked
+    #[prop_or(false)]
+    pub checked: bool,
+
+    /// Whether the item is disabled
+    #[prop_or(false)]
+    pub disabled: bool,
+
+    /// Checked state change handler
+    #[prop_or_default]
+    pub on_checked_change: Option<Callback<bool>>,
+
+    /// Additional CSS classes
+    #[prop_or_default]
+    pub class: Classes,
+
+    /// Children elements
+    pub children: Children,
+}
+
+/// Dropdown menu checkbox item component
+///
+/// A checkbox item within a dropdown menu.
+#[function_component(DropdownMenuCheckboxItem)]
+pub fn dropdown_menu_checkbox_item(props: &DropdownMenuCheckboxItemProps) -> Html {
+    let DropdownMenuCheckboxItemProps {
+        checked,
+        disabled,
+        on_checked_change,
+        class,
+        children,
+    } = props.clone();
+
+    let onclick = on_checked_change.map(|cb| {
+        let checked = checked;
+        Callback::from(move |e: MouseEvent| {
+            e.prevent_default();
+            cb.emit(!checked);
+        })
+    });
+
+    let classes: Classes = vec![
+        Classes::from("dropdown-menu-checkbox-item"),
+        if checked {
+            Classes::from("dropdown-menu-checkbox-item-checked")
+        } else {
+            Classes::new()
+        },
+        if disabled {
+            Classes::from("dropdown-menu-checkbox-item-disabled")
+        } else {
+            Classes::new()
+        },
+        class,
+    ]
+    .into_iter()
+    .collect();
+
+    html! {
+        <div
+            class={classes}
+            role="menuitemcheckbox"
+            aria-checked={checked.to_string()}
+            aria-disabled={disabled.to_string()}
+            onclick={onclick}
+        >
+            <span class="dropdown-menu-item-indicator">
+                if checked {
+                    { "✓" }
+                }
+            </span>
+            { children }
+        </div>
+    }
+}
+
+/// Dropdown menu radio group properties
+#[derive(Properties, PartialEq, Clone)]
+pub struct DropdownMenuRadioGroupProps {
+    /// Currently selected value
+    #[prop_or_default]
+    pub value: Option<AttrValue>,
+
+    /// Value change handler
+    #[prop_or_default]
+    pub on_value_change: Option<Callback<AttrValue>>,
+
+    /// Additional CSS classes
+    #[prop_or_default]
+    pub class: Classes,
+
+    /// Children elements (should be DropdownMenuRadioItem)
+    pub children: Children,
+}
+
+/// Dropdown menu radio group component
+///
+/// A group of radio items within a dropdown menu.
+#[function_component(DropdownMenuRadioGroup)]
+pub fn dropdown_menu_radio_group(props: &DropdownMenuRadioGroupProps) -> Html {
+    let DropdownMenuRadioGroupProps {
+        value: _,
+        on_value_change: _,
+        class,
+        children,
+    } = props.clone();
+
+    let classes: Classes = vec![Classes::from("dropdown-menu-radio-group"), class]
+        .into_iter()
+        .collect();
+
+    html! {
+        <div class={classes} role="group">
+            { children }
+        </div>
+    }
+}
+
+/// Dropdown menu radio item properties
+#[derive(Properties, PartialEq, Clone)]
+pub struct DropdownMenuRadioItemProps {
+    /// The value of this radio item
+    pub value: AttrValue,
+
+    /// Whether the item is disabled
+    #[prop_or(false)]
+    pub disabled: bool,
+
+    /// Click handler (receives the value)
+    #[prop_or_default]
+    pub on_select: Option<Callback<AttrValue>>,
+
+    /// Whether this item is selected
+    #[prop_or(false)]
+    pub selected: bool,
+
+    /// Additional CSS classes
+    #[prop_or_default]
+    pub class: Classes,
+
+    /// Children elements
+    pub children: Children,
+}
+
+/// Dropdown menu radio item component
+///
+/// A radio item within a dropdown menu radio group.
+#[function_component(DropdownMenuRadioItem)]
+pub fn dropdown_menu_radio_item(props: &DropdownMenuRadioItemProps) -> Html {
+    let DropdownMenuRadioItemProps {
+        value,
+        disabled,
+        on_select,
+        selected,
+        class,
+        children,
+    } = props.clone();
+
+    let onclick = on_select.map(|cb| {
+        let value = value.clone();
+        Callback::from(move |e: MouseEvent| {
+            e.prevent_default();
+            cb.emit(value.clone());
+        })
+    });
+
+    let classes: Classes = vec![
+        Classes::from("dropdown-menu-radio-item"),
+        if selected {
+            Classes::from("dropdown-menu-radio-item-selected")
+        } else {
+            Classes::new()
+        },
+        if disabled {
+            Classes::from("dropdown-menu-radio-item-disabled")
+        } else {
+            Classes::new()
+        },
+        class,
+    ]
+    .into_iter()
+    .collect();
+
+    html! {
+        <div
+            class={classes}
+            role="menuitemradio"
+            aria-checked={selected.to_string()}
+            aria-disabled={disabled.to_string()}
+            onclick={onclick}
+        >
+            <span class="dropdown-menu-item-indicator">
+                if selected {
+                    { "●" }
+                }
+            </span>
+            { children }
+        </div>
+    }
+}
+
+/// Dropdown menu sub properties
+#[derive(Properties, PartialEq, Clone)]
+pub struct DropdownMenuSubProps {
+    /// Whether the submenu is open
+    #[prop_or(false)]
+    pub open: bool,
+
+    /// Callback when open state changes
+    #[prop_or_default]
+    pub on_open_change: Option<Callback<bool>>,
+
+    /// Additional CSS classes
+    #[prop_or_default]
+    pub class: Classes,
+
+    /// Children elements
+    pub children: Children,
+}
+
+/// Dropdown menu sub component
+///
+/// A nested submenu within a dropdown menu.
+#[function_component(DropdownMenuSub)]
+pub fn dropdown_menu_sub(props: &DropdownMenuSubProps) -> Html {
+    let DropdownMenuSubProps {
+        open: _,
+        on_open_change: _,
+        class,
+        children,
+    } = props.clone();
+
+    let classes: Classes = vec![Classes::from("dropdown-menu-sub"), class]
+        .into_iter()
+        .collect();
+
+    html! {
+        <div class={classes} role="menu">
+            { children }
+        </div>
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -341,5 +587,74 @@ mod tests {
 
         assert!(!props.close_on_outside_click);
         assert!(!props.close_on_escape);
+    }
+
+    #[test]
+    fn test_dropdown_menu_checkbox_item_checked() {
+        let props = DropdownMenuCheckboxItemProps {
+            checked: true,
+            disabled: false,
+            on_checked_change: None,
+            class: Classes::new(),
+            children: Children::new(vec![]),
+        };
+
+        assert!(props.checked);
+        assert!(!props.disabled);
+    }
+
+    #[test]
+    fn test_dropdown_menu_checkbox_item_unchecked() {
+        let props = DropdownMenuCheckboxItemProps {
+            checked: false,
+            disabled: true,
+            on_checked_change: None,
+            class: Classes::new(),
+            children: Children::new(vec![]),
+        };
+
+        assert!(!props.checked);
+        assert!(props.disabled);
+    }
+
+    #[test]
+    fn test_dropdown_menu_radio_item_selected() {
+        let props = DropdownMenuRadioItemProps {
+            value: AttrValue::from("option1"),
+            disabled: false,
+            on_select: None,
+            selected: true,
+            class: Classes::new(),
+            children: Children::new(vec![]),
+        };
+
+        assert!(props.selected);
+        assert_eq!(props.value, AttrValue::from("option1"));
+    }
+
+    #[test]
+    fn test_dropdown_menu_radio_item_unselected() {
+        let props = DropdownMenuRadioItemProps {
+            value: AttrValue::from("option2"),
+            disabled: false,
+            on_select: None,
+            selected: false,
+            class: Classes::new(),
+            children: Children::new(vec![]),
+        };
+
+        assert!(!props.selected);
+    }
+
+    #[test]
+    fn test_dropdown_menu_sub_default() {
+        let props = DropdownMenuSubProps {
+            open: false,
+            on_open_change: None,
+            class: Classes::new(),
+            children: Children::new(vec![]),
+        };
+
+        assert!(!props.open);
     }
 }

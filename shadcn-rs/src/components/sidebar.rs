@@ -222,6 +222,64 @@ pub fn sidebar_group(props: &SidebarGroupProps) -> Html {
     }
 }
 
+/// Sidebar group label properties
+#[derive(Properties, PartialEq, Clone)]
+pub struct SidebarGroupLabelProps {
+    /// Additional CSS classes
+    #[prop_or_default]
+    pub class: Classes,
+
+    /// Children elements
+    pub children: Children,
+}
+
+/// Sidebar group label component
+///
+/// A label for a sidebar group.
+#[function_component(SidebarGroupLabel)]
+pub fn sidebar_group_label(props: &SidebarGroupLabelProps) -> Html {
+    let SidebarGroupLabelProps { class, children } = props.clone();
+
+    let classes: Classes = vec![Classes::from("sidebar-group-label"), class]
+        .into_iter()
+        .collect();
+
+    html! {
+        <div class={classes}>
+            { children }
+        </div>
+    }
+}
+
+/// Sidebar group content properties
+#[derive(Properties, PartialEq, Clone)]
+pub struct SidebarGroupContentProps {
+    /// Additional CSS classes
+    #[prop_or_default]
+    pub class: Classes,
+
+    /// Children elements
+    pub children: Children,
+}
+
+/// Sidebar group content component
+///
+/// The content area of a sidebar group.
+#[function_component(SidebarGroupContent)]
+pub fn sidebar_group_content(props: &SidebarGroupContentProps) -> Html {
+    let SidebarGroupContentProps { class, children } = props.clone();
+
+    let classes: Classes = vec![Classes::from("sidebar-group-content"), class]
+        .into_iter()
+        .collect();
+
+    html! {
+        <div class={classes}>
+            { children }
+        </div>
+    }
+}
+
 /// Sidebar menu properties
 #[derive(Properties, PartialEq, Clone)]
 pub struct SidebarMenuProps {
@@ -451,5 +509,25 @@ mod tests {
 
         assert!(props.disabled);
         assert!(!props.active);
+    }
+
+    #[test]
+    fn test_sidebar_group_label_default() {
+        let props = SidebarGroupLabelProps {
+            class: Classes::new(),
+            children: Children::new(vec![]),
+        };
+
+        assert_eq!(props.class, Classes::new());
+    }
+
+    #[test]
+    fn test_sidebar_group_content_default() {
+        let props = SidebarGroupContentProps {
+            class: Classes::new(),
+            children: Children::new(vec![]),
+        };
+
+        assert_eq!(props.class, Classes::new());
     }
 }

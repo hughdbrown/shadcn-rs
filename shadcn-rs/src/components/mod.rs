@@ -134,8 +134,9 @@ pub use drawer::{
     DrawerTrigger,
 };
 pub use dropdown_menu::{
-    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator,
-    DropdownMenuTrigger,
+    DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem,
+    DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator,
+    DropdownMenuSub, DropdownMenuTrigger,
 };
 pub use hover_card::{HoverCard, HoverCardContent, HoverCardTrigger};
 pub use popover::{Popover, PopoverContent, PopoverTrigger};
@@ -151,7 +152,7 @@ pub use breadcrumb::{
     BreadcrumbSeparator,
 };
 pub use context_menu::{
-    ContextMenu, ContextMenuCheckboxItem, ContextMenuContent, ContextMenuItem,
+    ContextMenu, ContextMenuCheckboxItem, ContextMenuContent, ContextMenuItem, ContextMenuLabel,
     ContextMenuRadioGroup, ContextMenuRadioItem, ContextMenuSeparator, ContextMenuSub,
     ContextMenuTrigger,
 };
@@ -168,8 +169,8 @@ pub use pagination::{
     PaginationNext, PaginationPrevious,
 };
 pub use sidebar::{
-    Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarHeader, SidebarMenu,
-    SidebarMenuButton, SidebarMenuItem, SidebarSeparator,
+    Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
+    SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarSeparator,
 };
 
 // Re-export Tier 7 components
