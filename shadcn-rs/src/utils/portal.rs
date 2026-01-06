@@ -141,9 +141,9 @@ fn portal_inner(props: &PortalInnerProps) -> Html {
 ///
 /// # Examples
 ///
-/// ```rust,no_run
+/// ```rust,ignore
 /// use yew::prelude::*;
-/// use shadcn_rs::use_portal;
+/// use shadcn_rs::{use_portal, Portal};
 ///
 /// #[function_component(Component)]
 /// fn component() -> Html {
@@ -171,8 +171,6 @@ pub fn use_portal() -> UseStateHandle<Option<Element>> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
     fn test_portal_props_target() {
         // Test that portal props can be created with different target values

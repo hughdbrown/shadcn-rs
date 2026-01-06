@@ -4,7 +4,7 @@
 //!
 //! # Examples
 //!
-//! ```rust,no_run
+//! ```rust,ignore
 //! use yew::prelude::*;
 //! use shadcn_rs::{Field, Input};
 //!

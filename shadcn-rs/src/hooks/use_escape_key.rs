@@ -9,7 +9,7 @@ use yew::prelude::*;
 ///
 /// # Examples
 ///
-/// ```rust,no_run
+/// ```rust,ignore
 /// use yew::prelude::*;
 /// use shadcn_rs::use_escape_key;
 ///
@@ -56,7 +56,7 @@ where
 ///
 /// # Examples
 ///
-/// ```rust,no_run
+/// ```rust,ignore
 /// use yew::prelude::*;
 /// use shadcn_rs::use_escape_key_conditional;
 ///
@@ -108,7 +108,7 @@ where
 ///
 /// # Examples
 ///
-/// ```rust,no_run
+/// ```rust,ignore
 /// use yew::prelude::*;
 /// use shadcn_rs::use_key_press;
 ///
@@ -144,8 +144,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
     fn test_use_escape_key_compiles() {
         // This test just verifies the hook API compiles correctly

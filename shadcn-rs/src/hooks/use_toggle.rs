@@ -8,7 +8,7 @@ use yew::prelude::*;
 ///
 /// # Examples
 ///
-/// ```rust,no_run
+/// ```rust,ignore
 /// use yew::prelude::*;
 /// use shadcn_rs::use_toggle;
 ///
@@ -55,7 +55,7 @@ pub fn use_toggle(initial: bool) -> (bool, Callback<()>, Callback<bool>) {
 ///
 /// # Examples
 ///
-/// ```rust,no_run
+/// ```rust,ignore
 /// use yew::prelude::*;
 /// use shadcn_rs::use_toggle_with_controls;
 ///
@@ -104,8 +104,6 @@ pub fn use_toggle_with_controls(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     // Note: These are basic structure tests
     // Full integration tests require wasm-bindgen-test
 

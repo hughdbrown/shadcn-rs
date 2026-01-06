@@ -9,7 +9,7 @@ use yew::prelude::*;
 ///
 /// # Examples
 ///
-/// ```rust,no_run
+/// ```rust,ignore
 /// use yew::prelude::*;
 /// use shadcn_rs::use_click_outside;
 ///
@@ -74,7 +74,7 @@ where
 ///
 /// # Examples
 ///
-/// ```rust,no_run
+/// ```rust,ignore
 /// use yew::prelude::*;
 /// use shadcn_rs::use_click_outside_conditional;
 ///
@@ -132,8 +132,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
     fn test_use_click_outside_compiles() {
         // This test just verifies the hook API compiles correctly

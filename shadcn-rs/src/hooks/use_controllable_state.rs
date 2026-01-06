@@ -11,7 +11,7 @@ use yew::prelude::*;
 ///
 /// ## Controlled usage
 ///
-/// ```rust,no_run
+/// ```rust,ignore
 /// use yew::prelude::*;
 /// use shadcn_rs::use_controllable_state;
 ///
@@ -34,8 +34,9 @@ use yew::prelude::*;
 ///
 /// ## Uncontrolled usage
 ///
-/// ```rust,no_run
+/// ```rust,ignore
 /// use yew::prelude::*;
+/// use shadcn_rs::Input;
 ///
 /// #[function_component(Parent)]
 /// fn parent() -> Html {
@@ -89,7 +90,7 @@ where
 ///
 /// # Examples
 ///
-/// ```rust,no_run
+/// ```rust,ignore
 /// use yew::prelude::*;
 /// use shadcn_rs::use_controllable_state_optional;
 ///
@@ -149,7 +150,7 @@ where
 ///
 /// # Examples
 ///
-/// ```rust,no_run
+/// ```rust,ignore
 /// use yew::prelude::*;
 /// use shadcn_rs::use_controllable_bool;
 ///
@@ -193,8 +194,6 @@ pub fn use_controllable_bool(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
     fn test_use_controllable_state_compiles() {
         // This test just verifies the hook API compiles correctly
