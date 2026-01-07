@@ -2,7 +2,9 @@
 
 A comprehensive UI component library for Rust/WebAssembly inspired by [shadcn/ui](https://ui.shadcn.com).
 
-> **Status**: 🚧 Project setup complete. Component implementation in progress.
+[![Crates.io](https://img.shields.io/crates/v/shadcn-rs.svg)](https://crates.io/crates/shadcn-rs)
+[![Documentation](https://docs.rs/shadcn-rs/badge.svg)](https://docs.rs/shadcn-rs)
+[![License](https://img.shields.io/crates/l/shadcn-rs.svg)](LICENSE-MIT)
 
 ## Overview
 
@@ -10,13 +12,13 @@ shadcn-rs provides 59+ accessible, customizable UI components for building moder
 
 ## Features
 
-- ✅ **59+ Components** - Complete implementation of shadcn/ui components
-- ✅ **Type-Safe** - Rust enums for variants, sizes, and colors
-- ✅ **Accessible** - WCAG 2.1 AA compliant with ARIA attributes
-- ✅ **Themeable** - Light and dark mode with CSS variables
-- ✅ **Mobile-Friendly** - Touch gesture support for key components
-- ✅ **No Runtime Overhead** - Pure CSS animations and styling
-- ✅ **Icon Library** - Complete Lucide icon set as Yew components
+- **59+ Components** - Complete implementation of shadcn/ui components
+- **Type-Safe** - Rust enums for variants, sizes, and colors
+- **Accessible** - WCAG 2.1 AA compliant with ARIA attributes
+- **Themeable** - Light and dark mode with CSS variables
+- **Mobile-Friendly** - Touch gesture support for key components
+- **No Runtime Overhead** - Pure CSS animations and styling
+- **Icon Library** - Lucide icons as Yew components
 
 ## Quick Start
 
@@ -26,14 +28,20 @@ Add shadcn-rs to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-shadcn-rs = "0.1.0"
-shadcn-icons = "0.1.0"  # Optional: icon library
+shadcn-rs = "0.1"
 yew = "0.21"
+```
+
+For icons (optional):
+
+```toml
+[dependencies]
+shadcn-icons = "0.1"
 ```
 
 ### Include CSS
 
-Add the stylesheet to your HTML:
+Add the stylesheet to your `index.html`:
 
 ```html
 <link rel="stylesheet" href="shadcn-rs.css">
@@ -43,110 +51,109 @@ Add the stylesheet to your HTML:
 
 ```rust
 use yew::prelude::*;
-use shadcn_rs::{Button, Variant, Size};
-use shadcn_icons::Check;
+use shadcn_rs::{Button, Card, CardHeader, CardTitle, CardContent, Variant};
 
 #[function_component(App)]
 fn app() -> Html {
-    let onclick = Callback::from(|_| {
-        web_sys::console::log_1(&"Button clicked!".into());
-    });
-
     html! {
-        <Button
-            variant={Variant::Primary}
-            size={Size::Lg}
-            onclick={onclick}
-            icon={html! { <Check /> }}
-        >
-            { "Click me" }
-        </Button>
+        <Card>
+            <CardHeader>
+                <CardTitle>{ "Welcome" }</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <p>{ "Get started with shadcn-rs" }</p>
+                <Button variant={Variant::Primary}>
+                    { "Learn More" }
+                </Button>
+            </CardContent>
+        </Card>
     }
+}
+
+fn main() {
+    yew::Renderer::<App>::new().render();
 }
 ```
 
-## Project Structure
-
-This repository is organized as a Cargo workspace with three crates:
-
-- **shadcn-rs** - Main component library
-- **shadcn-icons** - Lucide icons for Rust/Yew
-- **shadcn-showcase** - Interactive component showcase
-
 ## Components
 
-### Tier 1 - Foundational (10 components)
+### Foundational (10)
 Badge, Button, Label, Separator, Skeleton, Spinner, Kbd, Typography, Avatar, Alert
 
-### Tier 2 - Form Components (8 components)
-Input, Textarea, Checkbox, Switch, Radio Group, Native Select, Slider, Progress
+### Form Components (9)
+Input, Textarea, Checkbox, Switch, Radio Group, Native Select, Slider, Progress, Form
 
-### Tier 3 - Layout & Structure (8 components)
+### Layout & Structure (8)
 Card, Aspect Ratio, Scroll Area, Resizable, Tabs, Table, Empty, Item
 
-### Tier 4 - Interactive (7 components)
+### Interactive (7)
 Button Group, Input Group, Field, Collapsible, Accordion, Toggle, Toggle Group
 
-### Tier 5 - Overlays & Popups (7 components)
+### Overlays & Popups (7)
 Dialog, Alert Dialog, Popover, Tooltip, Hover Card, Sheet, Drawer
 
-### Tier 6 - Navigation (7 components)
+### Navigation (7)
 Breadcrumb, Navigation Menu, Menubar, Dropdown Menu, Context Menu, Pagination, Sidebar
 
-### Tier 7 - Advanced Forms (7 components)
-Form, Select, Combobox, Command, Input OTP, Date Picker, Calendar
+### Advanced Forms (7)
+Select, Combobox, Command, Input OTP, Date Picker, Calendar
 
-### Tier 8 - Complex (5 components)
+### Complex (5)
 Carousel, Data Table, Chart, Toast, Sonner
 
-**Total**: 59 components
+**Total: 59+ components**
+
+## Documentation
+
+- [Installation Guide](./docs/installation.md)
+- [Theming Guide](./docs/theming.md)
+- [Accessibility Guide](./docs/accessibility.md)
+- [API Documentation](https://docs.rs/shadcn-rs)
+- [Live Showcase](https://hughdbrown.github.io/shadcn-rs/)
 
 ## Development
 
 ### Prerequisites
 
-- Rust 2024 edition
-- wasm-pack
-- trunk (for development server)
+- Rust 2024 edition (rustc 1.85+)
+- wasm32-unknown-unknown target
+- [Trunk](https://trunkrs.dev/) for development server
 
 ### Build Library
 
 ```bash
-# Build library crate
-cd shadcn-rs
-cargo build
-
-# Build for WASM
-wasm-pack build --target web
+cargo build -p shadcn-rs
 ```
 
 ### Run Showcase
 
 ```bash
-# Run development server
 cd shadcn-showcase
 trunk serve
-
 # Open http://127.0.0.1:8080
 ```
 
 ### Run Tests
 
 ```bash
-# Run all tests
-cargo test
-
-# Run WASM tests
-wasm-pack test --headless --chrome
+cargo test --workspace
 ```
 
-## Documentation
+### Build Documentation
 
-- [Component Documentation](https://docs.rs/shadcn-rs)
-- [Icon Library](https://docs.rs/shadcn-icons)
-- [Examples](./examples)
-- [Architecture](./ai/03-architecture.md)
-- [Implementation Guide](./ai/05-component-patterns.md)
+```bash
+cargo doc --workspace --no-deps --open
+```
+
+## Project Structure
+
+```
+shadcn-rs/
+├── shadcn-rs/          # Main component library
+├── shadcn-icons/       # Lucide icons for Yew
+├── shadcn-showcase/    # Interactive demo application
+└── docs/               # User guides
+```
 
 ## Browser Support
 
@@ -160,18 +167,19 @@ wasm-pack test --headless --chrome
 
 Contributions are welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
 
+### Development Setup
+
+1. Clone the repository
+2. Install Rust and the WASM target: `rustup target add wasm32-unknown-unknown`
+3. Install Trunk: `cargo install trunk`
+4. Run the showcase: `cd shadcn-showcase && trunk serve`
+
 ## License
 
-This project is dual-licensed under MIT or Apache-2.0.
+This project is dual-licensed under [MIT](./LICENSE-MIT) or [Apache-2.0](./LICENSE-APACHE).
 
 ## Acknowledgments
 
 - Inspired by [shadcn/ui](https://ui.shadcn.com) by [@shadcn](https://twitter.com/shadcn)
 - Icons from [Lucide](https://lucide.dev)
 - Built with [Yew](https://yew.rs)
-
----
-
-**Version**: 0.1.0 (Pre-release)
-**Status**: Active Development
-**Estimated v1.0 Release**: TBD
