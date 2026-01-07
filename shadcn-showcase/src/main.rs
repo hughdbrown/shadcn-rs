@@ -72,6 +72,7 @@ fn switch(route: Route) -> Html {
         Route::Form => html! { <FormPage /> },
         Route::Input => html! { <InputPage /> },
         Route::Label => html! { <LabelPage /> },
+        Route::NativeSelect => html! { <NativeSelectPage /> },
         Route::Progress => html! { <ProgressPage /> },
         Route::Radio => html! { <RadioPage /> },
         Route::Select => html! { <SelectPage /> },

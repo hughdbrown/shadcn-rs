@@ -684,6 +684,95 @@
 }
 
 /* ============================================
+   Native Select
+   ============================================ */
+.native-select-wrapper {
+  position: relative;
+  display: inline-flex;
+  width: 100%;
+}
+
+.native-select {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  border-radius: var(--radius);
+  border: 1px solid hsl(var(--color-input));
+  background-color: hsl(var(--color-background));
+  padding-right: 2.5rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  transition: all 0.2s ease;
+}
+
+.native-select:focus {
+  outline: none;
+  border-color: hsl(var(--color-ring));
+  box-shadow: 0 0 0 2px hsl(var(--color-ring) / 0.2);
+}
+
+.native-select:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  background-color: hsl(var(--color-muted));
+}
+
+.native-select.native-select-invalid {
+  border-color: hsl(var(--color-destructive));
+}
+
+.native-select.native-select-invalid:focus {
+  box-shadow: 0 0 0 2px hsl(var(--color-destructive) / 0.2);
+}
+
+/* Native select sizes */
+.native-select.size-xs {
+  height: 1.75rem;
+  padding-left: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.native-select.size-sm {
+  height: 2rem;
+  padding-left: 0.75rem;
+  font-size: 0.875rem;
+}
+
+.native-select.size-md {
+  height: 2.5rem;
+  padding-left: 0.75rem;
+  font-size: 0.875rem;
+}
+
+.native-select.size-lg {
+  height: 2.75rem;
+  padding-left: 1rem;
+  font-size: 1rem;
+}
+
+.native-select.size-xl {
+  height: 3rem;
+  padding-left: 1rem;
+  font-size: 1rem;
+}
+
+.native-select-chevron {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: hsl(var(--color-muted-foreground));
+}
+
+.native-select-wrapper:has(.native-select:disabled) .native-select-chevron {
+  opacity: 0.5;
+}
+
+/* ============================================
    Progress
    ============================================ */
 .progress {

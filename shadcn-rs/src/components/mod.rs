@@ -19,6 +19,7 @@ pub mod checkbox;
 pub mod form;
 pub mod input;
 pub mod label;
+pub mod native_select;
 pub mod progress;
 pub mod radio;
 pub mod select;
@@ -96,6 +97,7 @@ pub use form::{
 };
 pub use input::Input;
 pub use label::Label;
+pub use native_select::{NativeSelect, NativeSelectOption, NativeSelectOptGroup};
 pub use progress::Progress;
 pub use radio::{Radio, RadioGroup};
 pub use select::{

@@ -52,6 +52,8 @@ pub enum Route {
     Input,
     #[at("/components/label")]
     Label,
+    #[at("/components/native-select")]
+    NativeSelect,
     #[at("/components/progress")]
     Progress,
     #[at("/components/radio")]
@@ -208,6 +210,7 @@ pub fn get_nav_groups() -> Vec<NavGroup> {
                 NavItem { label: "Form", route: Route::Form },
                 NavItem { label: "Input", route: Route::Input },
                 NavItem { label: "Label", route: Route::Label },
+                NavItem { label: "Native Select", route: Route::NativeSelect },
                 NavItem { label: "Progress", route: Route::Progress },
                 NavItem { label: "Radio", route: Route::Radio },
                 NavItem { label: "Select", route: Route::Select },
