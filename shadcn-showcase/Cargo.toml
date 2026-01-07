@@ -23,5 +23,5 @@ web-sys = { workspace = true, features = [
 ] }
 gloo = { workspace = true }
 wasm-bindgen-futures = { workspace = true }
-shadcn-rs = { path = "../shadcn-rs" }
-shadcn-icons = { path = "../shadcn-icons" }
+shadcn-rs = { path = "../shadcn-rs", version = "0.1.0" }
+shadcn-icons = { path = "../shadcn-icons", version = "0.1.0" }
