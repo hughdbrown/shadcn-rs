@@ -5,12 +5,13 @@ resolver = "2"
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
-authors = ["Hugh Brown"]
+authors = ["Hugh Browni <hughdbrown@gmail.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/hughdbrown/shadcn-rs"
 homepage = "https://github.com/hughdbrown/shadcn-rs"
 keywords = ["ui", "wasm", "yew", "components", "shadcn"]
 categories = ["wasm", "web-programming", "gui"]
+description = "Shadcn UI library for Rust"
 
 [workspace.dependencies]
 # Core Yew and WASM dependencies
