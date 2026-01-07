@@ -23,8 +23,8 @@
 //! }
 //! ```
 
-use yew::prelude::*;
 use crate::types::Position;
+use yew::prelude::*;
 
 /// Tooltip component properties
 #[derive(Properties, PartialEq, Clone)]

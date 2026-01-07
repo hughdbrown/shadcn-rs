@@ -20,8 +20,8 @@
 //! }
 //! ```
 
-use yew::prelude::*;
 use crate::types::Size;
+use yew::prelude::*;
 
 /// Kbd component properties
 #[derive(Properties, PartialEq, Clone)]
@@ -62,13 +62,9 @@ pub fn kbd(props: &KbdProps) -> Html {
         Size::Xl2 => "kbd-2xl",
     };
 
-    let classes: Classes = vec![
-        Classes::from("kbd"),
-        Classes::from(size_class),
-        class,
-    ]
-    .into_iter()
-    .collect();
+    let classes: Classes = vec![Classes::from("kbd"), Classes::from(size_class), class]
+        .into_iter()
+        .collect();
 
     html! {
         <kbd class={classes}>

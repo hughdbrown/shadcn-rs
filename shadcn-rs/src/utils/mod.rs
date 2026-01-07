@@ -9,14 +9,11 @@ pub mod touch;
 
 // Re-export commonly used utilities
 pub use aria::{
-    generate_id, generate_id_with_separator, aria_list, aria_labelledby, aria_describedby,
-    AriaLive, AriaAutoComplete, AriaCurrent,
+    AriaAutoComplete, AriaCurrent, AriaLive, aria_describedby, aria_labelledby, aria_list,
+    generate_id, generate_id_with_separator,
 };
-pub use class_name::{
-    class_names, class_if, merge_classes, classes_optional,
-};
+pub use class_name::{class_if, class_names, classes_optional, merge_classes};
 pub use portal::{Portal, create_portal, use_portal};
 pub use touch::{
-    SwipeDirection, SwipeConfig, TouchPoint, detect_swipe,
-    touch_point_from_event, get_first_touch,
+    SwipeConfig, SwipeDirection, TouchPoint, detect_swipe, get_first_touch, touch_point_from_event,
 };

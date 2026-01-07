@@ -77,9 +77,7 @@ pub fn carousel(props: &CarouselProps) -> Html {
         children,
     } = props.clone();
 
-    let classes: Classes = vec![Classes::from("carousel"), class]
-        .into_iter()
-        .collect();
+    let classes: Classes = vec![Classes::from("carousel"), class].into_iter().collect();
 
     html! {
         <div

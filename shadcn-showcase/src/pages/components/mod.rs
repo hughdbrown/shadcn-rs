@@ -38,8 +38,8 @@ mod button_group_page;
 mod collapsible_page;
 mod field_page;
 mod input_group_page;
-mod toggle_page;
 mod toggle_group_page;
+mod toggle_page;
 
 // Tier 5 - Overlays & Popups
 mod accordion_page;
@@ -110,8 +110,8 @@ pub use button_group_page::ButtonGroupPage;
 pub use collapsible_page::CollapsiblePage;
 pub use field_page::FieldPage;
 pub use input_group_page::InputGroupPage;
-pub use toggle_page::TogglePage;
 pub use toggle_group_page::ToggleGroupPage;
+pub use toggle_page::TogglePage;
 
 pub use accordion_page::AccordionPage;
 pub use alert_dialog_page::AlertDialogPage;

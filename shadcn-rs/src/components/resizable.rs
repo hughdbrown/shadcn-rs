@@ -24,10 +24,13 @@
 //! }
 //! ```
 
-use yew::prelude::*;
-use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use web_sys::{MouseEvent, Element};
+use wasm_bindgen::prelude::*;
+use web_sys::{Element, MouseEvent};
+use yew::prelude::*;
+
+/// Type alias for the mouse event closure reference counter
+type MouseClosureRc = std::rc::Rc<std::cell::RefCell<Option<Closure<dyn Fn(MouseEvent)>>>>;
 
 /// Resizable orientation
 #[derive(Debug, Clone, PartialEq)]
@@ -261,31 +264,33 @@ pub fn resizable_handle(props: &ResizableHandleProps) -> Html {
 
             // Handle mouse move
             let mousemove_closure = Closure::<dyn Fn(MouseEvent)>::new(move |e: MouseEvent| {
-                if let Some(ctx) = context_move.as_ref() {
-                    if let Some(container) = ctx.container_ref.cast::<Element>() {
-                        let rect = container.get_bounding_client_rect();
+                if let Some(ctx) = context_move.as_ref()
+                    && let Some(container) = ctx.container_ref.cast::<Element>()
+                {
+                    let rect = container.get_bounding_client_rect();
 
-                        let percentage = match ctx.orientation {
-                            ResizableOrientation::Horizontal => {
-                                let x = e.client_x() as f64 - rect.left();
-                                let width = rect.width();
-                                (x / width * 100.0).max(10.0).min(90.0)
-                            }
-                            ResizableOrientation::Vertical => {
-                                let y = e.client_y() as f64 - rect.top();
-                                let height = rect.height();
-                                (y / height * 100.0).max(10.0).min(90.0)
-                            }
-                        };
+                    let percentage = match ctx.orientation {
+                        ResizableOrientation::Horizontal => {
+                            let x = e.client_x() as f64 - rect.left();
+                            let width = rect.width();
+                            (x / width * 100.0).clamp(10.0, 90.0)
+                        }
+                        ResizableOrientation::Vertical => {
+                            let y = e.client_y() as f64 - rect.top();
+                            let height = rect.height();
+                            (y / height * 100.0).clamp(10.0, 90.0)
+                        }
+                    };
 
-                        ctx.set_sizes.emit(vec![percentage, 100.0 - percentage]);
-                    }
+                    ctx.set_sizes.emit(vec![percentage, 100.0 - percentage]);
                 }
             });
 
             // Handle mouse up
-            let mousemove_closure_rc = std::rc::Rc::new(std::cell::RefCell::new(Some(mousemove_closure)));
-            let mouseup_closure_rc: std::rc::Rc<std::cell::RefCell<Option<Closure<dyn Fn(MouseEvent)>>>> = std::rc::Rc::new(std::cell::RefCell::new(None));
+            let mousemove_closure_rc: MouseClosureRc =
+                std::rc::Rc::new(std::cell::RefCell::new(Some(mousemove_closure)));
+            let mouseup_closure_rc: MouseClosureRc =
+                std::rc::Rc::new(std::cell::RefCell::new(None));
             let mouseup_closure_rc_clone = mouseup_closure_rc.clone();
             let mousemove_rc_for_up = mousemove_closure_rc.clone();
 
@@ -301,13 +306,13 @@ pub fn resizable_handle(props: &ResizableHandleProps) -> Html {
                     if let Some(closure) = mousemove_rc_for_up.borrow_mut().take() {
                         let _ = window.remove_event_listener_with_callback(
                             "mousemove",
-                            closure.as_ref().unchecked_ref()
+                            closure.as_ref().unchecked_ref(),
                         );
                     }
                     if let Some(closure) = mouseup_closure_rc_clone.borrow_mut().take() {
                         let _ = window.remove_event_listener_with_callback(
                             "mouseup",
-                            closure.as_ref().unchecked_ref()
+                            closure.as_ref().unchecked_ref(),
                         );
                     }
                 }
@@ -320,13 +325,13 @@ pub fn resizable_handle(props: &ResizableHandleProps) -> Html {
                 if let Some(closure) = mousemove_closure_rc.borrow().as_ref() {
                     let _ = window.add_event_listener_with_callback(
                         "mousemove",
-                        closure.as_ref().unchecked_ref()
+                        closure.as_ref().unchecked_ref(),
                     );
                 }
                 if let Some(closure) = mouseup_closure_rc.borrow().as_ref() {
                     let _ = window.add_event_listener_with_callback(
                         "mouseup",
-                        closure.as_ref().unchecked_ref()
+                        closure.as_ref().unchecked_ref(),
                     );
                 }
             }

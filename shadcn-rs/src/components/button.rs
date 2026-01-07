@@ -22,9 +22,9 @@
 //! }
 //! ```
 
-use yew::prelude::*;
 use crate::types::{Size, Variant};
 use crate::utils::class_names;
+use yew::prelude::*;
 
 /// Button component properties
 #[derive(Properties, PartialEq, Clone)]
@@ -125,7 +125,11 @@ pub fn button(props: &ButtonProps) -> Html {
         Some("btn"),
         Some(variant.to_class()),
         Some(size.to_class()),
-        if full_width { Some("btn-full-width") } else { None },
+        if full_width {
+            Some("btn-full-width")
+        } else {
+            None
+        },
         if loading { Some("btn-loading") } else { None },
     ]);
 

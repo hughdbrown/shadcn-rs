@@ -296,10 +296,8 @@ pub fn context_menu_checkbox_item(props: &ContextMenuCheckboxItemProps) -> Html 
     .collect();
 
     let onclick = Callback::from(move |_| {
-        if !disabled {
-            if let Some(callback) = onchange.as_ref() {
-                callback.emit(!checked);
-            }
+        if !disabled && let Some(callback) = onchange.as_ref() {
+            callback.emit(!checked);
         }
     });
 

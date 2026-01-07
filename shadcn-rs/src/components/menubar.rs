@@ -51,9 +51,7 @@ pub struct MenubarProps {
 pub fn menubar(props: &MenubarProps) -> Html {
     let MenubarProps { class, children } = props.clone();
 
-    let classes: Classes = vec![Classes::from("menubar"), class]
-        .into_iter()
-        .collect();
+    let classes: Classes = vec![Classes::from("menubar"), class].into_iter().collect();
 
     html! {
         <div class={classes} role="menubar">
@@ -290,10 +288,8 @@ pub fn menubar_checkbox_item(props: &MenubarCheckboxItemProps) -> Html {
     .collect();
 
     let onclick = Callback::from(move |_| {
-        if !disabled {
-            if let Some(callback) = onchange.as_ref() {
-                callback.emit(!checked);
-            }
+        if !disabled && let Some(callback) = onchange.as_ref() {
+            callback.emit(!checked);
         }
     });
 

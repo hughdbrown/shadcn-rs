@@ -171,10 +171,7 @@ mod tests {
             children: Children::new(vec![]),
         };
 
-        assert_eq!(
-            props.description,
-            Some(AttrValue::from("Item description"))
-        );
+        assert_eq!(props.description, Some(AttrValue::from("Item description")));
     }
 
     #[test]

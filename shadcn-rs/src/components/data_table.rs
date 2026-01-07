@@ -182,12 +182,10 @@ mod tests {
 
     #[test]
     fn test_data_table_default() {
-        let data = vec![
-            TestData {
-                id: 1,
-                name: "Test".to_string(),
-            },
-        ];
+        let data = vec![TestData {
+            id: 1,
+            name: "Test".to_string(),
+        }];
 
         let props = DataTableProps {
             data,
@@ -209,12 +207,10 @@ mod tests {
 
     #[test]
     fn test_data_table_sortable() {
-        let data = vec![
-            TestData {
-                id: 1,
-                name: "Test".to_string(),
-            },
-        ];
+        let data = vec![TestData {
+            id: 1,
+            name: "Test".to_string(),
+        }];
 
         let props = DataTableProps {
             data,
@@ -235,12 +231,10 @@ mod tests {
 
     #[test]
     fn test_data_table_selectable() {
-        let data = vec![
-            TestData {
-                id: 1,
-                name: "Test".to_string(),
-            },
-        ];
+        let data = vec![TestData {
+            id: 1,
+            name: "Test".to_string(),
+        }];
 
         let props = DataTableProps {
             data,
@@ -262,12 +256,10 @@ mod tests {
 
     #[test]
     fn test_data_table_paginated() {
-        let data = vec![
-            TestData {
-                id: 1,
-                name: "Test".to_string(),
-            },
-        ];
+        let data = vec![TestData {
+            id: 1,
+            name: "Test".to_string(),
+        }];
 
         let props = DataTableProps {
             data,

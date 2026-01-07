@@ -1,7 +1,7 @@
 //! Resizable component showcase page
 
+use shadcn_rs::{Resizable, ResizableHandle, ResizableOrientation, ResizablePanel};
 use yew::prelude::*;
-use shadcn_rs::{Resizable, ResizablePanel, ResizableHandle, ResizableOrientation};
 
 use crate::components::{ComponentPage, Example, PropDoc};
 
@@ -67,11 +67,36 @@ pub fn resizable_page() -> Html {
     ];
 
     let props = vec![
-        PropDoc { name: "orientation", prop_type: "ResizableOrientation", default: "Horizontal", description: "Panel orientation (Horizontal or Vertical)" },
-        PropDoc { name: "index", prop_type: "usize", default: "0", description: "Panel index (0 or 1)" },
-        PropDoc { name: "default_size", prop_type: "f64", default: "50.0", description: "Default panel size %" },
-        PropDoc { name: "min_size", prop_type: "f64", default: "10.0", description: "Minimum panel size %" },
-        PropDoc { name: "max_size", prop_type: "f64", default: "90.0", description: "Maximum panel size %" },
+        PropDoc {
+            name: "orientation",
+            prop_type: "ResizableOrientation",
+            default: "Horizontal",
+            description: "Panel orientation (Horizontal or Vertical)",
+        },
+        PropDoc {
+            name: "index",
+            prop_type: "usize",
+            default: "0",
+            description: "Panel index (0 or 1)",
+        },
+        PropDoc {
+            name: "default_size",
+            prop_type: "f64",
+            default: "50.0",
+            description: "Default panel size %",
+        },
+        PropDoc {
+            name: "min_size",
+            prop_type: "f64",
+            default: "10.0",
+            description: "Minimum panel size %",
+        },
+        PropDoc {
+            name: "max_size",
+            prop_type: "f64",
+            default: "90.0",
+            description: "Maximum panel size %",
+        },
     ];
 
     html! { <ComponentPage name="Resizable" description="Resizable panel groups with drag handles." {examples} {props} /> }

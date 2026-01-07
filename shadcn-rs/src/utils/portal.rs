@@ -4,7 +4,7 @@
 //! the DOM hierarchy of the parent component. This is useful for modals,
 //! tooltips, and other overlay components.
 
-use web_sys::{window, Element, Node};
+use web_sys::{Element, Node, window};
 use yew::prelude::*;
 
 /// Portal component for rendering children to document.body

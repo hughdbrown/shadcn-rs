@@ -16,8 +16,8 @@
 //! }
 //! ```
 
-use yew::prelude::*;
 use crate::types::Size;
+use yew::prelude::*;
 
 /// Spinner component properties
 #[derive(Properties, PartialEq, Clone)]
@@ -65,13 +65,9 @@ pub fn spinner(props: &SpinnerProps) -> Html {
         Size::Xl2 => "spinner-2xl",
     };
 
-    let classes: Classes = vec![
-        Classes::from("spinner"),
-        Classes::from(size_class),
-        class,
-    ]
-    .into_iter()
-    .collect();
+    let classes: Classes = vec![Classes::from("spinner"), Classes::from(size_class), class]
+        .into_iter()
+        .collect();
 
     let style = color.map(|c| format!("color: {}", c));
 

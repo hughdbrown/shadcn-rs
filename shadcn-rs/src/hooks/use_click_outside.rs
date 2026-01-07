@@ -48,17 +48,13 @@ where
             let callback = callback.clone();
 
             EventListener::new(&gloo::utils::document(), "mousedown", move |event| {
-                if let Some(event) = event.dyn_ref::<WebMouseEvent>() {
-                    if let Some(target) = event.target() {
-                        if let Some(target_node) = target.dyn_ref::<Node>() {
-                            if let Some(element) = node_ref.cast::<Element>() {
-                                // Check if click target is outside the element
-                                if !element.contains(Some(target_node)) {
-                                    callback();
-                                }
-                            }
-                        }
-                    }
+                if let Some(event) = event.dyn_ref::<WebMouseEvent>()
+                    && let Some(target) = event.target()
+                    && let Some(target_node) = target.dyn_ref::<Node>()
+                    && let Some(element) = node_ref.cast::<Element>()
+                    && !element.contains(Some(target_node))
+                {
+                    callback();
                 }
             })
         };
@@ -109,19 +105,20 @@ where
             let node_ref = node_ref.clone();
             let callback_clone = callback.clone();
 
-            Some(EventListener::new(&gloo::utils::document(), "mousedown", move |event| {
-                if let Some(event) = event.dyn_ref::<WebMouseEvent>() {
-                    if let Some(target) = event.target() {
-                        if let Some(target_node) = target.dyn_ref::<Node>() {
-                            if let Some(element) = node_ref.cast::<Element>() {
-                                if !element.contains(Some(target_node)) {
-                                    callback_clone();
-                                }
-                            }
-                        }
+            Some(EventListener::new(
+                &gloo::utils::document(),
+                "mousedown",
+                move |event| {
+                    if let Some(event) = event.dyn_ref::<WebMouseEvent>()
+                        && let Some(target) = event.target()
+                        && let Some(target_node) = target.dyn_ref::<Node>()
+                        && let Some(element) = node_ref.cast::<Element>()
+                        && !element.contains(Some(target_node))
+                    {
+                        callback_clone();
                     }
-                }
-            }))
+                },
+            ))
         } else {
             None
         };

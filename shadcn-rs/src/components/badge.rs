@@ -21,9 +21,9 @@
 //! }
 //! ```
 
-use yew::prelude::*;
 use crate::types::Variant;
 use crate::utils::class_names;
+use yew::prelude::*;
 
 /// Badge component properties
 #[derive(Properties, PartialEq, Clone)]
@@ -76,10 +76,7 @@ pub fn badge(props: &BadgeProps) -> Html {
     } = props.clone();
 
     // Build class names
-    let classes = class_names(&[
-        Some("badge"),
-        Some(variant.to_class()),
-    ]);
+    let classes = class_names(&[Some("badge"), Some(variant.to_class())]);
 
     // Merge with custom classes
     let final_classes: Classes = vec![classes, class].into_iter().collect();

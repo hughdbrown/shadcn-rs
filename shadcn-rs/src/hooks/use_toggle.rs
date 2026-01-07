@@ -73,9 +73,7 @@ pub fn use_toggle(initial: bool) -> (bool, Callback<()>, Callback<bool>) {
 /// }
 /// ```
 #[hook]
-pub fn use_toggle_with_controls(
-    initial: bool,
-) -> (bool, Callback<()>, Callback<()>, Callback<()>) {
+pub fn use_toggle_with_controls(initial: bool) -> (bool, Callback<()>, Callback<()>, Callback<()>) {
     let state = use_state(|| initial);
 
     let toggle = {

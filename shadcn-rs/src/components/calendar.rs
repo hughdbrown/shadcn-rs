@@ -105,9 +105,7 @@ pub fn calendar(props: &CalendarProps) -> Html {
     let current_month = use_state(|| 0u8);
     let current_year = use_state(|| 2024i32);
 
-    let classes: Classes = vec![Classes::from("calendar"), class]
-        .into_iter()
-        .collect();
+    let classes: Classes = vec![Classes::from("calendar"), class].into_iter().collect();
 
     // Month names
     let month_names = vec![
@@ -126,7 +124,7 @@ pub fn calendar(props: &CalendarProps) -> Html {
     ];
 
     // Day names
-    let day_names = vec!["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+    let day_names = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
     // Navigate to previous month
     let go_prev_month = {

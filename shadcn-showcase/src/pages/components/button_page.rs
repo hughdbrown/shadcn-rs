@@ -1,7 +1,7 @@
 //! Button component showcase page
 
+use shadcn_rs::{Button, Size, Variant};
 use yew::prelude::*;
-use shadcn_rs::{Button, Variant, Size};
 
 use crate::components::{ComponentPage, Example, PropDoc};
 

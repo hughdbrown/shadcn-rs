@@ -126,7 +126,7 @@ pub fn home_page() -> Html {
                     <div class="quick-start-step">
                         <h3>{ "1. Add to Cargo.toml" }</h3>
                         <pre class="code-inline"><code>{ r#"[dependencies]
-shadcn-rs = "0.1""# }</code></pre>
+    shadcn-rs = "0.1""# }</code></pre>
                     </div>
                     <div class="quick-start-step">
                         <h3>{ "2. Include the CSS" }</h3>

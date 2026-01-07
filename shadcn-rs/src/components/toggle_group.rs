@@ -23,9 +23,9 @@
 //! }
 //! ```
 
-use yew::prelude::*;
-use std::collections::HashSet;
 use crate::types::Size;
+use std::collections::HashSet;
+use yew::prelude::*;
 
 /// Toggle group type
 #[derive(Debug, Clone, PartialEq)]
@@ -186,7 +186,7 @@ pub fn toggle_group(props: &ToggleGroupProps) -> Html {
         toggle_value,
         group_type: r#type.clone(),
         disabled,
-        size: size.clone(),
+        size,
     };
 
     let type_class = match r#type {
@@ -276,16 +276,14 @@ pub fn toggle_group_item(props: &ToggleGroupItemProps) -> Html {
 
     let is_disabled = disabled || context.as_ref().map(|ctx| ctx.disabled).unwrap_or(false);
 
-    let size = context.as_ref().map(|ctx| ctx.size.clone()).unwrap_or(Size::Md);
+    let size = context.as_ref().map(|ctx| ctx.size).unwrap_or(Size::Md);
 
     let handle_click = {
         let context = context.clone();
         let value = value.to_string();
         Callback::from(move |_: MouseEvent| {
-            if !is_disabled {
-                if let Some(ctx) = context.as_ref() {
-                    ctx.toggle_value.emit(value.clone());
-                }
+            if !is_disabled && let Some(ctx) = context.as_ref() {
+                ctx.toggle_value.emit(value.clone());
             }
         })
     };

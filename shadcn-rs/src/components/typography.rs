@@ -183,10 +183,7 @@ pub fn typography(props: &TypographyProps) -> Html {
         FontWeight::Bold => "font-bold",
     });
 
-    let mut classes_vec = vec![
-        Classes::from("typography"),
-        Classes::from(variant_class),
-    ];
+    let mut classes_vec = vec![Classes::from("typography"), Classes::from(variant_class)];
 
     if let Some(align_cls) = align_class {
         classes_vec.push(Classes::from(align_cls));
@@ -223,8 +220,11 @@ pub fn typography(props: &TypographyProps) -> Html {
         TypographyVariant::H6 => html! {
             <h6 class={classes}>{ children }</h6>
         },
-        TypographyVariant::P | TypographyVariant::Lead | TypographyVariant::Large
-        | TypographyVariant::Small | TypographyVariant::Muted => html! {
+        TypographyVariant::P
+        | TypographyVariant::Lead
+        | TypographyVariant::Large
+        | TypographyVariant::Small
+        | TypographyVariant::Muted => html! {
             <p class={classes}>{ children }</p>
         },
         TypographyVariant::Blockquote => html! {

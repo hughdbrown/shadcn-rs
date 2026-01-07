@@ -40,18 +40,22 @@ pub struct ThemeToggleProps {
 pub fn theme_toggle(props: &ThemeToggleProps) -> Html {
     let theme = use_state(|| {
         // Try to get theme from localStorage or system preference
-        if let Some(window) = window() {
-            if let Ok(Some(storage)) = window.local_storage() {
-                if let Ok(Some(stored)) = storage.get_item("theme") {
-                    return if stored == "dark" { Theme::Dark } else { Theme::Light };
-                }
-            }
-            // Check system preference
-            if let Ok(Some(query)) = window.match_media("(prefers-color-scheme: dark)") {
-                if query.matches() {
-                    return Theme::Dark;
-                }
-            }
+        if let Some(window) = window()
+            && let Ok(Some(storage)) = window.local_storage()
+            && let Ok(Some(stored)) = storage.get_item("theme")
+        {
+            return if stored == "dark" {
+                Theme::Dark
+            } else {
+                Theme::Light
+            };
+        }
+        // Check system preference
+        if let Some(window) = window()
+            && let Ok(Some(query)) = window.match_media("(prefers-color-scheme: dark)")
+            && query.matches()
+        {
+            return Theme::Dark;
         }
         Theme::Light
     });
@@ -60,15 +64,16 @@ pub fn theme_toggle(props: &ThemeToggleProps) -> Html {
     {
         let theme = *theme;
         use_effect_with(theme, move |theme| {
-            if let Some(window) = window() {
-                if let Some(document) = window.document() {
-                    if let Some(root) = document.document_element() {
-                        let _ = root.set_attribute("data-theme", theme.as_str());
-                    }
-                }
-                if let Ok(Some(storage)) = window.local_storage() {
-                    let _ = storage.set_item("theme", theme.as_str());
-                }
+            if let Some(window) = window()
+                && let Some(document) = window.document()
+                && let Some(root) = document.document_element()
+            {
+                let _ = root.set_attribute("data-theme", theme.as_str());
+            }
+            if let Some(window) = window()
+                && let Ok(Some(storage)) = window.local_storage()
+            {
+                let _ = storage.set_item("theme", theme.as_str());
             }
             || ()
         });

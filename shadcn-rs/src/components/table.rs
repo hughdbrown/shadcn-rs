@@ -62,9 +62,7 @@ pub fn table(props: &TableProps) -> Html {
         children,
     } = props.clone();
 
-    let classes: Classes = vec![Classes::from("table"), class]
-        .into_iter()
-        .collect();
+    let classes: Classes = vec![Classes::from("table"), class].into_iter().collect();
 
     html! {
         <div class="table-wrapper">

@@ -1,7 +1,10 @@
 //! Sheet component showcase page
 
+use shadcn_rs::{
+    Button, Input, Label, Position, Sheet, SheetContent, SheetDescription, SheetFooter,
+    SheetHeader, SheetTitle, SheetTrigger, Variant,
+};
 use yew::prelude::*;
-use shadcn_rs::{Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, Button, Variant, Input, Label, Position};
 
 use crate::components::{ComponentPage, Example, PropDoc};
 
@@ -78,9 +81,24 @@ pub fn sheet_page() -> Html {
     ];
 
     let props = vec![
-        PropDoc { name: "side", prop_type: "&str", default: "\"right\"", description: "Side to slide from" },
-        PropDoc { name: "open", prop_type: "bool", default: "false", description: "Controlled open state" },
-        PropDoc { name: "on_open_change", prop_type: "Callback<bool>", default: "-", description: "Open state change handler" },
+        PropDoc {
+            name: "side",
+            prop_type: "&str",
+            default: "\"right\"",
+            description: "Side to slide from",
+        },
+        PropDoc {
+            name: "open",
+            prop_type: "bool",
+            default: "false",
+            description: "Controlled open state",
+        },
+        PropDoc {
+            name: "on_open_change",
+            prop_type: "Callback<bool>",
+            default: "-",
+            description: "Open state change handler",
+        },
     ];
 
     html! { <ComponentPage name="Sheet" description="A slide-out side panel." {examples} {props} /> }

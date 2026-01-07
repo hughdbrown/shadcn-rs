@@ -21,9 +21,9 @@
 //! }
 //! ```
 
-use yew::prelude::*;
 use crate::types::Variant;
 use crate::utils::class_names;
+use yew::prelude::*;
 
 /// Alert component properties
 #[derive(Properties, PartialEq, Clone)]
@@ -77,10 +77,7 @@ pub fn alert(props: &AlertProps) -> Html {
     } = props.clone();
 
     // Build class names
-    let classes = class_names(&[
-        Some("alert"),
-        Some(variant.to_class()),
-    ]);
+    let classes = class_names(&[Some("alert"), Some(variant.to_class())]);
 
     // Merge with custom classes
     let final_classes: Classes = vec![classes, class].into_iter().collect();

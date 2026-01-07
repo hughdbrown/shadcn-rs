@@ -1,7 +1,7 @@
 //! Toast component showcase page
 
-use yew::prelude::*;
 use shadcn_rs::{Button, Variant};
+use yew::prelude::*;
 
 use crate::components::{ComponentPage, Example, PropDoc};
 
@@ -64,11 +64,36 @@ toast.warning("Please review your input");"#,
     ];
 
     let props = vec![
-        PropDoc { name: "title", prop_type: "String", default: "-", description: "Toast title" },
-        PropDoc { name: "description", prop_type: "Option<String>", default: "-", description: "Toast description" },
-        PropDoc { name: "variant", prop_type: "ToastVariant", default: "Default", description: "Visual variant" },
-        PropDoc { name: "duration", prop_type: "u32", default: "5000", description: "Auto-dismiss time (ms)" },
-        PropDoc { name: "action", prop_type: "Option<ToastAction>", default: "-", description: "Action button" },
+        PropDoc {
+            name: "title",
+            prop_type: "String",
+            default: "-",
+            description: "Toast title",
+        },
+        PropDoc {
+            name: "description",
+            prop_type: "Option<String>",
+            default: "-",
+            description: "Toast description",
+        },
+        PropDoc {
+            name: "variant",
+            prop_type: "ToastVariant",
+            default: "Default",
+            description: "Visual variant",
+        },
+        PropDoc {
+            name: "duration",
+            prop_type: "u32",
+            default: "5000",
+            description: "Auto-dismiss time (ms)",
+        },
+        PropDoc {
+            name: "action",
+            prop_type: "Option<ToastAction>",
+            default: "-",
+            description: "Action button",
+        },
     ];
 
     html! { <ComponentPage name="Toast" description="A succinct message that is displayed temporarily." {examples} {props} /> }

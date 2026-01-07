@@ -1,7 +1,7 @@
 //! InputGroup component showcase page
 
+use shadcn_rs::{Button, Input, InputGroup};
 use yew::prelude::*;
-use shadcn_rs::{InputGroup, Input, Button};
 
 use crate::components::{ComponentPage, Example, PropDoc};
 
@@ -53,12 +53,42 @@ pub fn input_group_page() -> Html {
     ];
 
     let props = vec![
-        PropDoc { name: "prefix", prop_type: "Option<Html>", default: "-", description: "Prefix content inside input" },
-        PropDoc { name: "suffix", prop_type: "Option<Html>", default: "-", description: "Suffix content inside input" },
-        PropDoc { name: "addon_before", prop_type: "Option<Html>", default: "-", description: "Add-on before input" },
-        PropDoc { name: "addon_after", prop_type: "Option<Html>", default: "-", description: "Add-on after input" },
-        PropDoc { name: "class", prop_type: "Classes", default: "-", description: "Additional CSS classes" },
-        PropDoc { name: "children", prop_type: "Children", default: "-", description: "Input element" },
+        PropDoc {
+            name: "prefix",
+            prop_type: "Option<Html>",
+            default: "-",
+            description: "Prefix content inside input",
+        },
+        PropDoc {
+            name: "suffix",
+            prop_type: "Option<Html>",
+            default: "-",
+            description: "Suffix content inside input",
+        },
+        PropDoc {
+            name: "addon_before",
+            prop_type: "Option<Html>",
+            default: "-",
+            description: "Add-on before input",
+        },
+        PropDoc {
+            name: "addon_after",
+            prop_type: "Option<Html>",
+            default: "-",
+            description: "Add-on after input",
+        },
+        PropDoc {
+            name: "class",
+            prop_type: "Classes",
+            default: "-",
+            description: "Additional CSS classes",
+        },
+        PropDoc {
+            name: "children",
+            prop_type: "Children",
+            default: "-",
+            description: "Input element",
+        },
     ];
 
     html! { <ComponentPage name="Input Group" description="Groups an input with addons or buttons." {examples} {props} /> }

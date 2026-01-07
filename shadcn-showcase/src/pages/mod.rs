@@ -9,7 +9,7 @@ mod getting_started;
 // Component pages
 mod components;
 
+pub use components::*;
+pub use getting_started::*;
 pub use home::HomePage;
 pub use not_found::NotFoundPage;
-pub use getting_started::*;
-pub use components::*;

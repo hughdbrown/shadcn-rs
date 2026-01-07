@@ -93,12 +93,8 @@ pub fn field(props: &FieldProps) -> Html {
     .into_iter()
     .collect();
 
-    let help_id = id
-        .as_ref()
-        .map(|field_id| format!("{}-help", field_id));
-    let error_id = id
-        .as_ref()
-        .map(|field_id| format!("{}-error", field_id));
+    let help_id = id.as_ref().map(|field_id| format!("{}-help", field_id));
+    let error_id = id.as_ref().map(|field_id| format!("{}-error", field_id));
 
     html! {
         <div class={classes}>
@@ -220,9 +216,6 @@ mod tests {
             children: Children::new(vec![]),
         };
 
-        assert_eq!(
-            props.error,
-            Some(AttrValue::from("This field is required"))
-        );
+        assert_eq!(props.error, Some(AttrValue::from("This field is required")));
     }
 }

@@ -97,7 +97,7 @@ pub use form::{
 };
 pub use input::Input;
 pub use label::Label;
-pub use native_select::{NativeSelect, NativeSelectOption, NativeSelectOptGroup};
+pub use native_select::{NativeSelect, NativeSelectOptGroup, NativeSelectOption};
 pub use progress::Progress;
 pub use radio::{Radio, RadioGroup};
 pub use select::{
@@ -112,7 +112,9 @@ pub use textarea::{Textarea, TextareaResize};
 pub use aspect_ratio::AspectRatio;
 pub use empty::Empty;
 pub use item::Item;
-pub use resizable::{Resizable, ResizableContext, ResizableHandle, ResizableOrientation, ResizablePanel};
+pub use resizable::{
+    Resizable, ResizableContext, ResizableHandle, ResizableOrientation, ResizablePanel,
+};
 pub use scroll_area::{ScrollArea, ScrollDirection};
 pub use table::{Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow};
 
@@ -122,22 +124,27 @@ pub use collapsible::{Collapsible, CollapsibleContent, CollapsibleTrigger};
 pub use field::Field;
 pub use input_group::InputGroup;
 pub use toggle::{Toggle, ToggleVariant};
-pub use toggle_group::{ToggleGroup, ToggleGroupContext, ToggleGroupItem, ToggleGroupOrientation, ToggleGroupType};
+pub use toggle_group::{
+    ToggleGroup, ToggleGroupContext, ToggleGroupItem, ToggleGroupOrientation, ToggleGroupType,
+};
 
 // Re-export Tier 5 components
-pub use accordion::{Accordion, AccordionContext, AccordionContent, AccordionItem, AccordionItemContext, AccordionTrigger, AccordionType};
+pub use accordion::{
+    Accordion, AccordionContent, AccordionContext, AccordionItem, AccordionItemContext,
+    AccordionTrigger, AccordionType,
+};
 pub use alert_dialog::{
     AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogContext,
     AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
     AlertDialogTrigger,
 };
 pub use dialog::{
-    Dialog, DialogClose, DialogContext, DialogContent, DialogDescription, DialogFooter, DialogHeader,
-    DialogTitle, DialogTrigger,
+    Dialog, DialogClose, DialogContent, DialogContext, DialogDescription, DialogFooter,
+    DialogHeader, DialogTitle, DialogTrigger,
 };
 pub use drawer::{
-    Drawer, DrawerClose, DrawerContext, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader,
-    DrawerTitle, DrawerTrigger,
+    Drawer, DrawerClose, DrawerContent, DrawerContext, DrawerDescription, DrawerFooter,
+    DrawerHeader, DrawerTitle, DrawerTrigger,
 };
 pub use dropdown_menu::{
     DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuContext,
@@ -154,8 +161,7 @@ pub use tooltip::{Tooltip, TooltipContent, TooltipTrigger};
 
 // Re-export Tier 6 components
 pub use breadcrumb::{
-    Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage,
-    BreadcrumbSeparator,
+    Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator,
 };
 pub use context_menu::{
     ContextMenu, ContextMenuCheckboxItem, ContextMenuContent, ContextMenuItem, ContextMenuLabel,

@@ -45,9 +45,9 @@
 //! }
 //! ```
 
-use yew::prelude::*;
+use crate::hooks::{use_click_outside_conditional, use_escape_key_conditional};
 use crate::utils::Portal;
-use crate::hooks::{use_escape_key_conditional, use_click_outside_conditional};
+use yew::prelude::*;
 
 /// Context for sharing dialog state between parent and children
 #[derive(Clone, PartialEq)]

@@ -20,8 +20,8 @@
 //! }
 //! ```
 
-use yew::prelude::*;
 use crate::types::Size;
+use yew::prelude::*;
 
 /// Button group orientation
 #[derive(Debug, Clone, PartialEq)]

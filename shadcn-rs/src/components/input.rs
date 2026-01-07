@@ -35,9 +35,9 @@
 //! }
 //! ```
 
-use yew::prelude::*;
 use crate::types::Size;
 use crate::utils::class_names;
+use yew::prelude::*;
 
 /// Input component properties
 #[derive(Properties, PartialEq, Clone)]
@@ -200,8 +200,16 @@ pub fn input(props: &InputProps) -> Html {
         Some("input"),
         Some(size.to_class()),
         if error { Some("input-error") } else { None },
-        if disabled { Some("input-disabled") } else { None },
-        if readonly { Some("input-readonly") } else { None },
+        if disabled {
+            Some("input-disabled")
+        } else {
+            None
+        },
+        if readonly {
+            Some("input-readonly")
+        } else {
+            None
+        },
     ]);
 
     // Merge with custom classes

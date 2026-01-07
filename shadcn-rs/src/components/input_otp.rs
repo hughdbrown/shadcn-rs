@@ -150,10 +150,10 @@ pub fn input_otp(props: &InputOTPProps) -> Html {
             }
 
             // Call on_complete if all fields are filled
-            if combined.len() == length {
-                if let Some(cb) = on_complete.as_ref() {
-                    cb.emit(combined);
-                }
+            if combined.len() == length
+                && let Some(cb) = on_complete.as_ref()
+            {
+                cb.emit(combined);
             }
         })
     };

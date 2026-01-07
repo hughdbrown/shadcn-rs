@@ -69,9 +69,7 @@ pub fn empty(props: &EmptyProps) -> Html {
         children,
     } = props.clone();
 
-    let classes: Classes = vec![Classes::from("empty"), class]
-        .into_iter()
-        .collect();
+    let classes: Classes = vec![Classes::from("empty"), class].into_iter().collect();
 
     let has_children = children.iter().count() > 0;
 

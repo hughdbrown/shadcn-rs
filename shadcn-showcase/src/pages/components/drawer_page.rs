@@ -1,41 +1,43 @@
 //! Drawer component showcase page
 
+use shadcn_rs::{
+    Button, Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader,
+    DrawerTitle, DrawerTrigger, Variant,
+};
 use yew::prelude::*;
-use shadcn_rs::{Drawer, DrawerTrigger, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter, DrawerClose, Button, Variant};
 
 use crate::components::{ComponentPage, Example, PropDoc};
 
 #[function_component(DrawerPage)]
 pub fn drawer_page() -> Html {
-    let examples = vec![
-        Example {
-            title: "Default",
-            description: "A mobile-friendly bottom drawer.",
-            demo: html! {
-                <Drawer>
-                    <DrawerTrigger>
-                        <Button variant={Variant::Outline}>{ "Open Drawer" }</Button>
-                    </DrawerTrigger>
-                    <DrawerContent>
-                        <DrawerHeader>
-                            <DrawerTitle>{ "Move Goal" }</DrawerTitle>
-                            <DrawerDescription>{ "Set your daily activity goal." }</DrawerDescription>
-                        </DrawerHeader>
-                        <div class="p-4">
-                            <p>{ "Drawer content goes here..." }</p>
-                        </div>
-                        <DrawerFooter>
-                            <DrawerClose>
-                                <Button>{ "Submit" }</Button>
-                            </DrawerClose>
-                            <DrawerClose>
-                                <Button variant={Variant::Outline}>{ "Cancel" }</Button>
-                            </DrawerClose>
-                        </DrawerFooter>
-                    </DrawerContent>
-                </Drawer>
-            },
-            code: r#"<Drawer>
+    let examples = vec![Example {
+        title: "Default",
+        description: "A mobile-friendly bottom drawer.",
+        demo: html! {
+            <Drawer>
+                <DrawerTrigger>
+                    <Button variant={Variant::Outline}>{ "Open Drawer" }</Button>
+                </DrawerTrigger>
+                <DrawerContent>
+                    <DrawerHeader>
+                        <DrawerTitle>{ "Move Goal" }</DrawerTitle>
+                        <DrawerDescription>{ "Set your daily activity goal." }</DrawerDescription>
+                    </DrawerHeader>
+                    <div class="p-4">
+                        <p>{ "Drawer content goes here..." }</p>
+                    </div>
+                    <DrawerFooter>
+                        <DrawerClose>
+                            <Button>{ "Submit" }</Button>
+                        </DrawerClose>
+                        <DrawerClose>
+                            <Button variant={Variant::Outline}>{ "Cancel" }</Button>
+                        </DrawerClose>
+                    </DrawerFooter>
+                </DrawerContent>
+            </Drawer>
+        },
+        code: r#"<Drawer>
     <DrawerTrigger>
         <Button>{ "Open Drawer" }</Button>
     </DrawerTrigger>
@@ -50,12 +52,21 @@ pub fn drawer_page() -> Html {
         </DrawerFooter>
     </DrawerContent>
 </Drawer>"#,
-        },
-    ];
+    }];
 
     let props = vec![
-        PropDoc { name: "open", prop_type: "bool", default: "false", description: "Controlled open state" },
-        PropDoc { name: "on_open_change", prop_type: "Callback<bool>", default: "-", description: "Open state change handler" },
+        PropDoc {
+            name: "open",
+            prop_type: "bool",
+            default: "false",
+            description: "Controlled open state",
+        },
+        PropDoc {
+            name: "on_open_change",
+            prop_type: "Callback<bool>",
+            default: "-",
+            description: "Open state change handler",
+        },
     ];
 
     html! { <ComponentPage name="Drawer" description="A mobile-friendly drawer component with swipe gestures." {examples} {props} /> }

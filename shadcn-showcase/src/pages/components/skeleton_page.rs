@@ -1,7 +1,7 @@
 //! Skeleton component showcase page
 
-use yew::prelude::*;
 use shadcn_rs::Skeleton;
+use yew::prelude::*;
 
 use crate::components::{ComponentPage, Example, PropDoc};
 
@@ -79,14 +79,12 @@ pub fn skeleton_page() -> Html {
         },
     ];
 
-    let props = vec![
-        PropDoc {
-            name: "class",
-            prop_type: "Classes",
-            default: "-",
-            description: "CSS classes to control size and shape",
-        },
-    ];
+    let props = vec![PropDoc {
+        name: "class",
+        prop_type: "Classes",
+        default: "-",
+        description: "CSS classes to control size and shape",
+    }];
 
     html! {
         <ComponentPage

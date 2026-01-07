@@ -1,7 +1,7 @@
 //! Calendar component showcase page
 
-use yew::prelude::*;
 use shadcn_rs::{Calendar, CalendarMode};
+use yew::prelude::*;
 
 use crate::components::{ComponentPage, Example, PropDoc};
 
@@ -30,12 +30,42 @@ pub fn calendar_page() -> Html {
     ];
 
     let props = vec![
-        PropDoc { name: "mode", prop_type: "&str", default: "\"single\"", description: "Selection mode (single, multiple, range)" },
-        PropDoc { name: "selected", prop_type: "Option<NaiveDate>", default: "-", description: "Selected date(s)" },
-        PropDoc { name: "on_select", prop_type: "Callback<NaiveDate>", default: "-", description: "Selection handler" },
-        PropDoc { name: "disabled_dates", prop_type: "Vec<NaiveDate>", default: "[]", description: "Dates to disable" },
-        PropDoc { name: "min_date", prop_type: "Option<NaiveDate>", default: "-", description: "Minimum selectable date" },
-        PropDoc { name: "max_date", prop_type: "Option<NaiveDate>", default: "-", description: "Maximum selectable date" },
+        PropDoc {
+            name: "mode",
+            prop_type: "&str",
+            default: "\"single\"",
+            description: "Selection mode (single, multiple, range)",
+        },
+        PropDoc {
+            name: "selected",
+            prop_type: "Option<NaiveDate>",
+            default: "-",
+            description: "Selected date(s)",
+        },
+        PropDoc {
+            name: "on_select",
+            prop_type: "Callback<NaiveDate>",
+            default: "-",
+            description: "Selection handler",
+        },
+        PropDoc {
+            name: "disabled_dates",
+            prop_type: "Vec<NaiveDate>",
+            default: "[]",
+            description: "Dates to disable",
+        },
+        PropDoc {
+            name: "min_date",
+            prop_type: "Option<NaiveDate>",
+            default: "-",
+            description: "Minimum selectable date",
+        },
+        PropDoc {
+            name: "max_date",
+            prop_type: "Option<NaiveDate>",
+            default: "-",
+            description: "Maximum selectable date",
+        },
     ];
 
     html! { <ComponentPage name="Calendar" description="A date field component that allows users to enter and edit date." {examples} {props} /> }

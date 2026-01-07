@@ -1,7 +1,7 @@
 //! Field component showcase page
 
-use yew::prelude::*;
 use shadcn_rs::{Field, Input};
+use yew::prelude::*;
 
 use crate::components::{ComponentPage, Example, PropDoc};
 
@@ -59,11 +59,36 @@ pub fn field_page() -> Html {
     ];
 
     let props = vec![
-        PropDoc { name: "label", prop_type: "AttrValue", default: "-", description: "Field label text" },
-        PropDoc { name: "id", prop_type: "Option<AttrValue>", default: "-", description: "Input element ID" },
-        PropDoc { name: "required", prop_type: "bool", default: "false", description: "Show required indicator" },
-        PropDoc { name: "error", prop_type: "Option<AttrValue>", default: "-", description: "Error message" },
-        PropDoc { name: "help_text", prop_type: "Option<AttrValue>", default: "-", description: "Help text" },
+        PropDoc {
+            name: "label",
+            prop_type: "AttrValue",
+            default: "-",
+            description: "Field label text",
+        },
+        PropDoc {
+            name: "id",
+            prop_type: "Option<AttrValue>",
+            default: "-",
+            description: "Input element ID",
+        },
+        PropDoc {
+            name: "required",
+            prop_type: "bool",
+            default: "false",
+            description: "Show required indicator",
+        },
+        PropDoc {
+            name: "error",
+            prop_type: "Option<AttrValue>",
+            default: "-",
+            description: "Error message",
+        },
+        PropDoc {
+            name: "help_text",
+            prop_type: "Option<AttrValue>",
+            default: "-",
+            description: "Help text",
+        },
     ];
 
     html! { <ComponentPage name="Field" description="A wrapper for form fields with label, input, and error handling." {examples} {props} /> }

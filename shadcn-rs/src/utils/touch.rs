@@ -33,9 +33,9 @@ pub struct SwipeConfig {
 impl Default for SwipeConfig {
     fn default() -> Self {
         Self {
-            min_distance: 30.0,      // 30px minimum
-            max_duration: 300.0,     // 300ms maximum
-            min_velocity: 0.1,       // 0.1 px/ms minimum
+            min_distance: 30.0,  // 30px minimum
+            max_duration: 300.0, // 300ms maximum
+            min_velocity: 0.1,   // 0.1 px/ms minimum
         }
     }
 }
@@ -179,8 +179,16 @@ mod tests {
 
     #[test]
     fn test_touch_point_distance() {
-        let p1 = TouchPoint { x: 0.0, y: 0.0, time: 0.0 };
-        let p2 = TouchPoint { x: 3.0, y: 4.0, time: 100.0 };
+        let p1 = TouchPoint {
+            x: 0.0,
+            y: 0.0,
+            time: 0.0,
+        };
+        let p2 = TouchPoint {
+            x: 3.0,
+            y: 4.0,
+            time: 100.0,
+        };
 
         let distance = p1.distance_to(&p2);
         assert!((distance - 5.0).abs() < 0.001); // 3-4-5 triangle
@@ -188,16 +196,32 @@ mod tests {
 
     #[test]
     fn test_touch_point_duration() {
-        let p1 = TouchPoint { x: 0.0, y: 0.0, time: 100.0 };
-        let p2 = TouchPoint { x: 0.0, y: 0.0, time: 250.0 };
+        let p1 = TouchPoint {
+            x: 0.0,
+            y: 0.0,
+            time: 100.0,
+        };
+        let p2 = TouchPoint {
+            x: 0.0,
+            y: 0.0,
+            time: 250.0,
+        };
 
         assert_eq!(p1.duration_to(&p2), 150.0);
     }
 
     #[test]
     fn test_touch_point_velocity() {
-        let p1 = TouchPoint { x: 0.0, y: 0.0, time: 0.0 };
-        let p2 = TouchPoint { x: 100.0, y: 0.0, time: 100.0 };
+        let p1 = TouchPoint {
+            x: 0.0,
+            y: 0.0,
+            time: 0.0,
+        };
+        let p2 = TouchPoint {
+            x: 100.0,
+            y: 0.0,
+            time: 100.0,
+        };
 
         let velocity = p1.velocity_to(&p2);
         assert_eq!(velocity, 1.0); // 100px / 100ms = 1.0 px/ms
@@ -205,8 +229,16 @@ mod tests {
 
     #[test]
     fn test_detect_swipe_right() {
-        let start = TouchPoint { x: 0.0, y: 0.0, time: 0.0 };
-        let end = TouchPoint { x: 100.0, y: 5.0, time: 100.0 };
+        let start = TouchPoint {
+            x: 0.0,
+            y: 0.0,
+            time: 0.0,
+        };
+        let end = TouchPoint {
+            x: 100.0,
+            y: 5.0,
+            time: 100.0,
+        };
         let config = SwipeConfig::default();
 
         let direction = detect_swipe(&start, &end, &config);
@@ -215,8 +247,16 @@ mod tests {
 
     #[test]
     fn test_detect_swipe_left() {
-        let start = TouchPoint { x: 100.0, y: 0.0, time: 0.0 };
-        let end = TouchPoint { x: 0.0, y: 5.0, time: 100.0 };
+        let start = TouchPoint {
+            x: 100.0,
+            y: 0.0,
+            time: 0.0,
+        };
+        let end = TouchPoint {
+            x: 0.0,
+            y: 5.0,
+            time: 100.0,
+        };
         let config = SwipeConfig::default();
 
         let direction = detect_swipe(&start, &end, &config);
@@ -225,8 +265,16 @@ mod tests {
 
     #[test]
     fn test_detect_swipe_up() {
-        let start = TouchPoint { x: 0.0, y: 100.0, time: 0.0 };
-        let end = TouchPoint { x: 5.0, y: 0.0, time: 100.0 };
+        let start = TouchPoint {
+            x: 0.0,
+            y: 100.0,
+            time: 0.0,
+        };
+        let end = TouchPoint {
+            x: 5.0,
+            y: 0.0,
+            time: 100.0,
+        };
         let config = SwipeConfig::default();
 
         let direction = detect_swipe(&start, &end, &config);
@@ -235,8 +283,16 @@ mod tests {
 
     #[test]
     fn test_detect_swipe_down() {
-        let start = TouchPoint { x: 0.0, y: 0.0, time: 0.0 };
-        let end = TouchPoint { x: 5.0, y: 100.0, time: 100.0 };
+        let start = TouchPoint {
+            x: 0.0,
+            y: 0.0,
+            time: 0.0,
+        };
+        let end = TouchPoint {
+            x: 5.0,
+            y: 100.0,
+            time: 100.0,
+        };
         let config = SwipeConfig::default();
 
         let direction = detect_swipe(&start, &end, &config);
@@ -245,8 +301,16 @@ mod tests {
 
     #[test]
     fn test_detect_swipe_too_short() {
-        let start = TouchPoint { x: 0.0, y: 0.0, time: 0.0 };
-        let end = TouchPoint { x: 10.0, y: 0.0, time: 100.0 };
+        let start = TouchPoint {
+            x: 0.0,
+            y: 0.0,
+            time: 0.0,
+        };
+        let end = TouchPoint {
+            x: 10.0,
+            y: 0.0,
+            time: 100.0,
+        };
         let config = SwipeConfig::default();
 
         let direction = detect_swipe(&start, &end, &config);
@@ -255,8 +319,16 @@ mod tests {
 
     #[test]
     fn test_detect_swipe_too_slow() {
-        let start = TouchPoint { x: 0.0, y: 0.0, time: 0.0 };
-        let end = TouchPoint { x: 100.0, y: 0.0, time: 500.0 };
+        let start = TouchPoint {
+            x: 0.0,
+            y: 0.0,
+            time: 0.0,
+        };
+        let end = TouchPoint {
+            x: 100.0,
+            y: 0.0,
+            time: 500.0,
+        };
         let config = SwipeConfig::default();
 
         let direction = detect_swipe(&start, &end, &config);

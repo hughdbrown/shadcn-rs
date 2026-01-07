@@ -22,9 +22,9 @@
 //! }
 //! ```
 
-use yew::prelude::*;
 use crate::types::{Size, Variant};
 use crate::utils::class_names;
+use yew::prelude::*;
 
 /// Progress component properties
 #[derive(Properties, PartialEq, Clone)]
@@ -98,7 +98,7 @@ pub fn progress(props: &ProgressProps) -> Html {
     let percentage = if indeterminate {
         None
     } else {
-        value.map(|v| (v / max * 100.0).max(0.0).min(100.0))
+        value.map(|v| (v / max * 100.0).clamp(0.0, 100.0))
     };
 
     // Build class names

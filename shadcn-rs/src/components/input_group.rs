@@ -21,8 +21,8 @@
 //! }
 //! ```
 
-use yew::prelude::*;
 use crate::types::Size;
+use yew::prelude::*;
 
 /// Input group component properties
 #[derive(Properties, PartialEq, Clone)]

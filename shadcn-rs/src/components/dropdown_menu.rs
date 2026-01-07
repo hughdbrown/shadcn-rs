@@ -26,9 +26,9 @@
 //! }
 //! ```
 
-use yew::prelude::*;
+use crate::hooks::{use_click_outside_conditional, use_escape_key_conditional};
 use crate::utils::Portal;
-use crate::hooks::{use_escape_key_conditional, use_click_outside_conditional};
+use yew::prelude::*;
 
 /// Context for sharing dropdown menu state between parent and children
 #[derive(Clone, PartialEq)]
@@ -296,7 +296,6 @@ pub fn dropdown_menu_item(props: &DropdownMenuItemProps) -> Html {
     let handle_click = {
         let context = context.clone();
         let onclick = onclick.clone();
-        let disabled = disabled;
         Callback::from(move |e: MouseEvent| {
             if disabled {
                 return;
@@ -426,7 +425,6 @@ pub fn dropdown_menu_checkbox_item(props: &DropdownMenuCheckboxItemProps) -> Htm
     } = props.clone();
 
     let onclick = on_checked_change.map(|cb| {
-        let checked = checked;
         Callback::from(move |e: MouseEvent| {
             e.prevent_default();
             cb.emit(!checked);

@@ -1,7 +1,7 @@
 //! Radio component showcase page
 
+use shadcn_rs::{Label, Radio, RadioGroup};
 use yew::prelude::*;
-use shadcn_rs::{RadioGroup, Radio, Label};
 
 use crate::components::{ComponentPage, Example, PropDoc};
 

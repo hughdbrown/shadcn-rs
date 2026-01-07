@@ -91,16 +91,35 @@ pub fn code_block(props: &CodeBlockProps) -> Html {
 /// Simple Rust syntax highlighting
 fn highlight_rust(code: &str) -> String {
     let keywords = [
-        "use", "fn", "let", "mut", "pub", "struct", "enum", "impl", "trait",
-        "where", "for", "if", "else", "match", "return", "const", "static",
-        "mod", "crate", "self", "super", "as", "in", "move", "ref", "type",
-        "dyn", "async", "await", "loop", "while", "break", "continue",
+        "use", "fn", "let", "mut", "pub", "struct", "enum", "impl", "trait", "where", "for", "if",
+        "else", "match", "return", "const", "static", "mod", "crate", "self", "super", "as", "in",
+        "move", "ref", "type", "dyn", "async", "await", "loop", "while", "break", "continue",
     ];
 
     let types = [
-        "Html", "String", "Vec", "Option", "Result", "bool", "u8", "u16",
-        "u32", "u64", "i8", "i16", "i32", "i64", "f32", "f64", "usize",
-        "isize", "str", "Self", "Callback", "AttrValue", "Properties",
+        "Html",
+        "String",
+        "Vec",
+        "Option",
+        "Result",
+        "bool",
+        "u8",
+        "u16",
+        "u32",
+        "u64",
+        "i8",
+        "i16",
+        "i32",
+        "i64",
+        "f32",
+        "f64",
+        "usize",
+        "isize",
+        "str",
+        "Self",
+        "Callback",
+        "AttrValue",
+        "Properties",
     ];
 
     let macros = ["html!", "vec!", "format!", "println!", "panic!", "assert!"];
@@ -112,19 +131,17 @@ fn highlight_rust(code: &str) -> String {
 
     while let Some(c) = chars.next() {
         // Handle comments
-        if !in_string && c == '/' {
-            if chars.peek() == Some(&'/') {
-                // Line comment
-                result.push_str("<span class=\"hljs-comment\">/");
-                while let Some(ch) = chars.next() {
-                    if ch == '\n' {
-                        result.push_str("</span>\n");
-                        break;
-                    }
-                    push_escaped(&mut result, ch);
+        if !in_string && c == '/' && chars.peek() == Some(&'/') {
+            // Line comment
+            result.push_str("<span class=\"hljs-comment\">/");
+            for ch in chars.by_ref() {
+                if ch == '\n' {
+                    result.push_str("</span>\n");
+                    break;
                 }
-                continue;
+                push_escaped(&mut result, ch);
             }
+            continue;
         }
 
         // Handle strings
@@ -161,14 +178,18 @@ fn highlight_rust(code: &str) -> String {
                 }
             }
 
-            if macros.iter().any(|m| *m == word) {
-                result.push_str(&format!("<span class=\"hljs-keyword\">{}</span>", escape_html(&word)));
-            } else if keywords.iter().any(|k| *k == word) {
-                result.push_str(&format!("<span class=\"hljs-keyword\">{}</span>", escape_html(&word)));
-            } else if types.iter().any(|t| *t == word) {
-                result.push_str(&format!("<span class=\"hljs-type\">{}</span>", escape_html(&word)));
-            } else if word.chars().next().map(|c| c.is_uppercase()).unwrap_or(false) {
-                result.push_str(&format!("<span class=\"hljs-type\">{}</span>", escape_html(&word)));
+            if macros.iter().any(|m| *m == word) || keywords.iter().any(|k| *k == word) {
+                result.push_str(&format!(
+                    "<span class=\"hljs-keyword\">{}</span>",
+                    escape_html(&word)
+                ));
+            } else if types.iter().any(|t| *t == word)
+                || word.chars().next().is_some_and(|c| c.is_uppercase())
+            {
+                result.push_str(&format!(
+                    "<span class=\"hljs-type\">{}</span>",
+                    escape_html(&word)
+                ));
             } else {
                 result.push_str(&escape_html(&word));
             }
@@ -186,7 +207,10 @@ fn highlight_rust(code: &str) -> String {
                     break;
                 }
             }
-            result.push_str(&format!("<span class=\"hljs-number\">{}</span>", escape_html(&num)));
+            result.push_str(&format!(
+                "<span class=\"hljs-number\">{}</span>",
+                escape_html(&num)
+            ));
             continue;
         }
 
@@ -194,7 +218,7 @@ fn highlight_rust(code: &str) -> String {
         if c == '#' && chars.peek() == Some(&'[') {
             result.push_str("<span class=\"hljs-meta\">#");
             let mut depth = 0;
-            while let Some(ch) = chars.next() {
+            for ch in chars.by_ref() {
                 push_escaped(&mut result, ch);
                 if ch == '[' {
                     depth += 1;

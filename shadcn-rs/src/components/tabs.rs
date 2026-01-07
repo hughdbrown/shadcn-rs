@@ -253,10 +253,7 @@ mod tests {
 
     #[test]
     fn test_tabs_orientation_class() {
-        assert_eq!(
-            TabsOrientation::Horizontal.to_class(),
-            "tabs-horizontal"
-        );
+        assert_eq!(TabsOrientation::Horizontal.to_class(), "tabs-horizontal");
         assert_eq!(TabsOrientation::Vertical.to_class(), "tabs-vertical");
     }
 

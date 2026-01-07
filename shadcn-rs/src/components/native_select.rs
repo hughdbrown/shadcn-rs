@@ -23,9 +23,9 @@
 //! }
 //! ```
 
-use yew::prelude::*;
 use crate::types::Size;
 use crate::utils::class_names;
+use yew::prelude::*;
 
 /// Native Select component properties
 #[derive(Properties, PartialEq, Clone)]
@@ -141,8 +141,16 @@ pub fn native_select(props: &NativeSelectProps) -> Html {
     let classes = class_names(&[
         Some("native-select"),
         Some(size.to_class()),
-        if disabled { Some("native-select-disabled") } else { None },
-        if is_invalid { Some("native-select-invalid") } else { None },
+        if disabled {
+            Some("native-select-disabled")
+        } else {
+            None
+        },
+        if is_invalid {
+            Some("native-select-invalid")
+        } else {
+            None
+        },
     ]);
 
     // Merge with custom classes

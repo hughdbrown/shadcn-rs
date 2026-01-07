@@ -1,7 +1,7 @@
 //! Label component showcase page
 
+use shadcn_rs::{Checkbox, Input, Label};
 use yew::prelude::*;
-use shadcn_rs::{Label, Input, Checkbox};
 
 use crate::components::{ComponentPage, Example, PropDoc};
 

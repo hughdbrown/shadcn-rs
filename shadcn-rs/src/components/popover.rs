@@ -26,10 +26,10 @@
 //! }
 //! ```
 
-use yew::prelude::*;
+use crate::hooks::{use_click_outside_conditional, use_escape_key_conditional};
 use crate::types::Position;
 use crate::utils::Portal;
-use crate::hooks::{use_escape_key_conditional, use_click_outside_conditional};
+use yew::prelude::*;
 
 /// Popover component properties
 #[derive(Properties, PartialEq, Clone)]

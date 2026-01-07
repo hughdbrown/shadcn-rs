@@ -20,8 +20,8 @@
 //! }
 //! ```
 
-use yew::prelude::*;
 use crate::types::Size;
+use yew::prelude::*;
 
 /// Avatar shape
 #[derive(Debug, Clone, PartialEq)]

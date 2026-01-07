@@ -35,9 +35,9 @@
 //! }
 //! ```
 
-use yew::prelude::*;
 use crate::types::Size;
 use crate::utils::class_names;
+use yew::prelude::*;
 
 /// Slider component properties
 #[derive(Properties, PartialEq, Clone)]
@@ -119,7 +119,10 @@ pub fn slider(props: &SliderProps) -> Html {
 
     // Internal state for uncontrolled mode
     let internal_value = use_state(|| {
-        value.clone().or_else(|| default_value.clone()).unwrap_or_else(|| vec![50.0])
+        value
+            .clone()
+            .or_else(|| default_value.clone())
+            .unwrap_or_else(|| vec![50.0])
     });
 
     // Sync with controlled value prop
@@ -148,15 +151,18 @@ pub fn slider(props: &SliderProps) -> Html {
     };
 
     // Calculate percentage for a value
-    let value_to_percent = |val: f64| -> f64 {
-        ((val - min) / (max - min) * 100.0).max(0.0).min(100.0)
-    };
+    let value_to_percent =
+        |val: f64| -> f64 { ((val - min) / (max - min) * 100.0).clamp(0.0, 100.0) };
 
     // Build class names
     let classes = class_names(&[
         Some("slider"),
         Some(size.to_class()),
-        if disabled { Some("slider-disabled") } else { None },
+        if disabled {
+            Some("slider-disabled")
+        } else {
+            None
+        },
     ]);
 
     let final_classes: Classes = vec![classes, class].into_iter().collect();
@@ -188,7 +194,11 @@ pub fn slider(props: &SliderProps) -> Html {
     } else if num_handles == 2 {
         let start_percent = value_to_percent(current_value[0].min(current_value[1]));
         let end_percent = value_to_percent(current_value[0].max(current_value[1]));
-        format!("left: {}%; width: {}%", start_percent, end_percent - start_percent)
+        format!(
+            "left: {}%; width: {}%",
+            start_percent,
+            end_percent - start_percent
+        )
     } else {
         String::from("width: 0")
     };

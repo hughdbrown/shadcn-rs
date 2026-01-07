@@ -382,7 +382,11 @@ pub struct FormDescriptionProps {
 /// Use FormDescription to provide additional context or instructions for form fields.
 #[function_component(FormDescription)]
 pub fn form_description(props: &FormDescriptionProps) -> Html {
-    let FormDescriptionProps { class, id, children } = props.clone();
+    let FormDescriptionProps {
+        class,
+        id,
+        children,
+    } = props.clone();
 
     let classes: Classes = vec![Classes::from("form-description"), class]
         .into_iter()

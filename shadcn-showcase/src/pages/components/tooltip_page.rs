@@ -1,7 +1,7 @@
 //! Tooltip component showcase page
 
+use shadcn_rs::{Button, Position, Tooltip, TooltipContent, TooltipTrigger};
 use yew::prelude::*;
-use shadcn_rs::{Tooltip, TooltipTrigger, TooltipContent, Button, Position};
 
 use crate::components::{ComponentPage, Example, PropDoc};
 
@@ -69,8 +69,18 @@ pub fn tooltip_page() -> Html {
     ];
 
     let props = vec![
-        PropDoc { name: "delay_duration", prop_type: "u32", default: "200", description: "Delay before showing (ms)" },
-        PropDoc { name: "side", prop_type: "&str", default: "\"top\"", description: "Preferred side" },
+        PropDoc {
+            name: "delay_duration",
+            prop_type: "u32",
+            default: "200",
+            description: "Delay before showing (ms)",
+        },
+        PropDoc {
+            name: "side",
+            prop_type: "&str",
+            default: "\"top\"",
+            description: "Preferred side",
+        },
     ];
 
     html! { <ComponentPage name="Tooltip" description="A popup that displays information on hover." {examples} {props} /> }

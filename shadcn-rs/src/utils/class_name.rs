@@ -40,11 +40,7 @@ pub fn class_names(classes: &[Option<&str>]) -> Classes {
 /// assert_eq!(class_if(false, "active"), None);
 /// ```
 pub fn class_if(condition: bool, class_name: &str) -> Option<&str> {
-    if condition {
-        Some(class_name)
-    } else {
-        None
-    }
+    if condition { Some(class_name) } else { None }
 }
 
 /// Combine multiple Classes instances

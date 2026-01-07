@@ -1,7 +1,7 @@
 //! AspectRatio component showcase page
 
-use yew::prelude::*;
 use shadcn_rs::AspectRatio;
+use yew::prelude::*;
 
 use crate::components::{ComponentPage, Example, PropDoc};
 
@@ -43,9 +43,24 @@ pub fn aspect_ratio_page() -> Html {
     ];
 
     let props = vec![
-        PropDoc { name: "ratio", prop_type: "f64", default: "1.0", description: "The aspect ratio (width/height)" },
-        PropDoc { name: "class", prop_type: "Classes", default: "-", description: "Additional CSS classes" },
-        PropDoc { name: "children", prop_type: "Children", default: "-", description: "Content to display" },
+        PropDoc {
+            name: "ratio",
+            prop_type: "f64",
+            default: "1.0",
+            description: "The aspect ratio (width/height)",
+        },
+        PropDoc {
+            name: "class",
+            prop_type: "Classes",
+            default: "-",
+            description: "Additional CSS classes",
+        },
+        PropDoc {
+            name: "children",
+            prop_type: "Children",
+            default: "-",
+            description: "Content to display",
+        },
     ];
 
     html! { <ComponentPage name="Aspect Ratio" description="Displays content within a desired aspect ratio." {examples} {props} /> }

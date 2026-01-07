@@ -1,7 +1,7 @@
 //! Sonner component showcase page
 
-use yew::prelude::*;
 use shadcn_rs::{Button, Variant};
+use yew::prelude::*;
 
 use crate::components::{ComponentPage, Example, PropDoc};
 
@@ -76,11 +76,36 @@ sonner::error("Error message");"#,
     ];
 
     let props = vec![
-        PropDoc { name: "position", prop_type: "&str", default: "\"bottom-right\"", description: "Toast position" },
-        PropDoc { name: "expand", prop_type: "bool", default: "false", description: "Expand toasts by default" },
-        PropDoc { name: "rich_colors", prop_type: "bool", default: "false", description: "Use rich color scheme" },
-        PropDoc { name: "close_button", prop_type: "bool", default: "false", description: "Show close button" },
-        PropDoc { name: "duration", prop_type: "u32", default: "4000", description: "Default duration (ms)" },
+        PropDoc {
+            name: "position",
+            prop_type: "&str",
+            default: "\"bottom-right\"",
+            description: "Toast position",
+        },
+        PropDoc {
+            name: "expand",
+            prop_type: "bool",
+            default: "false",
+            description: "Expand toasts by default",
+        },
+        PropDoc {
+            name: "rich_colors",
+            prop_type: "bool",
+            default: "false",
+            description: "Use rich color scheme",
+        },
+        PropDoc {
+            name: "close_button",
+            prop_type: "bool",
+            default: "false",
+            description: "Show close button",
+        },
+        PropDoc {
+            name: "duration",
+            prop_type: "u32",
+            default: "4000",
+            description: "Default duration (ms)",
+        },
     ];
 
     html! { <ComponentPage name="Sonner" description="An opinionated toast component." {examples} {props} /> }

@@ -1,7 +1,7 @@
 //! Alert component showcase page
 
+use shadcn_rs::{Alert, AlertDescription, AlertTitle, Variant};
 use yew::prelude::*;
-use shadcn_rs::{Alert, AlertTitle, AlertDescription, Variant};
 
 use crate::components::{ComponentPage, Example, PropDoc};
 

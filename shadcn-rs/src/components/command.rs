@@ -59,9 +59,7 @@ pub struct CommandProps {
 pub fn command(props: &CommandProps) -> Html {
     let CommandProps { class, children } = props.clone();
 
-    let classes: Classes = vec![Classes::from("command"), class]
-        .into_iter()
-        .collect();
+    let classes: Classes = vec![Classes::from("command"), class].into_iter().collect();
 
     html! {
         <div class={classes} role="application">

@@ -1,7 +1,7 @@
 //! Textarea component showcase page
 
-use yew::prelude::*;
 use shadcn_rs::Textarea;
+use yew::prelude::*;
 
 use crate::components::{ComponentPage, Example, PropDoc};
 

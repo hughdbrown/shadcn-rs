@@ -1,7 +1,7 @@
 //! Badge component showcase page
 
-use yew::prelude::*;
 use shadcn_rs::{Badge, Variant};
+use yew::prelude::*;
 
 use crate::components::{ComponentPage, Example, PropDoc};
 

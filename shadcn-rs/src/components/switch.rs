@@ -28,9 +28,9 @@
 //! }
 //! ```
 
-use yew::prelude::*;
 use crate::types::Size;
 use crate::utils::class_names;
+use yew::prelude::*;
 
 /// Switch component properties
 #[derive(Properties, PartialEq, Clone)]
@@ -186,8 +186,16 @@ pub fn switch(props: &SwitchProps) -> Html {
     let classes = class_names(&[
         Some("switch"),
         Some(size.to_class()),
-        if is_checked { Some("switch-checked") } else { None },
-        if disabled { Some("switch-disabled") } else { None },
+        if is_checked {
+            Some("switch-checked")
+        } else {
+            None
+        },
+        if disabled {
+            Some("switch-disabled")
+        } else {
+            None
+        },
     ]);
 
     // Merge with custom classes

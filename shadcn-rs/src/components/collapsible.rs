@@ -93,10 +93,7 @@ pub fn collapsible(props: &CollapsibleProps) -> Html {
         })
     };
 
-    let context = CollapsibleContext {
-        is_open,
-        toggle,
-    };
+    let context = CollapsibleContext { is_open, toggle };
 
     let classes: Classes = vec![
         Classes::from("collapsible"),

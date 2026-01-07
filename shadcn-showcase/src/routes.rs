@@ -181,110 +181,302 @@ pub fn get_nav_groups() -> Vec<NavGroup> {
         NavGroup {
             title: "Getting Started",
             items: vec![
-                NavItem { label: "Installation", route: Route::Installation },
-                NavItem { label: "Quick Start", route: Route::QuickStart },
-                NavItem { label: "Theming", route: Route::Theming },
-                NavItem { label: "Accessibility", route: Route::Accessibility },
-                NavItem { label: "Migration", route: Route::Migration },
+                NavItem {
+                    label: "Installation",
+                    route: Route::Installation,
+                },
+                NavItem {
+                    label: "Quick Start",
+                    route: Route::QuickStart,
+                },
+                NavItem {
+                    label: "Theming",
+                    route: Route::Theming,
+                },
+                NavItem {
+                    label: "Accessibility",
+                    route: Route::Accessibility,
+                },
+                NavItem {
+                    label: "Migration",
+                    route: Route::Migration,
+                },
             ],
         },
         NavGroup {
             title: "Foundational",
             items: vec![
-                NavItem { label: "Alert", route: Route::Alert },
-                NavItem { label: "Avatar", route: Route::Avatar },
-                NavItem { label: "Badge", route: Route::Badge },
-                NavItem { label: "Button", route: Route::Button },
-                NavItem { label: "Card", route: Route::Card },
-                NavItem { label: "Kbd", route: Route::Kbd },
-                NavItem { label: "Separator", route: Route::Separator },
-                NavItem { label: "Skeleton", route: Route::Skeleton },
-                NavItem { label: "Spinner", route: Route::Spinner },
-                NavItem { label: "Typography", route: Route::Typography },
+                NavItem {
+                    label: "Alert",
+                    route: Route::Alert,
+                },
+                NavItem {
+                    label: "Avatar",
+                    route: Route::Avatar,
+                },
+                NavItem {
+                    label: "Badge",
+                    route: Route::Badge,
+                },
+                NavItem {
+                    label: "Button",
+                    route: Route::Button,
+                },
+                NavItem {
+                    label: "Card",
+                    route: Route::Card,
+                },
+                NavItem {
+                    label: "Kbd",
+                    route: Route::Kbd,
+                },
+                NavItem {
+                    label: "Separator",
+                    route: Route::Separator,
+                },
+                NavItem {
+                    label: "Skeleton",
+                    route: Route::Skeleton,
+                },
+                NavItem {
+                    label: "Spinner",
+                    route: Route::Spinner,
+                },
+                NavItem {
+                    label: "Typography",
+                    route: Route::Typography,
+                },
             ],
         },
         NavGroup {
             title: "Form Components",
             items: vec![
-                NavItem { label: "Checkbox", route: Route::Checkbox },
-                NavItem { label: "Form", route: Route::Form },
-                NavItem { label: "Input", route: Route::Input },
-                NavItem { label: "Label", route: Route::Label },
-                NavItem { label: "Native Select", route: Route::NativeSelect },
-                NavItem { label: "Progress", route: Route::Progress },
-                NavItem { label: "Radio", route: Route::Radio },
-                NavItem { label: "Select", route: Route::Select },
-                NavItem { label: "Slider", route: Route::Slider },
-                NavItem { label: "Switch", route: Route::Switch },
-                NavItem { label: "Textarea", route: Route::Textarea },
+                NavItem {
+                    label: "Checkbox",
+                    route: Route::Checkbox,
+                },
+                NavItem {
+                    label: "Form",
+                    route: Route::Form,
+                },
+                NavItem {
+                    label: "Input",
+                    route: Route::Input,
+                },
+                NavItem {
+                    label: "Label",
+                    route: Route::Label,
+                },
+                NavItem {
+                    label: "Native Select",
+                    route: Route::NativeSelect,
+                },
+                NavItem {
+                    label: "Progress",
+                    route: Route::Progress,
+                },
+                NavItem {
+                    label: "Radio",
+                    route: Route::Radio,
+                },
+                NavItem {
+                    label: "Select",
+                    route: Route::Select,
+                },
+                NavItem {
+                    label: "Slider",
+                    route: Route::Slider,
+                },
+                NavItem {
+                    label: "Switch",
+                    route: Route::Switch,
+                },
+                NavItem {
+                    label: "Textarea",
+                    route: Route::Textarea,
+                },
             ],
         },
         NavGroup {
             title: "Layout & Structure",
             items: vec![
-                NavItem { label: "Aspect Ratio", route: Route::AspectRatio },
-                NavItem { label: "Empty", route: Route::Empty },
-                NavItem { label: "Item", route: Route::Item },
-                NavItem { label: "Resizable", route: Route::Resizable },
-                NavItem { label: "Scroll Area", route: Route::ScrollArea },
-                NavItem { label: "Table", route: Route::Table },
+                NavItem {
+                    label: "Aspect Ratio",
+                    route: Route::AspectRatio,
+                },
+                NavItem {
+                    label: "Empty",
+                    route: Route::Empty,
+                },
+                NavItem {
+                    label: "Item",
+                    route: Route::Item,
+                },
+                NavItem {
+                    label: "Resizable",
+                    route: Route::Resizable,
+                },
+                NavItem {
+                    label: "Scroll Area",
+                    route: Route::ScrollArea,
+                },
+                NavItem {
+                    label: "Table",
+                    route: Route::Table,
+                },
             ],
         },
         NavGroup {
             title: "Interactive",
             items: vec![
-                NavItem { label: "Button Group", route: Route::ButtonGroup },
-                NavItem { label: "Collapsible", route: Route::Collapsible },
-                NavItem { label: "Field", route: Route::Field },
-                NavItem { label: "Input Group", route: Route::InputGroup },
-                NavItem { label: "Toggle", route: Route::Toggle },
-                NavItem { label: "Toggle Group", route: Route::ToggleGroup },
+                NavItem {
+                    label: "Button Group",
+                    route: Route::ButtonGroup,
+                },
+                NavItem {
+                    label: "Collapsible",
+                    route: Route::Collapsible,
+                },
+                NavItem {
+                    label: "Field",
+                    route: Route::Field,
+                },
+                NavItem {
+                    label: "Input Group",
+                    route: Route::InputGroup,
+                },
+                NavItem {
+                    label: "Toggle",
+                    route: Route::Toggle,
+                },
+                NavItem {
+                    label: "Toggle Group",
+                    route: Route::ToggleGroup,
+                },
             ],
         },
         NavGroup {
             title: "Overlays & Popups",
             items: vec![
-                NavItem { label: "Accordion", route: Route::Accordion },
-                NavItem { label: "Alert Dialog", route: Route::AlertDialog },
-                NavItem { label: "Dialog", route: Route::Dialog },
-                NavItem { label: "Drawer", route: Route::Drawer },
-                NavItem { label: "Dropdown Menu", route: Route::DropdownMenu },
-                NavItem { label: "Hover Card", route: Route::HoverCard },
-                NavItem { label: "Popover", route: Route::Popover },
-                NavItem { label: "Sheet", route: Route::Sheet },
-                NavItem { label: "Tabs", route: Route::Tabs },
-                NavItem { label: "Tooltip", route: Route::Tooltip },
+                NavItem {
+                    label: "Accordion",
+                    route: Route::Accordion,
+                },
+                NavItem {
+                    label: "Alert Dialog",
+                    route: Route::AlertDialog,
+                },
+                NavItem {
+                    label: "Dialog",
+                    route: Route::Dialog,
+                },
+                NavItem {
+                    label: "Drawer",
+                    route: Route::Drawer,
+                },
+                NavItem {
+                    label: "Dropdown Menu",
+                    route: Route::DropdownMenu,
+                },
+                NavItem {
+                    label: "Hover Card",
+                    route: Route::HoverCard,
+                },
+                NavItem {
+                    label: "Popover",
+                    route: Route::Popover,
+                },
+                NavItem {
+                    label: "Sheet",
+                    route: Route::Sheet,
+                },
+                NavItem {
+                    label: "Tabs",
+                    route: Route::Tabs,
+                },
+                NavItem {
+                    label: "Tooltip",
+                    route: Route::Tooltip,
+                },
             ],
         },
         NavGroup {
             title: "Navigation",
             items: vec![
-                NavItem { label: "Breadcrumb", route: Route::Breadcrumb },
-                NavItem { label: "Context Menu", route: Route::ContextMenu },
-                NavItem { label: "Menubar", route: Route::Menubar },
-                NavItem { label: "Navigation Menu", route: Route::NavigationMenu },
-                NavItem { label: "Pagination", route: Route::Pagination },
-                NavItem { label: "Sidebar", route: Route::Sidebar },
+                NavItem {
+                    label: "Breadcrumb",
+                    route: Route::Breadcrumb,
+                },
+                NavItem {
+                    label: "Context Menu",
+                    route: Route::ContextMenu,
+                },
+                NavItem {
+                    label: "Menubar",
+                    route: Route::Menubar,
+                },
+                NavItem {
+                    label: "Navigation Menu",
+                    route: Route::NavigationMenu,
+                },
+                NavItem {
+                    label: "Pagination",
+                    route: Route::Pagination,
+                },
+                NavItem {
+                    label: "Sidebar",
+                    route: Route::Sidebar,
+                },
             ],
         },
         NavGroup {
             title: "Advanced Forms",
             items: vec![
-                NavItem { label: "Calendar", route: Route::Calendar },
-                NavItem { label: "Combobox", route: Route::Combobox },
-                NavItem { label: "Command", route: Route::Command },
-                NavItem { label: "Date Picker", route: Route::DatePicker },
-                NavItem { label: "Input OTP", route: Route::InputOtp },
+                NavItem {
+                    label: "Calendar",
+                    route: Route::Calendar,
+                },
+                NavItem {
+                    label: "Combobox",
+                    route: Route::Combobox,
+                },
+                NavItem {
+                    label: "Command",
+                    route: Route::Command,
+                },
+                NavItem {
+                    label: "Date Picker",
+                    route: Route::DatePicker,
+                },
+                NavItem {
+                    label: "Input OTP",
+                    route: Route::InputOtp,
+                },
             ],
         },
         NavGroup {
             title: "Complex",
             items: vec![
-                NavItem { label: "Carousel", route: Route::Carousel },
-                NavItem { label: "Chart", route: Route::Chart },
-                NavItem { label: "Data Table", route: Route::DataTable },
-                NavItem { label: "Sonner", route: Route::Sonner },
-                NavItem { label: "Toast", route: Route::Toast },
+                NavItem {
+                    label: "Carousel",
+                    route: Route::Carousel,
+                },
+                NavItem {
+                    label: "Chart",
+                    route: Route::Chart,
+                },
+                NavItem {
+                    label: "Data Table",
+                    route: Route::DataTable,
+                },
+                NavItem {
+                    label: "Sonner",
+                    route: Route::Sonner,
+                },
+                NavItem {
+                    label: "Toast",
+                    route: Route::Toast,
+                },
             ],
         },
     ]

@@ -1,7 +1,10 @@
 //! Form component showcase page
 
+use shadcn_rs::{
+    Button, Form, FormControl, FormDescription, FormItem, FormLabel, FormMessage, FormMessageType,
+    Input, Variant,
+};
 use yew::prelude::*;
-use shadcn_rs::{Form, FormItem, FormLabel, FormControl, FormDescription, FormMessage, FormMessageType, Input, Button, Variant};
 
 use crate::components::{ComponentPage, Example, PropDoc};
 

@@ -34,9 +34,9 @@
 //! }
 //! ```
 
-use yew::prelude::*;
 use crate::types::Size;
 use crate::utils::class_names;
+use yew::prelude::*;
 
 /// Select component properties
 #[derive(Properties, PartialEq, Clone)]
@@ -176,7 +176,11 @@ pub fn select(props: &SelectProps) -> Html {
         Some("select"),
         Some(size.to_class()),
         if error { Some("select-error") } else { None },
-        if disabled { Some("select-disabled") } else { None },
+        if disabled {
+            Some("select-disabled")
+        } else {
+            None
+        },
     ]);
 
     // Merge with custom classes
@@ -218,7 +222,7 @@ pub fn select(props: &SelectProps) -> Html {
 
 // Advanced Select Components (Custom Implementation with Context)
 
-use crate::hooks::{use_escape_key_conditional, use_click_outside_conditional};
+use crate::hooks::{use_click_outside_conditional, use_escape_key_conditional};
 
 /// Context for sharing select state with children
 #[derive(Clone, PartialEq)]
@@ -341,8 +345,12 @@ pub fn select_advanced(props: &SelectAdvancedProps) -> Html {
 
     let classes: Classes = vec![
         Classes::from("select-advanced"),
-        if is_open { Classes::from("select-open") } else { Classes::new() },
-        class
+        if is_open {
+            Classes::from("select-open")
+        } else {
+            Classes::new()
+        },
+        class,
     ]
     .into_iter()
     .collect();
@@ -389,10 +397,10 @@ pub fn select_trigger(props: &SelectTriggerProps) -> Html {
     let onclick = {
         let context = context.clone();
         Callback::from(move |_: MouseEvent| {
-            if let Some(ctx) = context.as_ref() {
-                if !ctx.disabled {
-                    ctx.toggle_open.emit(());
-                }
+            if let Some(ctx) = context.as_ref()
+                && !ctx.disabled
+            {
+                ctx.toggle_open.emit(());
             }
         })
     };
@@ -615,10 +623,12 @@ pub fn select_item(props: &SelectItemProps) -> Html {
     let label_ref = use_node_ref();
 
     // Check if this item is selected via context
-    let is_selected = prop_selected || context.as_ref()
-        .and_then(|c| c.selected_value.as_ref())
-        .map(|v| *v == value)
-        .unwrap_or(false);
+    let is_selected = prop_selected
+        || context
+            .as_ref()
+            .and_then(|c| c.selected_value.as_ref())
+            .map(|v| *v == value)
+            .unwrap_or(false);
 
     let onclick = {
         let value = value.clone();
@@ -630,13 +640,15 @@ pub fn select_item(props: &SelectItemProps) -> Html {
                 e.prevent_default();
 
                 // Get text content from the element for the label
-                let label_text = label_ref.cast::<web_sys::Element>()
+                let label_text = label_ref
+                    .cast::<web_sys::Element>()
                     .and_then(|el| el.text_content())
                     .unwrap_or_else(|| value.to_string());
 
                 // Notify context
                 if let Some(ctx) = context.as_ref() {
-                    ctx.select_value.emit((value.clone(), AttrValue::from(label_text)));
+                    ctx.select_value
+                        .emit((value.clone(), AttrValue::from(label_text)));
                 }
 
                 // Also call custom handler if provided
@@ -885,10 +897,7 @@ mod tests {
             children: Children::new(vec![]),
         };
 
-        assert_eq!(
-            props.placeholder,
-            Some(AttrValue::from("Choose an option"))
-        );
+        assert_eq!(props.placeholder, Some(AttrValue::from("Choose an option")));
     }
 
     #[test]

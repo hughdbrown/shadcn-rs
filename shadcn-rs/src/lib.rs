@@ -48,17 +48,16 @@ pub mod types;
 pub mod utils;
 
 // Re-export commonly used types
-pub use types::{Size, Variant, Color, Position, Alignment};
+pub use types::{Alignment, Color, Position, Size, Variant};
 
 // Re-export commonly used utilities
-pub use utils::{generate_id, class_names, class_if, Portal, use_portal};
+pub use utils::{Portal, class_if, class_names, generate_id, use_portal};
 
 // Re-export commonly used hooks
 pub use hooks::{
-    use_toggle, use_toggle_with_controls,
-    use_click_outside, use_click_outside_conditional,
-    use_escape_key, use_escape_key_conditional, use_key_press,
-    use_controllable_state, use_controllable_state_optional, use_controllable_bool,
+    use_click_outside, use_click_outside_conditional, use_controllable_bool,
+    use_controllable_state, use_controllable_state_optional, use_escape_key,
+    use_escape_key_conditional, use_key_press, use_toggle, use_toggle_with_controls,
 };
 
 // Re-export all components

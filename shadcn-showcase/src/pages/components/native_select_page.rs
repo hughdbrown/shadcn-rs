@@ -1,7 +1,7 @@
 //! Native Select component showcase page
 
+use shadcn_rs::{Label, NativeSelect, NativeSelectOptGroup, NativeSelectOption};
 use yew::prelude::*;
-use shadcn_rs::{NativeSelect, NativeSelectOption, NativeSelectOptGroup, Label};
 
 use crate::components::{ComponentPage, Example, PropDoc};
 

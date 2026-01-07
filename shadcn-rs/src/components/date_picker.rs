@@ -29,8 +29,8 @@
 //! }
 //! ```
 
-use yew::prelude::*;
 use crate::hooks::use_toggle;
+use yew::prelude::*;
 
 /// Date picker component properties
 #[derive(Properties, PartialEq, Clone)]
@@ -95,9 +95,7 @@ pub fn date_picker(props: &DatePickerProps) -> Html {
     } = props.clone();
 
     // Internal state for uncontrolled mode
-    let internal_value = use_state(|| {
-        value.clone().or_else(|| default_value.clone())
-    });
+    let internal_value = use_state(|| value.clone().or_else(|| default_value.clone()));
 
     let current_value = value.or_else(|| (*internal_value).clone());
 

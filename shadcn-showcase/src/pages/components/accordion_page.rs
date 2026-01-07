@@ -1,7 +1,7 @@
 //! Accordion component showcase page
 
+use shadcn_rs::{Accordion, AccordionContent, AccordionItem, AccordionTrigger, AccordionType};
 use yew::prelude::*;
-use shadcn_rs::{Accordion, AccordionItem, AccordionTrigger, AccordionContent, AccordionType};
 
 use crate::components::{ComponentPage, Example, PropDoc};
 
@@ -62,10 +62,30 @@ pub fn accordion_page() -> Html {
     ];
 
     let props = vec![
-        PropDoc { name: "accordion_type", prop_type: "&str", default: "\"single\"", description: "Selection type (single/multiple)" },
-        PropDoc { name: "collapsible", prop_type: "bool", default: "false", description: "Allow collapsing all items" },
-        PropDoc { name: "value", prop_type: "Option<String>", default: "-", description: "Controlled open item(s)" },
-        PropDoc { name: "default_value", prop_type: "Option<String>", default: "-", description: "Default open item(s)" },
+        PropDoc {
+            name: "accordion_type",
+            prop_type: "&str",
+            default: "\"single\"",
+            description: "Selection type (single/multiple)",
+        },
+        PropDoc {
+            name: "collapsible",
+            prop_type: "bool",
+            default: "false",
+            description: "Allow collapsing all items",
+        },
+        PropDoc {
+            name: "value",
+            prop_type: "Option<String>",
+            default: "-",
+            description: "Controlled open item(s)",
+        },
+        PropDoc {
+            name: "default_value",
+            prop_type: "Option<String>",
+            default: "-",
+            description: "Default open item(s)",
+        },
     ];
 
     html! { <ComponentPage name="Accordion" description="A vertically stacked set of interactive headings." {examples} {props} /> }

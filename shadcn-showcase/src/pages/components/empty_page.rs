@@ -1,7 +1,7 @@
 //! Empty state component showcase page
 
+use shadcn_rs::{Button, Empty};
 use yew::prelude::*;
-use shadcn_rs::{Empty, Button};
 
 use crate::components::{ComponentPage, Example, PropDoc};
 
@@ -48,8 +48,18 @@ pub fn empty_page() -> Html {
     ];
 
     let props = vec![
-        PropDoc { name: "class", prop_type: "Classes", default: "-", description: "Additional CSS classes" },
-        PropDoc { name: "children", prop_type: "Children", default: "-", description: "Empty state content" },
+        PropDoc {
+            name: "class",
+            prop_type: "Classes",
+            default: "-",
+            description: "Additional CSS classes",
+        },
+        PropDoc {
+            name: "children",
+            prop_type: "Children",
+            default: "-",
+            description: "Empty state content",
+        },
     ];
 
     html! { <ComponentPage name="Empty" description="Displays an empty state placeholder." {examples} {props} /> }

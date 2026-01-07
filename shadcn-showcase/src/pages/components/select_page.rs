@@ -1,7 +1,9 @@
 //! Select component showcase page
 
+use shadcn_rs::{
+    SelectAdvanced, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue,
+};
 use yew::prelude::*;
-use shadcn_rs::{SelectAdvanced, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectGroup, SelectLabel};
 
 use crate::components::{ComponentPage, Example, PropDoc};
 

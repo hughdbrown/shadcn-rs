@@ -29,8 +29,8 @@
 //! }
 //! ```
 
-use yew::prelude::*;
 use std::collections::HashSet;
+use yew::prelude::*;
 
 /// Accordion type
 #[derive(Debug, Clone, PartialEq)]
@@ -234,10 +234,10 @@ pub fn accordion_item(props: &AccordionItemProps) -> Html {
         let value = value.to_string();
         let accordion_ctx = accordion_ctx.clone();
         Callback::from(move |_: ()| {
-            if let Some(ctx) = accordion_ctx.as_ref() {
-                if !disabled {
-                    ctx.toggle_item.emit(value.clone());
-                }
+            if let Some(ctx) = accordion_ctx.as_ref()
+                && !disabled
+            {
+                ctx.toggle_item.emit(value.clone());
             }
         })
     };

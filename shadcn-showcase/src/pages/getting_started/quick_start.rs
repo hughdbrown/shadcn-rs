@@ -22,7 +22,7 @@ pub fn quick_start_page() -> Html {
 
                 <CodeBlock
                     code={r#"cargo new my-app
-cd my-app"#}
+    cd my-app"#}
                     language="bash"
                 />
             </section>

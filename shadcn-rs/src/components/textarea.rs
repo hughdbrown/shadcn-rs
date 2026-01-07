@@ -34,9 +34,9 @@
 //! }
 //! ```
 
-use yew::prelude::*;
 use crate::types::Size;
 use crate::utils::class_names;
+use yew::prelude::*;
 
 /// Textarea resize behavior
 #[derive(Debug, Clone, PartialEq)]
@@ -232,8 +232,16 @@ pub fn textarea(props: &TextareaProps) -> Html {
         Some(size.to_class()),
         Some(resize.to_class()),
         if error { Some("textarea-error") } else { None },
-        if disabled { Some("textarea-disabled") } else { None },
-        if readonly { Some("textarea-readonly") } else { None },
+        if disabled {
+            Some("textarea-disabled")
+        } else {
+            None
+        },
+        if readonly {
+            Some("textarea-readonly")
+        } else {
+            None
+        },
     ]);
 
     // Merge with custom classes

@@ -114,9 +114,7 @@ pub fn chart(props: &ChartProps) -> Html {
         class,
     } = props.clone();
 
-    let classes: Classes = vec![Classes::from("chart"), class]
-        .into_iter()
-        .collect();
+    let classes: Classes = vec![Classes::from("chart"), class].into_iter().collect();
 
     let chart_type_str = match chart_type {
         ChartType::Bar => "Bar Chart",
@@ -126,11 +124,7 @@ pub fn chart(props: &ChartProps) -> Html {
         ChartType::Donut => "Donut Chart",
     };
 
-    let aria_label = format!(
-        "{} with {} data points",
-        chart_type_str,
-        data.len()
-    );
+    let aria_label = format!("{} with {} data points", chart_type_str, data.len());
 
     html! {
         <div class={classes}>
@@ -187,12 +181,10 @@ mod tests {
 
     #[test]
     fn test_chart_default() {
-        let data = vec![
-            ChartData {
-                label: "A".to_string(),
-                value: 10.0,
-            },
-        ];
+        let data = vec![ChartData {
+            label: "A".to_string(),
+            value: 10.0,
+        }];
 
         let props = ChartProps {
             chart_type: ChartType::Bar,
@@ -213,12 +205,10 @@ mod tests {
 
     #[test]
     fn test_chart_line() {
-        let data = vec![
-            ChartData {
-                label: "A".to_string(),
-                value: 10.0,
-            },
-        ];
+        let data = vec![ChartData {
+            label: "A".to_string(),
+            value: 10.0,
+        }];
 
         let props = ChartProps {
             chart_type: ChartType::Line,

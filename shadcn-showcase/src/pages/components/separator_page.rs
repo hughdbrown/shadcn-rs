@@ -1,7 +1,7 @@
 //! Separator component showcase page
 
-use yew::prelude::*;
 use shadcn_rs::{Separator, SeparatorOrientation};
+use yew::prelude::*;
 
 use crate::components::{ComponentPage, Example, PropDoc};
 

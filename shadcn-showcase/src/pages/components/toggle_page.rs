@@ -1,7 +1,7 @@
 //! Toggle component showcase page
 
-use yew::prelude::*;
 use shadcn_rs::{Toggle, ToggleVariant};
+use yew::prelude::*;
 
 use crate::components::{ComponentPage, Example, PropDoc};
 
@@ -57,11 +57,36 @@ pub fn toggle_page() -> Html {
     ];
 
     let props = vec![
-        PropDoc { name: "pressed", prop_type: "Option<bool>", default: "-", description: "Controlled pressed state" },
-        PropDoc { name: "default_pressed", prop_type: "bool", default: "false", description: "Default pressed state (uncontrolled)" },
-        PropDoc { name: "disabled", prop_type: "bool", default: "false", description: "Disabled state" },
-        PropDoc { name: "variant", prop_type: "ToggleVariant", default: "Default", description: "Visual variant (Default or Outline)" },
-        PropDoc { name: "ontoggle", prop_type: "Option<Callback<MouseEvent>>", default: "-", description: "Toggle event handler" },
+        PropDoc {
+            name: "pressed",
+            prop_type: "Option<bool>",
+            default: "-",
+            description: "Controlled pressed state",
+        },
+        PropDoc {
+            name: "default_pressed",
+            prop_type: "bool",
+            default: "false",
+            description: "Default pressed state (uncontrolled)",
+        },
+        PropDoc {
+            name: "disabled",
+            prop_type: "bool",
+            default: "false",
+            description: "Disabled state",
+        },
+        PropDoc {
+            name: "variant",
+            prop_type: "ToggleVariant",
+            default: "Default",
+            description: "Visual variant (Default or Outline)",
+        },
+        PropDoc {
+            name: "ontoggle",
+            prop_type: "Option<Callback<MouseEvent>>",
+            default: "-",
+            description: "Toggle event handler",
+        },
     ];
 
     html! { <ComponentPage name="Toggle" description="A two-state button that can be toggled on or off." {examples} {props} /> }

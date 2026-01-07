@@ -39,10 +39,10 @@
 //! }
 //! ```
 
-use yew::prelude::*;
+use crate::hooks::{use_click_outside_conditional, use_escape_key_conditional};
 use crate::types::Position;
 use crate::utils::Portal;
-use crate::hooks::{use_escape_key_conditional, use_click_outside_conditional};
+use yew::prelude::*;
 
 /// Context for sharing drawer state between parent and children
 #[derive(Clone, PartialEq)]
@@ -133,7 +133,7 @@ pub fn drawer(props: &DrawerProps) -> Html {
         is_open,
         set_open,
         toggle,
-        side: side.clone(),
+        side,
     };
 
     html! {
@@ -228,7 +228,7 @@ pub fn drawer_content(props: &DrawerContentProps) -> Html {
 
     // Use context open state if available, otherwise use prop
     let is_open = context.as_ref().map(|ctx| ctx.is_open).unwrap_or(prop_open);
-    let side = context.as_ref().map(|ctx| ctx.side.clone()).unwrap_or(prop_side);
+    let side = context.as_ref().map(|ctx| ctx.side).unwrap_or(prop_side);
 
     // Handle Escape key - close via context if available
     let context_esc = context.clone();

@@ -1,7 +1,10 @@
 //! Card component showcase page
 
+use shadcn_rs::{
+    Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Input, Label,
+    Variant,
+};
 use yew::prelude::*;
-use shadcn_rs::{Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Button, Variant, Input, Label};
 
 use crate::components::{ComponentPage, Example, PropDoc};
 

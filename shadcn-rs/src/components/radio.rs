@@ -47,9 +47,9 @@
 //! }
 //! ```
 
-use yew::prelude::*;
 use crate::types::Size;
 use crate::utils::class_names;
+use yew::prelude::*;
 
 /// Radio component properties
 #[derive(Properties, PartialEq, Clone)]
@@ -174,7 +174,11 @@ pub fn radio(props: &RadioProps) -> Html {
         Some("radio"),
         Some(size.to_class()),
         if error { Some("radio-error") } else { None },
-        if disabled { Some("radio-disabled") } else { None },
+        if disabled {
+            Some("radio-disabled")
+        } else {
+            None
+        },
     ]);
 
     // Merge with custom classes

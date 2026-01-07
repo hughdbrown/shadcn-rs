@@ -1,7 +1,7 @@
 //! Item component showcase page
 
-use yew::prelude::*;
 use shadcn_rs::Item;
+use yew::prelude::*;
 
 use crate::components::{ComponentPage, Example, PropDoc};
 
@@ -36,10 +36,30 @@ pub fn item_page() -> Html {
     ];
 
     let props = vec![
-        PropDoc { name: "selected", prop_type: "bool", default: "false", description: "Whether the item is selected" },
-        PropDoc { name: "disabled", prop_type: "bool", default: "false", description: "Whether the item is disabled" },
-        PropDoc { name: "onclick", prop_type: "Callback<MouseEvent>", default: "-", description: "Click handler" },
-        PropDoc { name: "children", prop_type: "Children", default: "-", description: "Item content" },
+        PropDoc {
+            name: "selected",
+            prop_type: "bool",
+            default: "false",
+            description: "Whether the item is selected",
+        },
+        PropDoc {
+            name: "disabled",
+            prop_type: "bool",
+            default: "false",
+            description: "Whether the item is disabled",
+        },
+        PropDoc {
+            name: "onclick",
+            prop_type: "Callback<MouseEvent>",
+            default: "-",
+            description: "Click handler",
+        },
+        PropDoc {
+            name: "children",
+            prop_type: "Children",
+            default: "-",
+            description: "Item content",
+        },
     ];
 
     html! { <ComponentPage name="Item" description="A generic item component for lists and menus." {examples} {props} /> }

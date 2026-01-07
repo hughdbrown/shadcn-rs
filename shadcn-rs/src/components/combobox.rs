@@ -31,8 +31,8 @@
 //! }
 //! ```
 
+use crate::hooks::{use_click_outside_conditional, use_escape_key_conditional, use_toggle};
 use yew::prelude::*;
-use crate::hooks::{use_toggle, use_click_outside_conditional, use_escape_key_conditional};
 
 /// Combobox container properties
 #[derive(Properties, PartialEq, Clone)]

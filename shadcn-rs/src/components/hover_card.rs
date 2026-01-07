@@ -29,10 +29,10 @@
 //! }
 //! ```
 
-use yew::prelude::*;
+use crate::hooks::use_escape_key_conditional;
 use crate::types::Position;
 use crate::utils::Portal;
-use crate::hooks::use_escape_key_conditional;
+use yew::prelude::*;
 
 /// Context for sharing hover card state between parent and children
 #[derive(Clone, PartialEq)]
@@ -107,10 +107,7 @@ pub fn hover_card(props: &HoverCardProps) -> Html {
         })
     };
 
-    let context = HoverCardContext {
-        is_open,
-        set_open,
-    };
+    let context = HoverCardContext { is_open, set_open };
 
     html! {
         <ContextProvider<HoverCardContext> context={context}>

@@ -2,14 +2,14 @@
 //!
 //! Common types used across components.
 
-mod size;
-mod variant;
+mod alignment;
 mod color;
 mod position;
-mod alignment;
+mod size;
+mod variant;
 
-pub use size::Size;
-pub use variant::Variant;
+pub use alignment::Alignment;
 pub use color::Color;
 pub use position::Position;
-pub use alignment::Alignment;
+pub use size::Size;
+pub use variant::Variant;

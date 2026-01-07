@@ -1,7 +1,7 @@
 //! InputOTP component showcase page
 
-use yew::prelude::*;
 use shadcn_rs::InputOTP;
+use yew::prelude::*;
 
 use crate::components::{ComponentPage, Example, PropDoc};
 
@@ -43,13 +43,48 @@ pub fn input_otp_page() -> Html {
     ];
 
     let props = vec![
-        PropDoc { name: "length", prop_type: "usize", default: "6", description: "Number of OTP input fields" },
-        PropDoc { name: "value", prop_type: "Option<String>", default: "-", description: "Current value" },
-        PropDoc { name: "masked", prop_type: "bool", default: "false", description: "Show dots instead of characters" },
-        PropDoc { name: "disabled", prop_type: "bool", default: "false", description: "Disabled state" },
-        PropDoc { name: "pattern", prop_type: "Option<AttrValue>", default: "-", description: "Input validation pattern" },
-        PropDoc { name: "on_change", prop_type: "Option<Callback<String>>", default: "-", description: "Change handler" },
-        PropDoc { name: "on_complete", prop_type: "Option<Callback<String>>", default: "-", description: "Completion handler" },
+        PropDoc {
+            name: "length",
+            prop_type: "usize",
+            default: "6",
+            description: "Number of OTP input fields",
+        },
+        PropDoc {
+            name: "value",
+            prop_type: "Option<String>",
+            default: "-",
+            description: "Current value",
+        },
+        PropDoc {
+            name: "masked",
+            prop_type: "bool",
+            default: "false",
+            description: "Show dots instead of characters",
+        },
+        PropDoc {
+            name: "disabled",
+            prop_type: "bool",
+            default: "false",
+            description: "Disabled state",
+        },
+        PropDoc {
+            name: "pattern",
+            prop_type: "Option<AttrValue>",
+            default: "-",
+            description: "Input validation pattern",
+        },
+        PropDoc {
+            name: "on_change",
+            prop_type: "Option<Callback<String>>",
+            default: "-",
+            description: "Change handler",
+        },
+        PropDoc {
+            name: "on_complete",
+            prop_type: "Option<Callback<String>>",
+            default: "-",
+            description: "Completion handler",
+        },
     ];
 
     html! { <ComponentPage name="Input OTP" description="Accessible one-time password component." {examples} {props} /> }

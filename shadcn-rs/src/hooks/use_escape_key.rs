@@ -39,10 +39,10 @@ where
     use_effect(move || {
         let callback = std::rc::Rc::new(callback);
         let listener = EventListener::new(&gloo::utils::document(), "keydown", move |event| {
-            if let Some(event) = event.dyn_ref::<KeyboardEvent>() {
-                if event.key() == "Escape" {
-                    callback();
-                }
+            if let Some(event) = event.dyn_ref::<KeyboardEvent>()
+                && event.key() == "Escape"
+            {
+                callback();
             }
         });
 
@@ -89,13 +89,17 @@ where
     use_effect_with(enabled, move |enabled| {
         let listener = if *enabled {
             let callback = std::rc::Rc::new(callback);
-            Some(EventListener::new(&gloo::utils::document(), "keydown", move |event| {
-                if let Some(event) = event.dyn_ref::<KeyboardEvent>() {
-                    if event.key() == "Escape" {
+            Some(EventListener::new(
+                &gloo::utils::document(),
+                "keydown",
+                move |event| {
+                    if let Some(event) = event.dyn_ref::<KeyboardEvent>()
+                        && event.key() == "Escape"
+                    {
                         callback();
                     }
-                }
-            }))
+                },
+            ))
         } else {
             None
         };
@@ -131,10 +135,10 @@ where
     use_effect(move || {
         let callback = std::rc::Rc::new(callback);
         let listener = EventListener::new(&gloo::utils::document(), "keydown", move |event| {
-            if let Some(event) = event.dyn_ref::<KeyboardEvent>() {
-                if event.key() == key {
-                    callback();
-                }
+            if let Some(event) = event.dyn_ref::<KeyboardEvent>()
+                && event.key() == key
+            {
+                callback();
             }
         });
 

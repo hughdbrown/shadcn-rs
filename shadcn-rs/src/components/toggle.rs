@@ -30,8 +30,8 @@
 //! }
 //! ```
 
-use yew::prelude::*;
 use crate::types::Size;
+use yew::prelude::*;
 
 /// Toggle button variant
 #[derive(Debug, Clone, PartialEq)]

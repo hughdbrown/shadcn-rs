@@ -1,7 +1,7 @@
 //! ScrollArea component showcase page
 
-use yew::prelude::*;
 use shadcn_rs::ScrollArea;
+use yew::prelude::*;
 
 use crate::components::{ComponentPage, Example, PropDoc};
 
@@ -45,8 +45,18 @@ pub fn scroll_area_page() -> Html {
     ];
 
     let props = vec![
-        PropDoc { name: "class", prop_type: "Classes", default: "-", description: "Additional CSS classes" },
-        PropDoc { name: "children", prop_type: "Children", default: "-", description: "Scrollable content" },
+        PropDoc {
+            name: "class",
+            prop_type: "Classes",
+            default: "-",
+            description: "Additional CSS classes",
+        },
+        PropDoc {
+            name: "children",
+            prop_type: "Children",
+            default: "-",
+            description: "Scrollable content",
+        },
     ];
 
     html! { <ComponentPage name="Scroll Area" description="Augments native scroll functionality with custom scrollbars." {examples} {props} /> }

@@ -1,7 +1,7 @@
 //! Spinner component showcase page
 
+use shadcn_rs::{Size, Spinner};
 use yew::prelude::*;
-use shadcn_rs::{Spinner, Size};
 
 use crate::components::{ComponentPage, Example, PropDoc};
 

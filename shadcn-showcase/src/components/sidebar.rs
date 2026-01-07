@@ -3,7 +3,7 @@
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-use crate::routes::{get_nav_groups, Route};
+use crate::routes::{Route, get_nav_groups};
 
 /// Properties for Sidebar component
 #[derive(Properties, PartialEq)]
@@ -22,7 +22,7 @@ pub fn sidebar(props: &SidebarProps) -> Html {
     let nav_groups = get_nav_groups();
     let current_route = use_route::<Route>();
 
-    let collapsed_groups = use_state(|| std::collections::HashSet::<String>::new());
+    let collapsed_groups = use_state(std::collections::HashSet::<String>::new);
 
     let toggle_group = {
         let collapsed_groups = collapsed_groups.clone();

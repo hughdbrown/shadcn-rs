@@ -1,7 +1,7 @@
 //! Typography component showcase page
 
-use yew::prelude::*;
 use shadcn_rs::{Typography, TypographyVariant};
+use yew::prelude::*;
 
 use crate::components::{ComponentPage, Example, PropDoc};
 

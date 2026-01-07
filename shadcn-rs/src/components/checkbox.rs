@@ -29,10 +29,10 @@
 //! }
 //! ```
 
-use yew::prelude::*;
-use web_sys::HtmlInputElement;
 use crate::types::Size;
 use crate::utils::class_names;
+use web_sys::HtmlInputElement;
+use yew::prelude::*;
 
 /// Checkbox component properties
 #[derive(Properties, PartialEq, Clone)]
@@ -170,7 +170,11 @@ pub fn checkbox(props: &CheckboxProps) -> Html {
         Some("checkbox"),
         Some(size.to_class()),
         if error { Some("checkbox-error") } else { None },
-        if disabled { Some("checkbox-disabled") } else { None },
+        if disabled {
+            Some("checkbox-disabled")
+        } else {
+            None
+        },
         if indeterminate {
             Some("checkbox-indeterminate")
         } else {
