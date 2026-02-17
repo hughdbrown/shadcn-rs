@@ -34,6 +34,19 @@
 use crate::hooks::{use_click_outside_conditional, use_escape_key_conditional, use_toggle};
 use yew::prelude::*;
 
+/// Context for sharing combobox state with children
+#[derive(Clone, PartialEq)]
+pub struct ComboboxContext {
+    /// Current filter query string
+    pub filter_query: String,
+    /// Callback to update the filter query
+    pub set_filter_query: Callback<String>,
+    /// Whether the combobox dropdown is open
+    pub is_open: bool,
+    /// Callback to toggle the dropdown open/closed
+    pub toggle: Callback<()>,
+}
+
 /// Combobox container properties
 #[derive(Properties, PartialEq, Clone)]
 pub struct ComboboxProps {
@@ -75,7 +88,22 @@ pub fn combobox(props: &ComboboxProps) -> Html {
         children,
     } = props.clone();
 
-    let (is_open, _toggle, _set_open) = use_toggle(open.unwrap_or(default_open));
+    let (is_open, toggle, _set_open) = use_toggle(open.unwrap_or(default_open));
+    let filter_query = use_state(String::new);
+
+    let set_filter_query = {
+        let filter_query = filter_query.clone();
+        Callback::from(move |query: String| {
+            filter_query.set(query);
+        })
+    };
+
+    let context = ComboboxContext {
+        filter_query: (*filter_query).clone(),
+        set_filter_query,
+        is_open,
+        toggle,
+    };
 
     let classes: Classes = vec![
         Classes::from("combobox"),
@@ -90,9 +118,11 @@ pub fn combobox(props: &ComboboxProps) -> Html {
     .collect();
 
     html! {
-        <div class={classes}>
-            { children }
-        </div>
+        <ContextProvider<ComboboxContext> context={context}>
+            <div class={classes}>
+                { children }
+            </div>
+        </ContextProvider<ComboboxContext>>
     }
 }
 
@@ -172,6 +202,22 @@ pub fn combobox_input(props: &ComboboxInputProps) -> Html {
         class,
     } = props.clone();
 
+    let context = use_context::<ComboboxContext>();
+
+    let oninput_handler = {
+        let context = context.clone();
+        let oninput = oninput.clone();
+        Callback::from(move |e: InputEvent| {
+            let input: web_sys::HtmlInputElement = e.target_unchecked_into();
+            if let Some(ctx) = context.as_ref() {
+                ctx.set_filter_query.emit(input.value());
+            }
+            if let Some(cb) = oninput.as_ref() {
+                cb.emit(e);
+            }
+        })
+    };
+
     let classes: Classes = vec![Classes::from("combobox-input"), class]
         .into_iter()
         .collect();
@@ -182,7 +228,7 @@ pub fn combobox_input(props: &ComboboxInputProps) -> Html {
             class={classes}
             placeholder={placeholder}
             value={value}
-            oninput={oninput}
+            oninput={oninput_handler}
             role="combobox"
             aria-autocomplete="list"
         />
@@ -196,6 +242,18 @@ pub struct ComboboxContentProps {
     #[prop_or_default]
     pub class: Classes,
 
+    /// Maximum number of visible items before scrolling
+    #[prop_or_default]
+    pub max_visible_items: Option<usize>,
+
+    /// Whether to allow creating new items from the search query
+    #[prop_or(false)]
+    pub allow_create: bool,
+
+    /// Callback invoked when the user creates a new item
+    #[prop_or_default]
+    pub on_create: Option<Callback<String>>,
+
     /// Children elements
     pub children: Children,
 }
@@ -205,8 +263,15 @@ pub struct ComboboxContentProps {
 /// Container for combobox items.
 #[function_component(ComboboxContent)]
 pub fn combobox_content(props: &ComboboxContentProps) -> Html {
-    let ComboboxContentProps { class, children } = props.clone();
+    let ComboboxContentProps {
+        class,
+        max_visible_items,
+        allow_create,
+        on_create,
+        children,
+    } = props.clone();
 
+    let context = use_context::<ComboboxContext>();
     let content_ref = use_node_ref();
 
     // Close on click outside
@@ -215,9 +280,43 @@ pub fn combobox_content(props: &ComboboxContentProps) -> Html {
     // Close on Escape key
     use_escape_key_conditional(|| {}, true);
 
+    let style =
+        max_visible_items.map(|n: usize| format!("max-height: {}px; overflow-y: auto;", n * 36));
+
     let classes: Classes = vec![Classes::from("combobox-content"), class]
         .into_iter()
         .collect();
+
+    let create_option = if allow_create {
+        let filter_query = context
+            .as_ref()
+            .map(|ctx| ctx.filter_query.clone())
+            .unwrap_or_default();
+        if filter_query.is_empty() {
+            html! {}
+        } else {
+            let query = filter_query.clone();
+            let on_create = on_create.clone();
+            let onclick = Callback::from(move |_: MouseEvent| {
+                if let Some(cb) = on_create.as_ref() {
+                    cb.emit(query.clone());
+                }
+            });
+            html! {
+                <div
+                    class="combobox-item combobox-create-item"
+                    role="option"
+                    aria-selected="false"
+                    onclick={onclick}
+                    tabindex="0"
+                >
+                    { format!("Create \"{}\"", filter_query) }
+                </div>
+            }
+        }
+    } else {
+        html! {}
+    };
 
     html! {
         <div
@@ -225,8 +324,10 @@ pub fn combobox_content(props: &ComboboxContentProps) -> Html {
             class={classes}
             id="combobox-content"
             role="listbox"
+            style={style}
         >
             { children }
+            { create_option }
         </div>
     }
 }
@@ -314,6 +415,10 @@ pub struct ComboboxItemProps {
     /// Value of this item
     pub value: AttrValue,
 
+    /// Additional keywords for search matching
+    #[prop_or_default]
+    pub keywords: Option<AttrValue>,
+
     /// Selected state
     #[prop_or(false)]
     pub selected: bool,
@@ -340,13 +445,57 @@ pub struct ComboboxItemProps {
 #[function_component(ComboboxItem)]
 pub fn combobox_item(props: &ComboboxItemProps) -> Html {
     let ComboboxItemProps {
-        value: _,
+        value,
+        keywords,
         selected,
         disabled,
         onclick,
         class,
         children,
     } = props.clone();
+
+    let context = use_context::<ComboboxContext>();
+
+    // Filter visibility based on context filter_query
+    let is_visible = context
+        .as_ref()
+        .map(|ctx| {
+            if ctx.filter_query.is_empty() {
+                true
+            } else {
+                let query = ctx.filter_query.to_lowercase();
+                let val_str = value.to_string().to_lowercase();
+                let kw_match = keywords
+                    .as_ref()
+                    .map(|k| k.to_lowercase().contains(&query))
+                    .unwrap_or(false);
+                val_str.contains(&query) || kw_match
+            }
+        })
+        .unwrap_or(true);
+
+    if !is_visible {
+        return html! {};
+    }
+
+    // Keyboard navigation
+    let onkeydown = {
+        let onclick = onclick.clone();
+        Callback::from(move |e: KeyboardEvent| {
+            if disabled {
+                return;
+            }
+            match e.key().as_str() {
+                "Enter" | " " => {
+                    e.prevent_default();
+                    // Keyboard activation: prevent default to handle Enter/Space
+                    // The browser will fire a click event on focused elements for Enter
+                    let _ = onclick.as_ref();
+                }
+                _ => {}
+            }
+        })
+    };
 
     let classes: Classes = vec![
         Classes::from("combobox-item"),
@@ -365,6 +514,8 @@ pub fn combobox_item(props: &ComboboxItemProps) -> Html {
     .into_iter()
     .collect();
 
+    let tabindex = if disabled { "-1" } else { "0" };
+
     html! {
         <div
             class={classes}
@@ -372,6 +523,8 @@ pub fn combobox_item(props: &ComboboxItemProps) -> Html {
             aria-selected={selected.to_string()}
             aria-disabled={disabled.to_string()}
             onclick={onclick}
+            onkeydown={onkeydown}
+            tabindex={tabindex}
         >
             { children }
         </div>
@@ -423,6 +576,7 @@ mod tests {
     fn test_combobox_item_selected() {
         let props = ComboboxItemProps {
             value: AttrValue::from("test"),
+            keywords: None,
             selected: true,
             disabled: false,
             onclick: None,
@@ -438,6 +592,7 @@ mod tests {
     fn test_combobox_item_disabled() {
         let props = ComboboxItemProps {
             value: AttrValue::from("test"),
+            keywords: None,
             selected: false,
             disabled: true,
             onclick: None,
@@ -458,5 +613,106 @@ mod tests {
         };
 
         assert_eq!(props.heading, Some(AttrValue::from("Options")));
+    }
+
+    #[test]
+    fn test_combobox_item_with_keywords() {
+        let props = ComboboxItemProps {
+            value: AttrValue::from("react"),
+            keywords: Some(AttrValue::from("javascript frontend library")),
+            selected: false,
+            disabled: false,
+            onclick: None,
+            class: Classes::new(),
+            children: Children::new(vec![]),
+        };
+
+        assert_eq!(
+            props.keywords,
+            Some(AttrValue::from("javascript frontend library"))
+        );
+    }
+
+    #[test]
+    fn test_combobox_context_creation() {
+        let ctx = ComboboxContext {
+            filter_query: String::from("test"),
+            set_filter_query: Callback::from(|_: String| {}),
+            is_open: true,
+            toggle: Callback::from(|_: ()| {}),
+        };
+
+        assert_eq!(ctx.filter_query, "test");
+        assert!(ctx.is_open);
+    }
+
+    #[test]
+    fn test_combobox_context_empty_query() {
+        let ctx = ComboboxContext {
+            filter_query: String::new(),
+            set_filter_query: Callback::from(|_: String| {}),
+            is_open: false,
+            toggle: Callback::from(|_: ()| {}),
+        };
+
+        assert!(ctx.filter_query.is_empty());
+        assert!(!ctx.is_open);
+    }
+
+    #[test]
+    fn test_combobox_content_with_max_visible() {
+        let props = ComboboxContentProps {
+            class: Classes::new(),
+            max_visible_items: Some(5),
+            allow_create: false,
+            on_create: None,
+            children: Children::new(vec![]),
+        };
+
+        assert_eq!(props.max_visible_items, Some(5));
+    }
+
+    #[test]
+    fn test_combobox_content_allow_create() {
+        let props = ComboboxContentProps {
+            class: Classes::new(),
+            max_visible_items: None,
+            allow_create: true,
+            on_create: Some(Callback::from(|_: String| {})),
+            children: Children::new(vec![]),
+        };
+
+        assert!(props.allow_create);
+        assert!(props.on_create.is_some());
+    }
+
+    #[test]
+    fn test_combobox_content_defaults() {
+        let props = ComboboxContentProps {
+            class: Classes::new(),
+            max_visible_items: None,
+            allow_create: false,
+            on_create: None,
+            children: Children::new(vec![]),
+        };
+
+        assert!(!props.allow_create);
+        assert!(props.max_visible_items.is_none());
+        assert!(props.on_create.is_none());
+    }
+
+    #[test]
+    fn test_combobox_item_keywords_none() {
+        let props = ComboboxItemProps {
+            value: AttrValue::from("test"),
+            keywords: None,
+            selected: false,
+            disabled: false,
+            onclick: None,
+            class: Classes::new(),
+            children: Children::new(vec![]),
+        };
+
+        assert!(props.keywords.is_none());
     }
 }

@@ -44,6 +44,14 @@ pub struct SidebarProps {
     #[prop_or(false)]
     pub collapsed: bool,
 
+    /// Whether the sidebar is in mobile overlay mode
+    #[prop_or(false)]
+    pub is_mobile: bool,
+
+    /// Callback when the backdrop is clicked (to close sidebar on mobile)
+    #[prop_or_default]
+    pub on_backdrop_click: Option<Callback<MouseEvent>>,
+
     /// Additional CSS classes
     #[prop_or_default]
     pub class: Classes,
@@ -64,6 +72,8 @@ pub struct SidebarProps {
 pub fn sidebar(props: &SidebarProps) -> Html {
     let SidebarProps {
         collapsed,
+        is_mobile,
+        on_backdrop_click,
         class,
         children,
     } = props.clone();
@@ -75,15 +85,25 @@ pub fn sidebar(props: &SidebarProps) -> Html {
         } else {
             Classes::new()
         },
+        if is_mobile {
+            Classes::from("sidebar-mobile")
+        } else {
+            Classes::new()
+        },
         class,
     ]
     .into_iter()
     .collect();
 
     html! {
-        <aside class={classes} aria-label="Sidebar">
-            { children }
-        </aside>
+        <>
+            if is_mobile && !collapsed {
+                <div class="sidebar-backdrop" onclick={on_backdrop_click} aria-hidden="true" />
+            }
+            <aside class={classes} aria-label="Sidebar">
+                { children }
+            </aside>
+        </>
     }
 }
 
@@ -462,11 +482,41 @@ mod tests {
     fn test_sidebar_collapsed() {
         let props = SidebarProps {
             collapsed: true,
+            is_mobile: false,
+            on_backdrop_click: None,
             class: Classes::new(),
             children: Children::new(vec![]),
         };
 
         assert!(props.collapsed);
+    }
+
+    #[test]
+    fn test_sidebar_mobile() {
+        let props = SidebarProps {
+            collapsed: false,
+            is_mobile: true,
+            on_backdrop_click: None,
+            class: Classes::new(),
+            children: Children::new(vec![]),
+        };
+
+        assert!(props.is_mobile);
+        assert!(!props.collapsed);
+    }
+
+    #[test]
+    fn test_sidebar_mobile_with_backdrop() {
+        let props = SidebarProps {
+            collapsed: false,
+            is_mobile: true,
+            on_backdrop_click: Some(Callback::noop()),
+            class: Classes::new(),
+            children: Children::new(vec![]),
+        };
+
+        assert!(props.is_mobile);
+        assert!(props.on_backdrop_click.is_some());
     }
 
     #[test]

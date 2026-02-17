@@ -239,6 +239,8 @@ pub struct SelectContext {
     pub select_value: Callback<(AttrValue, AttrValue)>,
     /// Whether the select is disabled
     pub disabled: bool,
+    /// Whether multiple selections are allowed
+    pub multiple: bool,
 }
 
 /// Advanced select container properties (also used as the main Select when using compound components)
@@ -259,6 +261,10 @@ pub struct SelectAdvancedProps {
     /// Whether the select is disabled
     #[prop_or(false)]
     pub disabled: bool,
+
+    /// Allow multiple selections
+    #[prop_or(false)]
+    pub multiple: bool,
 
     /// Callback when open state changes
     #[prop_or_default]
@@ -287,6 +293,7 @@ pub fn select_advanced(props: &SelectAdvancedProps) -> Html {
         default_value,
         open,
         disabled,
+        multiple,
         on_open_change,
         on_value_change,
         class,
@@ -322,14 +329,40 @@ pub fn select_advanced(props: &SelectAdvancedProps) -> Html {
         let on_value_change = on_value_change.clone();
         let on_open_change = on_open_change.clone();
         Callback::from(move |(val, label): (AttrValue, AttrValue)| {
-            internal_value.set(Some(val.clone()));
-            internal_label.set(Some(label));
-            internal_open.set(false);
-            if let Some(callback) = on_value_change.as_ref() {
-                callback.emit(val);
-            }
-            if let Some(callback) = on_open_change.as_ref() {
-                callback.emit(false);
+            if multiple {
+                // In multiple mode, toggle the value in a comma-separated list
+                let current = (*internal_value)
+                    .as_ref()
+                    .map(|v| v.to_string())
+                    .unwrap_or_default();
+                let mut values: Vec<String> = if current.is_empty() {
+                    Vec::new()
+                } else {
+                    current.split(',').map(|s| s.to_string()).collect()
+                };
+                let val_str = val.to_string();
+                if let Some(pos) = values.iter().position(|v| *v == val_str) {
+                    values.remove(pos);
+                } else {
+                    values.push(val_str);
+                }
+                let new_val = values.join(",");
+                internal_value.set(Some(AttrValue::from(new_val.clone())));
+                internal_label.set(Some(label));
+                // Don't close dropdown in multiple mode
+                if let Some(callback) = on_value_change.as_ref() {
+                    callback.emit(AttrValue::from(new_val));
+                }
+            } else {
+                internal_value.set(Some(val.clone()));
+                internal_label.set(Some(label));
+                internal_open.set(false);
+                if let Some(callback) = on_value_change.as_ref() {
+                    callback.emit(val);
+                }
+                if let Some(callback) = on_open_change.as_ref() {
+                    callback.emit(false);
+                }
             }
         })
     };
@@ -341,6 +374,7 @@ pub fn select_advanced(props: &SelectAdvancedProps) -> Html {
         toggle_open,
         select_value,
         disabled,
+        multiple,
     };
 
     let classes: Classes = vec![
@@ -503,6 +537,14 @@ pub struct SelectContentProps {
     #[prop_or(true)]
     pub close_on_escape: bool,
 
+    /// Whether to show a search input
+    #[prop_or(false)]
+    pub searchable: bool,
+
+    /// Placeholder for search input
+    #[prop_or(AttrValue::from("Search..."))]
+    pub search_placeholder: AttrValue,
+
     /// Additional CSS classes
     #[prop_or_default]
     pub class: Classes,
@@ -521,12 +563,15 @@ pub fn select_content(props: &SelectContentProps) -> Html {
         on_close,
         close_on_outside_click,
         close_on_escape,
+        searchable,
+        search_placeholder,
         class,
         children,
     } = props.clone();
 
     let context = use_context::<SelectContext>();
     let content_ref = use_node_ref();
+    let search_query = use_state(String::new);
 
     // Use prop if provided, otherwise use context
     let is_open = prop_open.unwrap_or_else(|| context.as_ref().map(|c| c.is_open).unwrap_or(false));
@@ -574,6 +619,23 @@ pub fn select_content(props: &SelectContentProps) -> Html {
             class={classes}
             role="listbox"
         >
+            if searchable {
+                <input
+                    type="text"
+                    class="select-search-input"
+                    placeholder={search_placeholder}
+                    value={(*search_query).clone()}
+                    oninput={{
+                        let search_query = search_query.clone();
+                        Callback::from(move |e: InputEvent| {
+                            let input: web_sys::HtmlInputElement = e.target_unchecked_into();
+                            search_query.set(input.value());
+                        })
+                    }}
+                    role="searchbox"
+                    aria-label="Search options"
+                />
+            }
             { children }
         </div>
     }
@@ -659,6 +721,35 @@ pub fn select_item(props: &SelectItemProps) -> Html {
         })
     };
 
+    let onkeydown = {
+        let value = value.clone();
+        let context = context.clone();
+        let on_select = on_select.clone();
+        let label_ref = label_ref.clone();
+        Callback::from(move |e: KeyboardEvent| {
+            if disabled {
+                return;
+            }
+            match e.key().as_str() {
+                "Enter" | " " => {
+                    e.prevent_default();
+                    let label_text = label_ref
+                        .cast::<web_sys::Element>()
+                        .and_then(|el| el.text_content())
+                        .unwrap_or_else(|| value.to_string());
+                    if let Some(ctx) = context.as_ref() {
+                        ctx.select_value
+                            .emit((value.clone(), AttrValue::from(label_text)));
+                    }
+                    if let Some(cb) = on_select.as_ref() {
+                        cb.emit(value.clone());
+                    }
+                }
+                _ => {}
+            }
+        })
+    };
+
     let classes: Classes = vec![
         Classes::from("select-item"),
         if is_selected {
@@ -683,7 +774,9 @@ pub fn select_item(props: &SelectItemProps) -> Html {
             role="option"
             aria-selected={is_selected.to_string()}
             aria-disabled={disabled.to_string()}
+            tabindex={if disabled { "-1" } else { "0" }}
             onclick={onclick}
+            onkeydown={onkeydown}
         >
             if is_selected {
                 <svg class="select-item-check" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -938,6 +1031,7 @@ mod tests {
             default_value: None,
             open: None,
             disabled: false,
+            multiple: false,
             on_open_change: None,
             on_value_change: None,
             class: Classes::new(),
@@ -946,6 +1040,7 @@ mod tests {
 
         assert!(props.open.is_none());
         assert!(props.value.is_none());
+        assert!(!props.multiple);
     }
 
     #[test]
@@ -1008,6 +1103,8 @@ mod tests {
             on_close: None,
             close_on_outside_click: true,
             close_on_escape: true,
+            searchable: false,
+            search_placeholder: AttrValue::from("Search..."),
             class: Classes::new(),
             children: Children::new(vec![]),
         };
@@ -1015,5 +1112,59 @@ mod tests {
         assert_eq!(props.open, Some(true));
         assert!(props.close_on_outside_click);
         assert!(props.close_on_escape);
+        assert!(!props.searchable);
+    }
+
+    #[test]
+    fn test_select_content_searchable() {
+        let props = SelectContentProps {
+            open: Some(true),
+            on_close: None,
+            close_on_outside_click: true,
+            close_on_escape: true,
+            searchable: true,
+            search_placeholder: AttrValue::from("Filter options..."),
+            class: Classes::new(),
+            children: Children::new(vec![]),
+        };
+
+        assert!(props.searchable);
+        assert_eq!(
+            props.search_placeholder,
+            AttrValue::from("Filter options...")
+        );
+    }
+
+    #[test]
+    fn test_select_advanced_multiple() {
+        let props = SelectAdvancedProps {
+            value: None,
+            default_value: None,
+            open: None,
+            disabled: false,
+            multiple: true,
+            on_open_change: None,
+            on_value_change: None,
+            class: Classes::new(),
+            children: Children::new(vec![]),
+        };
+
+        assert!(props.multiple);
+    }
+
+    #[test]
+    fn test_select_context_multiple() {
+        let context = SelectContext {
+            is_open: false,
+            selected_value: None,
+            selected_label: None,
+            toggle_open: Callback::from(|_: ()| {}),
+            select_value: Callback::from(|_: (AttrValue, AttrValue)| {}),
+            disabled: false,
+            multiple: true,
+        };
+
+        assert!(context.multiple);
+        assert!(!context.disabled);
     }
 }

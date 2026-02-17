@@ -34,6 +34,10 @@ use yew::prelude::*;
 /// Navigation menu container properties
 #[derive(Properties, PartialEq, Clone)]
 pub struct NavigationMenuProps {
+    /// Orientation of the navigation menu ("horizontal" or "vertical")
+    #[prop_or(AttrValue::from("horizontal"))]
+    pub orientation: AttrValue,
+
     /// Additional CSS classes
     #[prop_or_default]
     pub class: Classes,
@@ -52,14 +56,24 @@ pub struct NavigationMenuProps {
 /// - Focus management
 #[function_component(NavigationMenu)]
 pub fn navigation_menu(props: &NavigationMenuProps) -> Html {
-    let NavigationMenuProps { class, children } = props.clone();
+    let NavigationMenuProps {
+        orientation,
+        class,
+        children,
+    } = props.clone();
 
-    let classes: Classes = vec![Classes::from("navigation-menu"), class]
-        .into_iter()
-        .collect();
+    let orientation_class = format!("navigation-menu-{}", orientation);
+
+    let classes: Classes = vec![
+        Classes::from("navigation-menu"),
+        Classes::from(orientation_class),
+        class,
+    ]
+    .into_iter()
+    .collect();
 
     html! {
-        <nav class={classes}>
+        <nav class={classes} aria-orientation={orientation}>
             { children }
         </nav>
     }
@@ -134,6 +148,14 @@ pub struct NavigationMenuTriggerProps {
     #[prop_or_default]
     pub onclick: Option<Callback<MouseEvent>>,
 
+    /// Mouse enter handler (for hover triggers)
+    #[prop_or_default]
+    pub onmouseenter: Option<Callback<MouseEvent>>,
+
+    /// Mouse leave handler (for hover triggers)
+    #[prop_or_default]
+    pub onmouseleave: Option<Callback<MouseEvent>>,
+
     /// Children elements
     pub children: Children,
 }
@@ -146,6 +168,8 @@ pub fn navigation_menu_trigger(props: &NavigationMenuTriggerProps) -> Html {
     let NavigationMenuTriggerProps {
         class,
         onclick,
+        onmouseenter,
+        onmouseleave,
         children,
     } = props.clone();
 
@@ -153,8 +177,35 @@ pub fn navigation_menu_trigger(props: &NavigationMenuTriggerProps) -> Html {
         .into_iter()
         .collect();
 
+    let onkeydown = {
+        let onclick: Option<Callback<MouseEvent>> = onclick.clone();
+        Callback::from(move |e: KeyboardEvent| {
+            match e.key().as_str() {
+                "ArrowDown" | "ArrowRight" => {
+                    e.prevent_default();
+                    if let Some(ref _cb) = onclick {
+                        // Arrow keys prevent default to avoid scrolling;
+                        // actual menu opening is handled by click.
+                    }
+                }
+                "Escape" => {
+                    e.prevent_default();
+                }
+                _ => {}
+            }
+        })
+    };
+
     html! {
-        <button class={classes} onclick={onclick}>
+        <button
+            class={classes}
+            onclick={onclick}
+            onmouseenter={onmouseenter}
+            onmouseleave={onmouseleave}
+            onkeydown={onkeydown}
+            aria-expanded="false"
+            aria-haspopup="true"
+        >
             { children }
         </button>
     }
@@ -304,5 +355,88 @@ mod tests {
         };
 
         assert!(!props.active);
+    }
+
+    #[test]
+    fn test_navigation_menu_orientation_default() {
+        let props = NavigationMenuProps {
+            orientation: AttrValue::from("horizontal"),
+            class: Classes::new(),
+            children: Children::new(vec![]),
+        };
+
+        assert_eq!(props.orientation, AttrValue::from("horizontal"));
+    }
+
+    #[test]
+    fn test_navigation_menu_orientation_vertical() {
+        let props = NavigationMenuProps {
+            orientation: AttrValue::from("vertical"),
+            class: Classes::new(),
+            children: Children::new(vec![]),
+        };
+
+        assert_eq!(props.orientation, AttrValue::from("vertical"));
+    }
+
+    #[test]
+    fn test_navigation_menu_orientation_class_format() {
+        let orientation = AttrValue::from("horizontal");
+        let orientation_class = format!("navigation-menu-{}", orientation);
+        assert_eq!(orientation_class, "navigation-menu-horizontal");
+
+        let orientation = AttrValue::from("vertical");
+        let orientation_class = format!("navigation-menu-{}", orientation);
+        assert_eq!(orientation_class, "navigation-menu-vertical");
+    }
+
+    #[test]
+    fn test_navigation_menu_trigger_hover_props() {
+        let props = NavigationMenuTriggerProps {
+            class: Classes::new(),
+            onclick: None,
+            onmouseenter: None,
+            onmouseleave: None,
+            children: Children::new(vec![]),
+        };
+
+        assert!(props.onmouseenter.is_none());
+        assert!(props.onmouseleave.is_none());
+    }
+
+    #[test]
+    fn test_navigation_menu_trigger_with_hover_callbacks() {
+        let on_enter = Callback::from(|_: MouseEvent| {});
+        let on_leave = Callback::from(|_: MouseEvent| {});
+
+        let props = NavigationMenuTriggerProps {
+            class: Classes::new(),
+            onclick: None,
+            onmouseenter: Some(on_enter),
+            onmouseleave: Some(on_leave),
+            children: Children::new(vec![]),
+        };
+
+        assert!(props.onmouseenter.is_some());
+        assert!(props.onmouseleave.is_some());
+    }
+
+    #[test]
+    fn test_navigation_menu_trigger_with_all_callbacks() {
+        let on_click = Callback::from(|_: MouseEvent| {});
+        let on_enter = Callback::from(|_: MouseEvent| {});
+        let on_leave = Callback::from(|_: MouseEvent| {});
+
+        let props = NavigationMenuTriggerProps {
+            class: Classes::new(),
+            onclick: Some(on_click),
+            onmouseenter: Some(on_enter),
+            onmouseleave: Some(on_leave),
+            children: Children::new(vec![]),
+        };
+
+        assert!(props.onclick.is_some());
+        assert!(props.onmouseenter.is_some());
+        assert!(props.onmouseleave.is_some());
     }
 }

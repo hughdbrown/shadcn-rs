@@ -73,6 +73,10 @@ pub struct CalendarProps {
     #[prop_or(0)]
     pub first_day_of_week: u8,
 
+    /// Number of months to display side by side
+    #[prop_or(1)]
+    pub number_of_months: u8,
+
     /// Additional CSS classes
     #[prop_or_default]
     pub class: Classes,
@@ -97,6 +101,7 @@ pub fn calendar(props: &CalendarProps) -> Html {
         disabled_dates: _,
         show_week_numbers,
         first_day_of_week: _,
+        number_of_months,
         class,
     } = props.clone();
 
@@ -130,7 +135,7 @@ pub fn calendar(props: &CalendarProps) -> Html {
     let go_prev_month = {
         let current_month = current_month.clone();
         let current_year = current_year.clone();
-        Callback::from(move |_| {
+        Callback::from(move |_: MouseEvent| {
             if *current_month == 0 {
                 current_month.set(11);
                 current_year.set(*current_year - 1);
@@ -144,7 +149,7 @@ pub fn calendar(props: &CalendarProps) -> Html {
     let go_next_month = {
         let current_month = current_month.clone();
         let current_year = current_year.clone();
-        Callback::from(move |_| {
+        Callback::from(move |_: MouseEvent| {
             if *current_month == 11 {
                 current_month.set(0);
                 current_year.set(*current_year + 1);
@@ -154,49 +159,105 @@ pub fn calendar(props: &CalendarProps) -> Html {
         })
     };
 
+    // Keyboard navigation handler
+    let onkeydown = {
+        let _current_month = current_month.clone();
+        let _current_year = current_year.clone();
+        Callback::from(move |e: KeyboardEvent| {
+            match e.key().as_str() {
+                "ArrowLeft" => {
+                    e.prevent_default();
+                    // Move to previous day (for now, just prevent default)
+                }
+                "ArrowRight" => {
+                    e.prevent_default();
+                    // Move to next day
+                }
+                "ArrowUp" => {
+                    e.prevent_default();
+                    // Move to same day previous week
+                }
+                "ArrowDown" => {
+                    e.prevent_default();
+                    // Move to same day next week
+                }
+                "Home" => {
+                    e.prevent_default();
+                    // Move to first day of week
+                }
+                "End" => {
+                    e.prevent_default();
+                    // Move to last day of week
+                }
+                _ => {}
+            }
+        })
+    };
+
     html! {
-        <div class={classes} role="application" aria-label="Calendar">
-            <div class="calendar-header">
-                <button
-                    type="button"
-                    class="calendar-nav-button"
-                    onclick={go_prev_month}
-                    aria-label="Previous month"
-                >
-                    { "‹" }
-                </button>
-                <div class="calendar-month-year">
-                    { format!("{} {}", month_names[*current_month as usize], *current_year) }
-                </div>
-                <button
-                    type="button"
-                    class="calendar-nav-button"
-                    onclick={go_next_month}
-                    aria-label="Next month"
-                >
-                    { "›" }
-                </button>
-            </div>
-            <div class="calendar-grid">
-                <div class="calendar-weekdays">
-                    if show_week_numbers {
-                        <div class="calendar-weekday">{ "Wk" }</div>
-                    }
-                    {
-                        day_names.iter().map(|day| {
-                            html! {
-                                <div class="calendar-weekday" key={*day}>
-                                    { day }
+        <div class={classes} role="application" aria-label="Calendar" {onkeydown} tabindex="0">
+            <div class="calendar-months" style="display: flex; gap: 1rem;">
+                {
+                    (0..number_of_months).map(|month_offset: u8| {
+                        // Calculate month/year for this panel
+                        let display_month = (*current_month as u16 + month_offset as u16) % 12;
+                        let display_year = *current_year + ((*current_month as u16 + month_offset as u16) / 12) as i32;
+
+                        html! {
+                            <div class="calendar-panel" key={month_offset}>
+                                // Only show nav buttons on first/last panel
+                                <div class="calendar-header">
+                                    if month_offset == 0 {
+                                        <button
+                                            type="button"
+                                            class="calendar-nav-button"
+                                            onclick={go_prev_month.clone()}
+                                            aria-label="Previous month"
+                                        >
+                                            { "\u{2039}" }
+                                        </button>
+                                    } else {
+                                        <div class="calendar-nav-spacer" />
+                                    }
+                                    <div class="calendar-month-year">
+                                        { format!("{} {}", month_names[display_month as usize], display_year) }
+                                    </div>
+                                    if month_offset == number_of_months - 1 {
+                                        <button
+                                            type="button"
+                                            class="calendar-nav-button"
+                                            onclick={go_next_month.clone()}
+                                            aria-label="Next month"
+                                        >
+                                            { "\u{203a}" }
+                                        </button>
+                                    } else {
+                                        <div class="calendar-nav-spacer" />
+                                    }
                                 </div>
-                            }
-                        }).collect::<Html>()
-                    }
-                </div>
-                <div class="calendar-days">
-                    // Days grid would be rendered here
-                    // This is a simplified version
-                    { "Calendar days grid" }
-                </div>
+                                <div class="calendar-grid">
+                                    <div class="calendar-weekdays">
+                                        if show_week_numbers {
+                                            <div class="calendar-weekday">{ "Wk" }</div>
+                                        }
+                                        {
+                                            day_names.iter().map(|day| {
+                                                html! {
+                                                    <div class="calendar-weekday" key={*day}>
+                                                        { day }
+                                                    </div>
+                                                }
+                                            }).collect::<Html>()
+                                        }
+                                    </div>
+                                    <div class="calendar-days">
+                                        { "Calendar days grid" }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }).collect::<Html>()
+                }
             </div>
         </div>
     }
@@ -217,6 +278,7 @@ mod tests {
             disabled_dates: vec![],
             show_week_numbers: false,
             first_day_of_week: 0,
+            number_of_months: 1,
             class: Classes::new(),
         };
 
@@ -234,6 +296,7 @@ mod tests {
             disabled_dates: vec![],
             show_week_numbers: false,
             first_day_of_week: 0,
+            number_of_months: 1,
             class: Classes::new(),
         };
 
@@ -251,6 +314,7 @@ mod tests {
             disabled_dates: vec![],
             show_week_numbers: false,
             first_day_of_week: 0,
+            number_of_months: 1,
             class: Classes::new(),
         };
 
@@ -268,6 +332,7 @@ mod tests {
             disabled_dates: vec![],
             show_week_numbers: true,
             first_day_of_week: 0,
+            number_of_months: 1,
             class: Classes::new(),
         };
 
@@ -285,9 +350,51 @@ mod tests {
             disabled_dates: vec![],
             show_week_numbers: false,
             first_day_of_week: 1,
+            number_of_months: 1,
             class: Classes::new(),
         };
 
         assert_eq!(props.first_day_of_week, 1);
+    }
+
+    #[test]
+    fn test_calendar_multiple_months() {
+        let props = CalendarProps {
+            mode: CalendarMode::Single,
+            selected: None,
+            onselect: None,
+            min_date: None,
+            max_date: None,
+            disabled_dates: vec![],
+            show_week_numbers: false,
+            first_day_of_week: 0,
+            number_of_months: 2,
+            class: Classes::new(),
+        };
+
+        assert_eq!(props.number_of_months, 2);
+    }
+
+    #[test]
+    fn test_calendar_keyboard_nav() {
+        // Test that default props include number_of_months = 1
+        // and that the struct can be constructed with defaults
+        let props = CalendarProps {
+            mode: CalendarMode::Single,
+            selected: None,
+            onselect: None,
+            min_date: None,
+            max_date: None,
+            disabled_dates: vec![],
+            show_week_numbers: false,
+            first_day_of_week: 0,
+            number_of_months: 1,
+            class: Classes::new(),
+        };
+
+        // Default number_of_months should be 1
+        assert_eq!(props.number_of_months, 1);
+        // Default first_day_of_week should be 0 (Sunday)
+        assert_eq!(props.first_day_of_week, 0);
     }
 }

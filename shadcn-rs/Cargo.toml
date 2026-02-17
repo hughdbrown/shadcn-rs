@@ -33,6 +33,8 @@ web-sys = { workspace = true, features = [
     "TouchEvent",
     "TouchList",
     "Touch",
+    "ClipboardEvent",
+    "DataTransfer",
     "EventTarget",
     "Node",
     "NodeList",

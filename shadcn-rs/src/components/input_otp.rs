@@ -29,6 +29,7 @@
 //! }
 //! ```
 
+use wasm_bindgen::JsCast;
 use yew::prelude::*;
 
 /// Input OTP component properties
@@ -130,41 +131,128 @@ pub fn input_otp(props: &InputOTPProps) -> Html {
     .into_iter()
     .collect();
 
-    // Handle change for a specific field
-    let handle_field_change = {
-        let field_values = field_values.clone();
-        let on_change = on_change.clone();
-        let on_complete = on_complete.clone();
-        let length = length_val;
-
-        Callback::from(move |new_value: String| {
-            // Update field values
-            field_values.set(new_value.chars().map(|c| c.to_string()).collect());
-
-            // Get combined value
-            let combined = field_values.iter().cloned().collect::<String>();
-
-            // Call on_change
-            if let Some(cb) = on_change.as_ref() {
-                cb.emit(combined.clone());
-            }
-
-            // Call on_complete if all fields are filled
-            if combined.len() == length
-                && let Some(cb) = on_complete.as_ref()
-            {
-                cb.emit(combined);
-            }
-        })
-    };
-
     html! {
         <div class={classes} role="group" aria-label="One-time password input">
             {
                 (0..length_val).map(|i| {
                     let field_val = field_values.get(i).cloned().unwrap_or_default();
-                    let handle_change = handle_field_change.clone();
-                    let field_values_clone = field_values.clone();
+                    let field_values_input = field_values.clone();
+                    let on_change_input = on_change.clone();
+                    let on_complete_input = on_complete.clone();
+                    let length = length_val;
+
+                    let oninput = Callback::from(move |e: InputEvent| {
+                        let input: web_sys::HtmlInputElement = e.target_unchecked_into();
+                        let val = input.value();
+                        let mut new_values = (*field_values_input).clone();
+                        new_values[i] = val.chars().take(1).collect();
+
+                        let combined: String = new_values.iter().cloned().collect();
+                        field_values_input.set(new_values);
+
+                        if let Some(cb) = on_change_input.as_ref() {
+                            cb.emit(combined.clone());
+                        }
+                        if combined.len() == length
+                            && combined.chars().all(|c| !c.is_whitespace())
+                            && let Some(cb) = on_complete_input.as_ref()
+                        {
+                            cb.emit(combined);
+                        }
+
+                        // Auto-focus next field
+                        if !val.is_empty()
+                            && i + 1 < length
+                            && let Some(parent) = input.parent_element()
+                        {
+                            let selector = format!("input:nth-child({})", i + 2);
+                            if let Ok(Some(next)) = parent.query_selector(&selector)
+                                && let Some(next_input) = next.dyn_ref::<web_sys::HtmlElement>()
+                            {
+                                let _ = next_input.focus();
+                            }
+                        }
+                    });
+
+                    let field_values_key = field_values.clone();
+                    let onkeydown = Callback::from(move |e: KeyboardEvent| {
+                        let input: web_sys::HtmlInputElement = e.target_unchecked_into();
+                        match e.key().as_str() {
+                            "Backspace" => {
+                                if input.value().is_empty()
+                                    && i > 0
+                                    && let Some(parent) = input.parent_element()
+                                {
+                                    let selector = format!("input:nth-child({})", i);
+                                    if let Ok(Some(prev)) = parent.query_selector(&selector)
+                                        && let Some(prev_input) = prev.dyn_ref::<web_sys::HtmlElement>()
+                                    {
+                                        let _ = prev_input.focus();
+                                    }
+                                }
+                            }
+                            "ArrowLeft" => {
+                                if i > 0 {
+                                    e.prevent_default();
+                                    if let Some(parent) = input.parent_element() {
+                                        let selector = format!("input:nth-child({})", i);
+                                        if let Ok(Some(prev)) = parent.query_selector(&selector)
+                                            && let Some(prev_input) = prev.dyn_ref::<web_sys::HtmlElement>()
+                                        {
+                                            let _ = prev_input.focus();
+                                        }
+                                    }
+                                }
+                            }
+                            "ArrowRight" => {
+                                let len = (*field_values_key).len();
+                                if i + 1 < len {
+                                    e.prevent_default();
+                                    if let Some(parent) = input.parent_element() {
+                                        let selector = format!("input:nth-child({})", i + 2);
+                                        if let Ok(Some(next)) = parent.query_selector(&selector)
+                                            && let Some(next_input) = next.dyn_ref::<web_sys::HtmlElement>()
+                                        {
+                                            let _ = next_input.focus();
+                                        }
+                                    }
+                                }
+                            }
+                            _ => {}
+                        }
+                    });
+
+                    let field_values_paste = field_values.clone();
+                    let on_change_paste = on_change.clone();
+                    let on_complete_paste = on_complete.clone();
+                    let onpaste = Callback::from(move |e: Event| {
+                        e.prevent_default();
+                        // Access clipboard data via ClipboardEvent
+                        if let Some(clipboard_event) = e.dyn_ref::<web_sys::ClipboardEvent>()
+                            && let Some(data) = clipboard_event.clipboard_data()
+                            && let Ok(text) = data.get_data("text/plain")
+                        {
+                            let chars: Vec<char> = text.chars().take(length).collect();
+                            let mut new_values: Vec<String> = (*field_values_paste).clone();
+                            for (j, ch) in chars.iter().enumerate() {
+                                if i + j < length {
+                                    new_values[i + j] = ch.to_string();
+                                }
+                            }
+                            let combined: String = new_values.iter().cloned().collect();
+                            field_values_paste.set(new_values);
+
+                            if let Some(cb) = on_change_paste.as_ref() {
+                                cb.emit(combined.clone());
+                            }
+                            if combined.len() == length
+                                && combined.chars().all(|c| !c.is_whitespace())
+                                && let Some(cb) = on_complete_paste.as_ref()
+                            {
+                                cb.emit(combined);
+                            }
+                        }
+                    });
 
                     html! {
                         <input
@@ -175,12 +263,11 @@ pub fn input_otp(props: &InputOTPProps) -> Html {
                             value={field_val}
                             disabled={disabled_val}
                             aria-label={format!("Digit {}", i + 1)}
-                            oninput={move |e: InputEvent| {
-                                let input: web_sys::HtmlInputElement = e.target_unchecked_into();
-                                let mut new_values = (*field_values_clone).clone();
-                                new_values[i] = input.value();
-                                handle_change.emit(new_values.into_iter().collect());
-                            }}
+                            oninput={oninput}
+                            onkeydown={onkeydown}
+                            onpaste={onpaste}
+                            inputmode="numeric"
+                            autocomplete="one-time-code"
                         />
                     }
                 }).collect::<Html>()
@@ -295,5 +382,47 @@ mod tests {
         };
 
         assert_eq!(props.pattern, Some(AttrValue::from("^[0-9]*$")));
+    }
+
+    #[test]
+    fn test_input_otp_with_initial_value_fields() {
+        // Verify that a value shorter than length still works (fields padded with empty strings)
+        let props = InputOTPProps {
+            length: 6,
+            value: Some(String::from("123")),
+            default_value: None,
+            disabled: false,
+            masked: false,
+            pattern: None,
+            on_change: None,
+            on_complete: None,
+            class: Classes::new(),
+        };
+
+        assert_eq!(props.length, 6);
+        assert_eq!(props.value, Some(String::from("123")));
+        // The component should initialize 6 fields with first 3 filled
+    }
+
+    #[test]
+    fn test_input_otp_keyboard_nav_props() {
+        // The component now supports keyboard navigation (ArrowLeft, ArrowRight, Backspace)
+        // and paste support. Verify props still work correctly with these features.
+        let props = InputOTPProps {
+            length: 4,
+            value: None,
+            default_value: None,
+            disabled: false,
+            masked: false,
+            pattern: None,
+            on_change: Some(Callback::from(|_: String| {})),
+            on_complete: Some(Callback::from(|_: String| {})),
+            class: Classes::new(),
+        };
+
+        assert_eq!(props.length, 4);
+        assert!(!props.disabled);
+        assert!(props.on_change.is_some());
+        assert!(props.on_complete.is_some());
     }
 }

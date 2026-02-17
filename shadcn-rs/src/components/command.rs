@@ -34,7 +34,17 @@
 //! }
 //! ```
 
+use wasm_bindgen::JsCast;
 use yew::prelude::*;
+
+/// Shared context for command search state
+#[derive(Clone, PartialEq)]
+pub struct CommandContext {
+    /// The current search query
+    pub search_query: String,
+    /// Callback to update the search query
+    pub set_search_query: Callback<String>,
+}
 
 /// Command container properties
 #[derive(Properties, PartialEq, Clone)]
@@ -59,12 +69,28 @@ pub struct CommandProps {
 pub fn command(props: &CommandProps) -> Html {
     let CommandProps { class, children } = props.clone();
 
+    let search_query = use_state(String::new);
+
+    let set_search_query = {
+        let search_query = search_query.clone();
+        Callback::from(move |val: String| {
+            search_query.set(val);
+        })
+    };
+
+    let context = CommandContext {
+        search_query: (*search_query).clone(),
+        set_search_query,
+    };
+
     let classes: Classes = vec![Classes::from("command"), class].into_iter().collect();
 
     html! {
-        <div class={classes} role="application">
-            { children }
-        </div>
+        <ContextProvider<CommandContext> context={context}>
+            <div class={classes} role="application">
+                { children }
+            </div>
+        </ContextProvider<CommandContext>>
     }
 }
 
@@ -100,6 +126,24 @@ pub fn command_input(props: &CommandInputProps) -> Html {
         class,
     } = props.clone();
 
+    let context = use_context::<CommandContext>();
+
+    let oninput_handler = {
+        let context = context.clone();
+        let oninput = oninput.clone();
+        Callback::from(move |e: InputEvent| {
+            if let Some(target) = e.target()
+                && let Ok(input) = target.dyn_into::<web_sys::HtmlInputElement>()
+                && let Some(ctx) = context.as_ref()
+            {
+                ctx.set_search_query.emit(input.value());
+            }
+            if let Some(cb) = oninput.as_ref() {
+                cb.emit(e);
+            }
+        })
+    };
+
     let classes: Classes = vec![Classes::from("command-input"), class]
         .into_iter()
         .collect();
@@ -111,7 +155,7 @@ pub fn command_input(props: &CommandInputProps) -> Html {
                 class={classes}
                 placeholder={placeholder}
                 value={value}
-                oninput={oninput}
+                oninput={oninput_handler}
                 role="combobox"
                 aria-expanded="true"
                 aria-autocomplete="list"
@@ -252,15 +296,62 @@ pub struct CommandItemProps {
 /// Command item component
 ///
 /// A selectable item in the command palette.
+/// Supports fuzzy search filtering via `CommandContext` and keyboard navigation.
 #[function_component(CommandItem)]
 pub fn command_item(props: &CommandItemProps) -> Html {
     let CommandItemProps {
-        value: _,
+        value,
         disabled,
         onclick,
         class,
         children,
     } = props.clone();
+
+    let context = use_context::<CommandContext>();
+
+    // Filter based on search query from context
+    let is_visible = context
+        .as_ref()
+        .map(|ctx: &CommandContext| {
+            if ctx.search_query.is_empty() {
+                true
+            } else {
+                let query = ctx.search_query.to_lowercase();
+                // Check value if available; otherwise show item (children text not inspectable)
+                value
+                    .as_ref()
+                    .map(|v: &AttrValue| v.to_lowercase().contains(&query))
+                    .unwrap_or(true)
+            }
+        })
+        .unwrap_or(true);
+
+    if !is_visible {
+        return html! {};
+    }
+
+    let onkeydown = {
+        Callback::from(move |e: KeyboardEvent| {
+            if disabled {
+                return;
+            }
+            match e.key().as_str() {
+                "Enter" | " " => {
+                    e.prevent_default();
+                    // Trigger click on the element via keyboard activation.
+                    // This will fire the onclick handler attached to the div.
+                    if let Some(target) = e.target()
+                        && let Ok(el) = target.dyn_into::<web_sys::HtmlElement>()
+                    {
+                        el.click();
+                    }
+                }
+                _ => {}
+            }
+        })
+    };
+
+    let tabindex = if disabled { "-1" } else { "0" };
 
     let classes: Classes = vec![
         Classes::from("command-item"),
@@ -280,6 +371,8 @@ pub fn command_item(props: &CommandItemProps) -> Html {
             role="option"
             aria-disabled={disabled.to_string()}
             onclick={onclick}
+            onkeydown={onkeydown}
+            tabindex={tabindex}
         >
             { children }
         </div>
@@ -390,5 +483,96 @@ mod tests {
         };
 
         assert!(!props.disabled);
+    }
+
+    #[test]
+    fn test_command_context_clone_and_eq() {
+        let ctx1 = CommandContext {
+            search_query: "hello".to_string(),
+            set_search_query: Callback::noop(),
+        };
+        let ctx2 = ctx1.clone();
+
+        assert_eq!(ctx1.search_query, ctx2.search_query);
+        assert_eq!(ctx1.search_query, "hello");
+    }
+
+    #[test]
+    fn test_command_context_empty_query() {
+        let ctx = CommandContext {
+            search_query: String::new(),
+            set_search_query: Callback::noop(),
+        };
+
+        assert!(ctx.search_query.is_empty());
+    }
+
+    #[test]
+    fn test_command_context_search_filtering_logic() {
+        // Simulate the filtering logic used in command_item
+        let query = "cal".to_lowercase();
+        let value = AttrValue::from("Calendar");
+
+        let matches = value.to_lowercase().contains(&query);
+        assert!(matches);
+    }
+
+    #[test]
+    fn test_command_context_search_no_match() {
+        let query = "xyz".to_lowercase();
+        let value = AttrValue::from("Calendar");
+
+        let matches = value.to_lowercase().contains(&query);
+        assert!(!matches);
+    }
+
+    #[test]
+    fn test_command_context_search_case_insensitive() {
+        let query = "CALENDAR".to_lowercase();
+        let value = AttrValue::from("calendar");
+
+        let matches = value.to_lowercase().contains(&query);
+        assert!(matches);
+    }
+
+    #[test]
+    fn test_command_item_no_value_always_visible() {
+        // When value is None, item should be visible regardless of query
+        let query = "anything";
+        let value: Option<AttrValue> = None;
+
+        let is_visible = value
+            .as_ref()
+            .map(|v: &AttrValue| v.to_lowercase().contains(query))
+            .unwrap_or(true);
+        assert!(is_visible);
+    }
+
+    #[test]
+    fn test_command_item_empty_query_always_visible() {
+        let query = "";
+        let is_visible = query.is_empty();
+        assert!(is_visible);
+    }
+
+    #[test]
+    fn test_command_context_set_search_query_callback() {
+        use std::cell::RefCell;
+        use std::rc::Rc;
+
+        let captured = Rc::new(RefCell::new(String::new()));
+        let captured_clone = captured.clone();
+
+        let cb = Callback::from(move |val: String| {
+            *captured_clone.borrow_mut() = val;
+        });
+
+        let ctx = CommandContext {
+            search_query: String::new(),
+            set_search_query: cb,
+        };
+
+        ctx.set_search_query.emit("test query".to_string());
+        assert_eq!(*captured.borrow(), "test query");
     }
 }

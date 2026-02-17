@@ -188,12 +188,12 @@ pub use sidebar::{
 // Re-export Tier 7 components
 pub use calendar::{Calendar, CalendarMode};
 pub use combobox::{
-    Combobox, ComboboxContent, ComboboxEmpty, ComboboxGroup, ComboboxInput, ComboboxItem,
-    ComboboxSeparator, ComboboxTrigger,
+    Combobox, ComboboxContent, ComboboxContext, ComboboxEmpty, ComboboxGroup, ComboboxInput,
+    ComboboxItem, ComboboxSeparator, ComboboxTrigger,
 };
 pub use command::{
-    Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator,
-    CommandShortcut,
+    Command, CommandContext, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
+    CommandSeparator, CommandShortcut,
 };
 pub use date_picker::DatePicker;
 pub use input_otp::InputOTP;

@@ -81,24 +81,54 @@ pub struct BreadcrumbListProps {
     #[prop_or_default]
     pub class: Classes,
 
+    /// Maximum number of items to display before truncating with ellipsis.
+    /// When set and children count exceeds this value (minimum 3),
+    /// renders the first item, an ellipsis, and the last `max_items - 2` items.
+    #[prop_or_default]
+    pub max_items: Option<usize>,
+
     /// Children elements
     pub children: Children,
 }
 
 /// Breadcrumb list component
 ///
-/// Contains the breadcrumb items.
+/// Contains the breadcrumb items. Supports truncation via `max_items`.
 #[function_component(BreadcrumbList)]
 pub fn breadcrumb_list(props: &BreadcrumbListProps) -> Html {
-    let BreadcrumbListProps { class, children } = props.clone();
+    let BreadcrumbListProps {
+        class,
+        max_items,
+        children,
+    } = props.clone();
 
     let classes: Classes = vec![Classes::from("breadcrumb-list"), class]
         .into_iter()
         .collect();
 
+    let content: Html = match max_items {
+        Some(max) if max >= 3 && children.len() > max => {
+            let all: Vec<Html> = children.iter().collect();
+            let first = all[0].clone();
+            let tail_start: usize = all.len() - (max - 2);
+            let tail: Vec<Html> = all[tail_start..].to_vec();
+
+            html! {
+                <>
+                    { first }
+                    <li class="breadcrumb-ellipsis" role="presentation">{ "\u{2026}" }</li>
+                    { tail.into_iter().collect::<Html>() }
+                </>
+            }
+        }
+        _ => {
+            html! { { children } }
+        }
+    };
+
     html! {
         <ol class={classes}>
-            { children }
+            { content }
         </ol>
     }
 }
@@ -262,6 +292,33 @@ mod tests {
         };
 
         assert_eq!(props.aria_label, AttrValue::from("Navigation path"));
+    }
+
+    #[test]
+    fn test_breadcrumb_list_max_items_prop() {
+        // When max_items is None, all children render normally
+        let props_none = BreadcrumbListProps {
+            class: Classes::new(),
+            max_items: None,
+            children: Children::new(vec![]),
+        };
+        assert!(props_none.max_items.is_none());
+
+        // When max_items is set, the value is stored correctly
+        let props_some = BreadcrumbListProps {
+            class: Classes::new(),
+            max_items: Some(4),
+            children: Children::new(vec![]),
+        };
+        assert_eq!(props_some.max_items, Some(4));
+
+        // max_items less than 3 should not trigger truncation
+        let props_small = BreadcrumbListProps {
+            class: Classes::new(),
+            max_items: Some(2),
+            children: Children::new(vec![]),
+        };
+        assert_eq!(props_small.max_items, Some(2));
     }
 
     #[test]

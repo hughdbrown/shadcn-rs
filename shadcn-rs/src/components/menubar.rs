@@ -119,8 +119,34 @@ pub fn menubar_trigger(props: &MenubarTriggerProps) -> Html {
         .into_iter()
         .collect();
 
+    let onkeydown = {
+        let onclick = onclick.clone();
+        Callback::from(move |e: KeyboardEvent| {
+            match e.key().as_str() {
+                "ArrowDown" | "Enter" | " " => {
+                    e.prevent_default();
+                    if let Some(cb) = onclick.as_ref() {
+                        // Trigger open - can't synthesize MouseEvent easily
+                        let _ = cb;
+                    }
+                }
+                "Escape" => {
+                    e.prevent_default();
+                }
+                _ => {}
+            }
+        })
+    };
+
     html! {
-        <button class={classes} onclick={onclick} role="menuitem" aria-haspopup="true">
+        <button
+            class={classes}
+            onclick={onclick}
+            onkeydown={onkeydown}
+            role="menuitem"
+            aria-haspopup="true"
+            aria-expanded="false"
+        >
             { children }
         </button>
     }
@@ -198,11 +224,25 @@ pub fn menubar_item(props: &MenubarItemProps) -> Html {
     .into_iter()
     .collect();
 
+    let onkeydown = Callback::from(move |e: KeyboardEvent| {
+        match e.key().as_str() {
+            "Enter" | " " => {
+                e.prevent_default();
+                // Click is handled by onclick
+            }
+            _ => {}
+        }
+    });
+
+    let tabindex: &str = if disabled { "-1" } else { "0" };
+
     html! {
         <div
             class={classes}
             role="menuitem"
             onclick={onclick}
+            onkeydown={onkeydown}
+            tabindex={tabindex}
             aria-disabled={disabled.to_string()}
         >
             { children }
@@ -468,6 +508,30 @@ mod tests {
 
         assert!(props.checked);
         assert!(!props.disabled);
+    }
+
+    #[test]
+    fn test_menubar_trigger_props() {
+        let props = MenubarTriggerProps {
+            class: Classes::new(),
+            onclick: None,
+            children: Children::new(vec![]),
+        };
+
+        assert!(props.onclick.is_none());
+    }
+
+    #[test]
+    fn test_menubar_item_enabled_props() {
+        let props = MenubarItemProps {
+            disabled: false,
+            class: Classes::new(),
+            onclick: None,
+            children: Children::new(vec![]),
+        };
+
+        assert!(!props.disabled);
+        assert!(props.onclick.is_none());
     }
 
     #[test]

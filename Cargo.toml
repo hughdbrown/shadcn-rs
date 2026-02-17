@@ -5,7 +5,7 @@ resolver = "2"
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
-authors = ["Hugh Browni <hughdbrown@gmail.com>"]
+authors = ["Hugh Brown <hughdbrown@gmail.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/hughdbrown/shadcn-rs"
 homepage = "https://github.com/hughdbrown/shadcn-rs"
@@ -33,3 +33,12 @@ wasm-bindgen-futures = "0.4"
 
 # Development dependencies
 wasm-bindgen-test = "0.3"
+
+[profile.release]
+codegen-units = 1
+debug = false
+lto = true
+opt-level = "z"
+panic = "abort"
+strip = true
+
