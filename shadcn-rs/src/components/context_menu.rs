@@ -310,8 +310,6 @@ pub fn context_menu_item(props: &ContextMenuItemProps) -> Html {
     };
 
     let onkeydown = {
-        let onclick = onclick.clone();
-        let context = context.clone();
         Callback::from(move |e: KeyboardEvent| {
             if disabled {
                 return;
@@ -319,19 +317,13 @@ pub fn context_menu_item(props: &ContextMenuItemProps) -> Html {
             match e.key().as_str() {
                 "Enter" | " " => {
                     e.prevent_default();
-                    // Dispatch click on the target element for keyboard activation
+                    // Dispatch click on the target element for keyboard activation.
+                    // el.click() triggers handle_click which already emits ctx.close,
+                    // so we don't emit close again here.
                     if let Some(target) = e.target()
                         && let Some(el) = target.dyn_ref::<web_sys::HtmlElement>()
                     {
                         el.click();
-                    }
-                    if let Some(callback) = onclick.as_ref() {
-                        // The click handler above will fire, but also emit directly
-                        // in case the element doesn't support .click()
-                        let _ = callback;
-                    }
-                    if let Some(ctx) = context.as_ref() {
-                        ctx.close.emit(());
                     }
                 }
                 _ => {}

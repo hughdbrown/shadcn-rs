@@ -106,9 +106,7 @@ pub fn alert_dialog(props: &AlertDialogProps) -> Html {
     {
         let internal_open = internal_open.clone();
         use_effect_with(open, move |&open| {
-            if open {
-                internal_open.set(true);
-            }
+            internal_open.set(open);
         });
     }
     let has_on_change = on_open_change.is_some();

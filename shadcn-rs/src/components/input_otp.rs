@@ -120,9 +120,6 @@ pub fn input_otp(props: &InputOTPProps) -> Html {
         }
     });
 
-    // Pattern is passed through to the HTML input pattern attribute for native validation
-    let _pattern = pattern;
-
     let classes: Classes = vec![
         Classes::from("input-otp"),
         if disabled_val {
@@ -144,6 +141,7 @@ pub fn input_otp(props: &InputOTPProps) -> Html {
                     let on_change_input = on_change.clone();
                     let on_complete_input = on_complete.clone();
                     let length = length_val;
+                    let pattern = pattern.clone();
 
                     let oninput = Callback::from(move |e: InputEvent| {
                         let input: web_sys::HtmlInputElement = e.target_unchecked_into();
@@ -266,6 +264,7 @@ pub fn input_otp(props: &InputOTPProps) -> Html {
                             maxlength="1"
                             value={field_val}
                             disabled={disabled_val}
+                            pattern={pattern}
                             aria-label={format!("Digit {}", i + 1)}
                             oninput={oninput}
                             onkeydown={onkeydown}

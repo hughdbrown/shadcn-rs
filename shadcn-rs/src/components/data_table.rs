@@ -99,6 +99,10 @@ pub struct DataTableProps<T: Clone + PartialEq + 'static> {
     /// Render function for rows
     #[prop_or_default]
     pub render_row: Option<Callback<T, Html>>,
+
+    /// Render function for column headers
+    #[prop_or_default]
+    pub render_header: Option<Callback<(), Html>>,
 }
 
 /// Data table component
@@ -135,6 +139,7 @@ pub fn data_table<T: Clone + PartialEq + 'static>(props: &DataTableProps<T>) -> 
     .collect();
 
     let render_row = &props.render_row;
+    let render_header = &props.render_header;
 
     html! {
         <div class={classes} role="grid">
@@ -145,6 +150,9 @@ pub fn data_table<T: Clone + PartialEq + 'static>(props: &DataTableProps<T>) -> 
                             <th class="data-table-select-column">
                                 <input type="checkbox" aria-label="Select all" />
                             </th>
+                        }
+                        if let Some(renderer) = render_header {
+                            { renderer.emit(()) }
                         }
                     </tr>
                 </thead>
@@ -203,6 +211,7 @@ mod tests {
             rows_per_page: 10,
             class: Classes::new(),
             render_row: None,
+            render_header: None,
         };
 
         assert!(!props.sortable);
@@ -228,6 +237,7 @@ mod tests {
             rows_per_page: 10,
             class: Classes::new(),
             render_row: None,
+            render_header: None,
         };
 
         assert!(props.sortable);
@@ -252,6 +262,7 @@ mod tests {
             rows_per_page: 10,
             class: Classes::new(),
             render_row: None,
+            render_header: None,
         };
 
         assert!(props.selectable);
@@ -277,6 +288,7 @@ mod tests {
             rows_per_page: 20,
             class: Classes::new(),
             render_row: None,
+            render_header: None,
         };
 
         assert!(props.paginated);

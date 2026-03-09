@@ -105,9 +105,7 @@ pub fn dialog(props: &DialogProps) -> Html {
     {
         let internal_open = internal_open.clone();
         use_effect_with(open, move |&open| {
-            if open {
-                internal_open.set(true);
-            }
+            internal_open.set(open);
         });
     }
     // If the parent explicitly passes open=true/false, use that; for uncontrolled, use internal
