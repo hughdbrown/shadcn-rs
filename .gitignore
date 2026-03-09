@@ -15,6 +15,7 @@ wasm-pack.log
 *.swo
 *~
 .DS_Store
+*.*-e
 
 # Trunk (WASM dev server)
 .trunk/
