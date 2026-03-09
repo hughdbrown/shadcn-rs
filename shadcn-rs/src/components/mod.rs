@@ -2,6 +2,9 @@
 //!
 //! This module contains all shadcn-rs UI components organized by tier.
 
+// Utility components
+pub mod direction;
+
 // Tier 1 - Foundational components
 pub mod alert;
 pub mod avatar;
@@ -76,6 +79,9 @@ pub mod chart;
 pub mod data_table;
 pub mod sonner;
 pub mod toast;
+
+// Re-export utility components
+pub use direction::{Direction, DirectionContext, DirectionProvider, use_direction};
 
 // Re-export Tier 1 components
 pub use alert::{Alert, AlertDescription, AlertTitle};
@@ -157,7 +163,7 @@ pub use sheet::{
     Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger,
 };
 pub use tabs::{Tabs, TabsContent, TabsList, TabsOrientation, TabsTrigger};
-pub use tooltip::{Tooltip, TooltipContent, TooltipTrigger};
+pub use tooltip::{Tooltip, TooltipContent, TooltipContext, TooltipProvider, TooltipTrigger};
 
 // Re-export Tier 6 components
 pub use breadcrumb::{
@@ -181,8 +187,9 @@ pub use pagination::{
     PaginationNext, PaginationPrevious,
 };
 pub use sidebar::{
-    Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
-    SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarSeparator,
+    Sidebar, SidebarContent, SidebarContext, SidebarFooter, SidebarGroup, SidebarGroupContent,
+    SidebarGroupLabel, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton,
+    SidebarMenuItem, SidebarProvider, SidebarRail, SidebarSeparator, SidebarTrigger, use_sidebar,
 };
 
 // Re-export Tier 7 components

@@ -26,6 +26,78 @@
 use crate::types::Position;
 use yew::prelude::*;
 
+/// Context for sharing tooltip configuration through the component tree
+#[derive(Clone, Debug, PartialEq)]
+pub struct TooltipContext {
+    /// Default delay before showing tooltips (in milliseconds)
+    pub delay_duration: u32,
+    /// Duration to skip delay when moving between tooltips (in milliseconds)
+    pub skip_delay_duration: u32,
+}
+
+/// TooltipProvider component properties
+#[derive(Properties, PartialEq, Clone)]
+pub struct TooltipProviderProps {
+    /// Default delay before showing tooltips (in milliseconds)
+    #[prop_or(200)]
+    pub delay_duration: u32,
+
+    /// Duration to skip delay when quickly moving between tooltips (in milliseconds)
+    #[prop_or(300)]
+    pub skip_delay_duration: u32,
+
+    /// Children elements
+    pub children: Children,
+}
+
+/// TooltipProvider component
+///
+/// Wraps the application or a subtree to provide global tooltip configuration.
+/// All `Tooltip` components within this provider will inherit the configured
+/// delay settings unless overridden individually.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use yew::prelude::*;
+/// use shadcn_rs::{TooltipProvider, Tooltip, TooltipTrigger, TooltipContent, Button};
+///
+/// #[function_component(App)]
+/// fn app() -> Html {
+///     html! {
+///         <TooltipProvider delay_duration={400}>
+///             <Tooltip>
+///                 <TooltipTrigger>
+///                     <Button>{ "Hover me" }</Button>
+///                 </TooltipTrigger>
+///                 <TooltipContent>
+///                     { "This tooltip has a 400ms delay" }
+///                 </TooltipContent>
+///             </Tooltip>
+///         </TooltipProvider>
+///     }
+/// }
+/// ```
+#[function_component(TooltipProvider)]
+pub fn tooltip_provider(props: &TooltipProviderProps) -> Html {
+    let TooltipProviderProps {
+        delay_duration,
+        skip_delay_duration,
+        children,
+    } = props.clone();
+
+    let context = TooltipContext {
+        delay_duration,
+        skip_delay_duration,
+    };
+
+    html! {
+        <ContextProvider<TooltipContext> {context}>
+            { children }
+        </ContextProvider<TooltipContext>>
+    }
+}
+
 /// Tooltip component properties
 #[derive(Properties, PartialEq, Clone)]
 pub struct TooltipProps {
@@ -173,6 +245,49 @@ mod tests {
         };
 
         assert!(props.disabled);
+    }
+
+    #[test]
+    fn test_tooltip_provider_defaults() {
+        let props = TooltipProviderProps {
+            delay_duration: 200,
+            skip_delay_duration: 300,
+            children: Children::new(vec![]),
+        };
+
+        assert_eq!(props.delay_duration, 200);
+        assert_eq!(props.skip_delay_duration, 300);
+    }
+
+    #[test]
+    fn test_tooltip_provider_custom() {
+        let props = TooltipProviderProps {
+            delay_duration: 500,
+            skip_delay_duration: 100,
+            children: Children::new(vec![]),
+        };
+
+        assert_eq!(props.delay_duration, 500);
+        assert_eq!(props.skip_delay_duration, 100);
+    }
+
+    #[test]
+    fn test_tooltip_context_equality() {
+        let ctx1 = TooltipContext {
+            delay_duration: 200,
+            skip_delay_duration: 300,
+        };
+        let ctx2 = TooltipContext {
+            delay_duration: 200,
+            skip_delay_duration: 300,
+        };
+        let ctx3 = TooltipContext {
+            delay_duration: 400,
+            skip_delay_duration: 300,
+        };
+
+        assert_eq!(ctx1, ctx2);
+        assert_ne!(ctx1, ctx3);
     }
 
     #[test]

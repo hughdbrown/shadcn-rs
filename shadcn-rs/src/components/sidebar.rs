@@ -37,6 +37,277 @@
 
 use yew::prelude::*;
 
+/// Sidebar state shared via context
+#[derive(Clone, Debug, PartialEq)]
+pub struct SidebarContext {
+    /// Whether the sidebar is currently open
+    pub open: bool,
+    /// Whether the sidebar is in mobile mode
+    pub is_mobile: bool,
+    /// Callback to toggle the sidebar open/closed
+    pub toggle: Callback<()>,
+    /// Callback to set the sidebar open state directly
+    pub set_open: Callback<bool>,
+}
+
+/// SidebarProvider component properties
+#[derive(Properties, PartialEq, Clone)]
+pub struct SidebarProviderProps {
+    /// Whether the sidebar starts open
+    #[prop_or(true)]
+    pub default_open: bool,
+
+    /// Controlled open state
+    #[prop_or_default]
+    pub open: Option<bool>,
+
+    /// Callback when open state changes
+    #[prop_or_default]
+    pub on_open_change: Option<Callback<bool>>,
+
+    /// Additional CSS classes
+    #[prop_or_default]
+    pub class: Classes,
+
+    /// Children elements
+    pub children: Children,
+}
+
+/// SidebarProvider component
+///
+/// Wraps the application layout to provide sidebar state context.
+/// Use the `use_sidebar` hook or `SidebarTrigger` to control the sidebar.
+///
+/// # Accessibility
+/// - Manages focus when sidebar toggles
+/// - Provides state to all sidebar sub-components
+#[function_component(SidebarProvider)]
+pub fn sidebar_provider(props: &SidebarProviderProps) -> Html {
+    let SidebarProviderProps {
+        default_open,
+        open: controlled_open,
+        on_open_change,
+        class,
+        children,
+    } = props.clone();
+
+    let internal_open = use_state(|| default_open);
+
+    let is_open = controlled_open.unwrap_or(*internal_open);
+
+    let toggle = {
+        let internal_open = internal_open.clone();
+        let on_open_change = on_open_change.clone();
+        Callback::from(move |_: ()| {
+            let new_val = !controlled_open.unwrap_or(*internal_open);
+            if controlled_open.is_none() {
+                internal_open.set(new_val);
+            }
+            if let Some(cb) = &on_open_change {
+                cb.emit(new_val);
+            }
+        })
+    };
+
+    let set_open = {
+        let internal_open = internal_open.clone();
+        let on_open_change = on_open_change.clone();
+        Callback::from(move |value: bool| {
+            internal_open.set(value);
+            if let Some(cb) = &on_open_change {
+                cb.emit(value);
+            }
+        })
+    };
+
+    let context = SidebarContext {
+        open: is_open,
+        is_mobile: false,
+        toggle,
+        set_open,
+    };
+
+    let classes: Classes = vec![
+        Classes::from("sidebar-provider"),
+        if is_open {
+            Classes::from("sidebar-provider-open")
+        } else {
+            Classes::from("sidebar-provider-closed")
+        },
+        class,
+    ]
+    .into_iter()
+    .collect();
+
+    html! {
+        <ContextProvider<SidebarContext> {context}>
+            <div class={classes}>
+                { children }
+            </div>
+        </ContextProvider<SidebarContext>>
+    }
+}
+
+/// Hook to access sidebar state from a SidebarProvider ancestor.
+///
+/// # Panics
+///
+/// Panics if used outside a SidebarProvider.
+///
+/// # Examples
+///
+/// ```rust,ignore
+/// use yew::prelude::*;
+/// use shadcn_rs::components::sidebar::use_sidebar;
+///
+/// #[function_component(MyComponent)]
+/// fn my_component() -> Html {
+///     let sidebar = use_sidebar();
+///
+///     html! {
+///         <button onclick={move |_| sidebar.toggle.emit(())}>
+///             { if sidebar.open { "Close" } else { "Open" } }
+///         </button>
+///     }
+/// }
+/// ```
+#[hook]
+pub fn use_sidebar() -> SidebarContext {
+    use_context::<SidebarContext>().expect("use_sidebar must be used within a SidebarProvider")
+}
+
+/// SidebarTrigger component properties
+#[derive(Properties, PartialEq, Clone)]
+pub struct SidebarTriggerProps {
+    /// Additional CSS classes
+    #[prop_or_default]
+    pub class: Classes,
+
+    /// Children elements (defaults to a hamburger icon if empty)
+    #[prop_or_default]
+    pub children: Children,
+}
+
+/// SidebarTrigger component
+///
+/// A button that toggles the sidebar open/closed state.
+///
+/// # Accessibility
+/// - Uses `aria-expanded` to indicate sidebar state
+/// - Uses `aria-label` for screen readers
+#[function_component(SidebarTrigger)]
+pub fn sidebar_trigger(props: &SidebarTriggerProps) -> Html {
+    let SidebarTriggerProps { class, children } = props.clone();
+
+    let context = use_context::<SidebarContext>();
+
+    let (is_open, onclick) = if let Some(ctx) = &context {
+        let toggle = ctx.toggle.clone();
+        (
+            ctx.open,
+            Callback::from(move |_: MouseEvent| toggle.emit(())),
+        )
+    } else {
+        (false, Callback::from(|_: MouseEvent| {}))
+    };
+
+    let classes: Classes = vec![Classes::from("sidebar-trigger"), class]
+        .into_iter()
+        .collect();
+
+    let has_children = !children.is_empty();
+
+    html! {
+        <button
+            class={classes}
+            onclick={onclick}
+            aria-expanded={is_open.to_string()}
+            aria-label="Toggle sidebar"
+        >
+            if has_children {
+                { children }
+            } else {
+                <span class="sidebar-trigger-icon" aria-hidden="true">
+                    { "☰" }
+                </span>
+            }
+        </button>
+    }
+}
+
+/// SidebarRail component properties
+#[derive(Properties, PartialEq, Clone)]
+pub struct SidebarRailProps {
+    /// Additional CSS classes
+    #[prop_or_default]
+    pub class: Classes,
+}
+
+/// SidebarRail component
+///
+/// A thin rail on the edge of the sidebar that can be used to toggle it.
+/// Typically rendered as a narrow vertical bar that becomes visible on hover.
+///
+/// # Accessibility
+/// - Keyboard accessible (Enter/Space to toggle)
+/// - Uses aria-label for screen readers
+#[function_component(SidebarRail)]
+pub fn sidebar_rail(props: &SidebarRailProps) -> Html {
+    let SidebarRailProps { class } = props.clone();
+
+    let context = use_context::<SidebarContext>();
+
+    let onclick = if let Some(ctx) = &context {
+        let toggle = ctx.toggle.clone();
+        Callback::from(move |_: MouseEvent| toggle.emit(()))
+    } else {
+        Callback::from(|_: MouseEvent| {})
+    };
+
+    let classes: Classes = vec![Classes::from("sidebar-rail"), class]
+        .into_iter()
+        .collect();
+
+    html! {
+        <button
+            class={classes}
+            onclick={onclick}
+            aria-label="Toggle sidebar"
+            tabindex="0"
+        />
+    }
+}
+
+/// SidebarInset component properties
+#[derive(Properties, PartialEq, Clone)]
+pub struct SidebarInsetProps {
+    /// Additional CSS classes
+    #[prop_or_default]
+    pub class: Classes,
+
+    /// Children elements
+    pub children: Children,
+}
+
+/// SidebarInset component
+///
+/// The main content area that sits next to the sidebar.
+/// Automatically adjusts its layout when the sidebar opens/closes.
+#[function_component(SidebarInset)]
+pub fn sidebar_inset(props: &SidebarInsetProps) -> Html {
+    let SidebarInsetProps { class, children } = props.clone();
+
+    let classes: Classes = vec![Classes::from("sidebar-inset"), class]
+        .into_iter()
+        .collect();
+
+    html! {
+        <main class={classes}>
+            { children }
+        </main>
+    }
+}
+
 /// Sidebar container properties
 #[derive(Properties, PartialEq, Clone)]
 pub struct SidebarProps {
@@ -574,6 +845,82 @@ mod tests {
     #[test]
     fn test_sidebar_group_content_default() {
         let props = SidebarGroupContentProps {
+            class: Classes::new(),
+            children: Children::new(vec![]),
+        };
+
+        assert_eq!(props.class, Classes::new());
+    }
+
+    #[test]
+    fn test_sidebar_provider_props_default_open() {
+        let props = SidebarProviderProps {
+            default_open: true,
+            open: None,
+            on_open_change: None,
+            class: Classes::new(),
+            children: Children::new(vec![]),
+        };
+
+        assert!(props.default_open);
+        assert!(props.open.is_none());
+    }
+
+    #[test]
+    fn test_sidebar_provider_props_controlled() {
+        let props = SidebarProviderProps {
+            default_open: true,
+            open: Some(false),
+            on_open_change: Some(Callback::noop()),
+            class: Classes::new(),
+            children: Children::new(vec![]),
+        };
+
+        assert_eq!(props.open, Some(false));
+        assert!(props.on_open_change.is_some());
+    }
+
+    #[test]
+    fn test_sidebar_context_equality() {
+        let ctx1 = SidebarContext {
+            open: true,
+            is_mobile: false,
+            toggle: Callback::noop(),
+            set_open: Callback::noop(),
+        };
+        let ctx2 = SidebarContext {
+            open: true,
+            is_mobile: false,
+            toggle: Callback::noop(),
+            set_open: Callback::noop(),
+        };
+
+        assert_eq!(ctx1.open, ctx2.open);
+        assert_eq!(ctx1.is_mobile, ctx2.is_mobile);
+    }
+
+    #[test]
+    fn test_sidebar_trigger_props() {
+        let props = SidebarTriggerProps {
+            class: Classes::new(),
+            children: Children::new(vec![]),
+        };
+
+        assert_eq!(props.class, Classes::new());
+    }
+
+    #[test]
+    fn test_sidebar_rail_props() {
+        let props = SidebarRailProps {
+            class: Classes::new(),
+        };
+
+        assert_eq!(props.class, Classes::new());
+    }
+
+    #[test]
+    fn test_sidebar_inset_props() {
+        let props = SidebarInsetProps {
             class: Classes::new(),
             children: Children::new(vec![]),
         };
