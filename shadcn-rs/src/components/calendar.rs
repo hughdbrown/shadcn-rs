@@ -82,11 +82,18 @@ pub struct CalendarProps {
     pub class: Classes,
 }
 
-/// Returns the number of days in a given month/year
+/// Returns the number of days in a given month/year.
+///
+/// Month is 0-indexed: 0 = January, 11 = December.
+///
+/// # Panics
+///
+/// Panics in debug builds if `month >= 12`.
 fn days_in_month(year: i32, month: u8) -> u8 {
+    debug_assert!(month < 12, "invalid month: {month}");
     match month {
         0 | 2 | 4 | 6 | 7 | 9 | 11 => 31, // Jan, Mar, May, Jul, Aug, Oct, Dec
-        3 | 5 | 8 | 10 => 30,             // Apr, Jun, Sep, Nov
+        3 | 5 | 8 | 10 => 30,               // Apr, Jun, Sep, Nov
         1 => {
             // February - leap year check
             if (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0) {
@@ -99,8 +106,10 @@ fn days_in_month(year: i32, month: u8) -> u8 {
     }
 }
 
-/// Returns the day of the week for the first day of a month (0 = Sunday)
-/// Uses Zeller-like formula (Tomohiko Sakamoto's algorithm)
+/// Returns the day of the week for the first day of a month (0 = Sunday).
+///
+/// Uses Tomohiko Sakamoto's algorithm with `d = 1` (always computes for day 1).
+/// Month is 0-indexed: 0 = January, 11 = December.
 fn first_day_of_month(year: i32, month: u8) -> u8 {
     let m = month as i32 + 1; // 1-based month
     let mut y = year;

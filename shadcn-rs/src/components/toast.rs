@@ -130,7 +130,10 @@ pub fn toast(props: &ToastProps) -> Html {
         children,
     } = props.clone();
 
-    // Auto-dismiss timer
+    // Auto-dismiss timer.
+    // Note: the timer depends on `duration` so it only re-runs when duration changes.
+    // This is correct when the component is unmounted/remounted (common case),
+    // since a new component instance always runs its effects on mount.
     {
         let on_close = on_close.clone();
         use_effect_with(duration, move |&duration| {

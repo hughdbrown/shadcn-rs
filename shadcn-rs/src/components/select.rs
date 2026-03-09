@@ -270,7 +270,10 @@ pub struct SelectAdvancedProps {
     #[prop_or_default]
     pub on_open_change: Option<Callback<bool>>,
 
-    /// Callback when value changes
+    /// Callback when value changes.
+    ///
+    /// In multi-select mode, the callback receives values joined by `,`.
+    /// Values containing commas are not supported in multi-select mode.
     #[prop_or_default]
     pub on_value_change: Option<Callback<AttrValue>>,
 

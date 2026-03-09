@@ -31,7 +31,7 @@
 //! }
 //! ```
 
-use crate::hooks::{use_click_outside_conditional, use_escape_key_conditional, use_toggle};
+use crate::hooks::{use_click_outside_conditional, use_escape_key_conditional};
 use wasm_bindgen::JsCast;
 use yew::prelude::*;
 
@@ -48,6 +48,8 @@ pub struct ComboboxContext {
     pub toggle: Callback<()>,
     /// Callback to set the dropdown open state directly
     pub set_open: Callback<bool>,
+    /// Shared id for ARIA association between trigger and content
+    pub content_id: String,
 }
 
 /// Combobox container properties
@@ -91,30 +93,30 @@ pub fn combobox(props: &ComboboxProps) -> Html {
         children,
     } = props.clone();
 
-    let (is_open, internal_toggle, internal_set_open) = use_toggle(open.unwrap_or(default_open));
+    let open_state = use_state(|| open.unwrap_or(default_open));
+    let is_open = *open_state;
     let filter_query = use_state(String::new);
+    let content_id = use_memo((), |_| crate::generate_id("combobox"));
 
-    // Wrap set_open to also emit on_open_change
     let set_open = {
-        let internal_set_open = internal_set_open.clone();
+        let open_state = open_state.clone();
         let on_open_change = on_open_change.clone();
         Callback::from(move |value: bool| {
-            internal_set_open.emit(value);
+            open_state.set(value);
             if let Some(cb) = on_open_change.as_ref() {
                 cb.emit(value);
             }
         })
     };
 
-    // Wrap toggle to also emit on_open_change
     let toggle = {
-        let internal_toggle = internal_toggle.clone();
+        let open_state = open_state.clone();
         let on_open_change = on_open_change.clone();
-        let current_open = is_open;
         Callback::from(move |_: ()| {
-            internal_toggle.emit(());
+            let new_value = !*open_state;
+            open_state.set(new_value);
             if let Some(cb) = on_open_change.as_ref() {
-                cb.emit(!current_open);
+                cb.emit(new_value);
             }
         })
     };
@@ -132,6 +134,7 @@ pub fn combobox(props: &ComboboxProps) -> Html {
         is_open,
         toggle,
         set_open,
+        content_id: (*content_id).clone(),
     };
 
     let classes: Classes = vec![
@@ -187,7 +190,10 @@ pub fn combobox_trigger(props: &ComboboxTriggerProps) -> Html {
 
     let context = use_context::<ComboboxContext>();
     let is_open = context.as_ref().map(|ctx| ctx.is_open).unwrap_or(false);
-    let id = use_memo((), |_| crate::generate_id("combobox"));
+    let content_id = context
+        .as_ref()
+        .map(|ctx| ctx.content_id.clone())
+        .unwrap_or_default();
 
     let handle_click = {
         let context = context.clone();
@@ -211,7 +217,7 @@ pub fn combobox_trigger(props: &ComboboxTriggerProps) -> Html {
             onclick={handle_click}
             role="combobox"
             aria-expanded={is_open.to_string()}
-            aria-controls={(*id).clone()}
+            aria-controls={content_id}
         >
             { children }
         </button>
@@ -322,6 +328,10 @@ pub fn combobox_content(props: &ComboboxContentProps) -> Html {
     let context = use_context::<ComboboxContext>();
     let content_ref = use_node_ref();
     let is_open = context.as_ref().map(|ctx| ctx.is_open).unwrap_or(false);
+    let content_id = context
+        .as_ref()
+        .map(|ctx| ctx.content_id.clone())
+        .unwrap_or_default();
 
     // Close on click outside
     let context_click = context.clone();
@@ -393,7 +403,7 @@ pub fn combobox_content(props: &ComboboxContentProps) -> Html {
         <div
             ref={content_ref}
             class={classes}
-            id="combobox-content"
+            id={content_id}
             role="listbox"
             style={style}
         >
@@ -715,6 +725,7 @@ mod tests {
             is_open: true,
             toggle: Callback::from(|_: ()| {}),
             set_open: Callback::from(|_: bool| {}),
+            content_id: String::from("combobox-1"),
         };
 
         assert_eq!(ctx.filter_query, "test");
@@ -729,6 +740,7 @@ mod tests {
             is_open: false,
             toggle: Callback::from(|_: ()| {}),
             set_open: Callback::from(|_: bool| {}),
+            content_id: String::from("combobox-2"),
         };
 
         assert!(ctx.filter_query.is_empty());

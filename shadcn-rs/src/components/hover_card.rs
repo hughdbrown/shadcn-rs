@@ -319,7 +319,7 @@ pub fn hover_card_content(props: &HoverCardContentProps) -> Html {
 
     html! {
         <Portal>
-            <div class={classes} role="region">
+            <div class={classes} role="region" aria-label="Additional information">
                 if show_arrow {
                     <div class="hover-card-arrow" aria-hidden="true" />
                 }
