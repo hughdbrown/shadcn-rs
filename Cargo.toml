@@ -31,6 +31,9 @@ wasm-bindgen-futures = "0.4"
 # Development dependencies
 wasm-bindgen-test = "0.3"
 
+# Security: pin transitive dependency to patched version (RUSTSEC-2026-0007)
+bytes = ">=1.11.1"
+
 [profile.release]
 codegen-units = 1
 debug = false
