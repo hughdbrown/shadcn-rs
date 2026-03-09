@@ -229,10 +229,10 @@ use crate::hooks::{use_click_outside_conditional, use_escape_key_conditional};
 pub struct SelectContext {
     /// Whether the dropdown is open
     pub is_open: bool,
-    /// Currently selected value
-    pub selected_value: Option<AttrValue>,
-    /// Display label for the selected value
-    pub selected_label: Option<AttrValue>,
+    /// Currently selected values (supports multi-select)
+    pub selected_values: Vec<AttrValue>,
+    /// Display labels for the selected values
+    pub selected_labels: Vec<AttrValue>,
     /// Callback to toggle open/close state
     pub toggle_open: Callback<()>,
     /// Callback to select a value (value, label)
@@ -304,11 +304,20 @@ pub fn select_advanced(props: &SelectAdvancedProps) -> Html {
     let internal_open = use_state(|| false);
     let is_open = open.unwrap_or(*internal_open);
 
-    // Internal state for selected value
-    let internal_value = use_state(|| default_value.clone());
-    let internal_label = use_state(|| Option::<AttrValue>::None);
-    let selected_value = value.clone().or_else(|| (*internal_value).clone());
-    let selected_label = (*internal_label).clone();
+    // Internal state for selected values (supports multi-select)
+    let internal_values = use_state(|| -> Vec<AttrValue> {
+        default_value
+            .as_ref()
+            .map(|v| vec![v.clone()])
+            .unwrap_or_default()
+    });
+    let internal_labels = use_state(Vec::<AttrValue>::new);
+    let selected_values: Vec<AttrValue> = if let Some(val) = value.as_ref() {
+        vec![val.clone()]
+    } else {
+        (*internal_values).clone()
+    };
+    let selected_labels: Vec<AttrValue> = (*internal_labels).clone();
 
     let toggle_open = {
         let internal_open = internal_open.clone();
@@ -323,39 +332,39 @@ pub fn select_advanced(props: &SelectAdvancedProps) -> Html {
     };
 
     let select_value = {
-        let internal_value = internal_value.clone();
-        let internal_label = internal_label.clone();
+        let internal_values = internal_values.clone();
+        let internal_labels = internal_labels.clone();
         let internal_open = internal_open.clone();
         let on_value_change = on_value_change.clone();
         let on_open_change = on_open_change.clone();
         Callback::from(move |(val, label): (AttrValue, AttrValue)| {
             if multiple {
-                // In multiple mode, toggle the value in a comma-separated list
-                let current = (*internal_value)
-                    .as_ref()
-                    .map(|v| v.to_string())
-                    .unwrap_or_default();
-                let mut values: Vec<String> = if current.is_empty() {
-                    Vec::new()
-                } else {
-                    current.split(',').map(|s| s.to_string()).collect()
-                };
-                let val_str = val.to_string();
-                if let Some(pos) = values.iter().position(|v| *v == val_str) {
+                // In multiple mode, toggle the value in the collection
+                let mut values = (*internal_values).clone();
+                let mut labels = (*internal_labels).clone();
+                if let Some(pos) = values.iter().position(|v| *v == val) {
                     values.remove(pos);
+                    if pos < labels.len() {
+                        labels.remove(pos);
+                    }
                 } else {
-                    values.push(val_str);
+                    values.push(val.clone());
+                    labels.push(label);
                 }
-                let new_val = values.join(",");
-                internal_value.set(Some(AttrValue::from(new_val.clone())));
-                internal_label.set(Some(label));
+                let joined = values
+                    .iter()
+                    .map(|v| v.to_string())
+                    .collect::<Vec<_>>()
+                    .join(",");
+                internal_values.set(values);
+                internal_labels.set(labels);
                 // Don't close dropdown in multiple mode
                 if let Some(callback) = on_value_change.as_ref() {
-                    callback.emit(AttrValue::from(new_val));
+                    callback.emit(AttrValue::from(joined));
                 }
             } else {
-                internal_value.set(Some(val.clone()));
-                internal_label.set(Some(label));
+                internal_values.set(vec![val.clone()]);
+                internal_labels.set(vec![label]);
                 internal_open.set(false);
                 if let Some(callback) = on_value_change.as_ref() {
                     callback.emit(val);
@@ -369,8 +378,8 @@ pub fn select_advanced(props: &SelectAdvancedProps) -> Html {
 
     let context = SelectContext {
         is_open,
-        selected_value,
-        selected_label,
+        selected_values,
+        selected_labels,
         toggle_open,
         select_value,
         disabled,
@@ -497,18 +506,22 @@ pub fn select_value(props: &SelectValueProps) -> Html {
     } = props.clone();
 
     let context = use_context::<SelectContext>();
-    let selected_label = context.as_ref().and_then(|c| c.selected_label.clone());
+    let selected_labels = context
+        .as_ref()
+        .map(|c| c.selected_labels.clone())
+        .unwrap_or_default();
 
     let classes: Classes = vec![Classes::from("select-value"), class]
         .into_iter()
         .collect();
 
     let has_children = children.iter().count() > 0;
+    let has_selection = !selected_labels.is_empty();
 
     html! {
         <span class={classes}>
-            if let Some(label) = selected_label {
-                { label }
+            if has_selection {
+                { selected_labels.iter().map(|l| l.to_string()).collect::<Vec<_>>().join(", ") }
             } else if has_children {
                 { children }
             } else if let Some(placeholder_text) = placeholder {
@@ -684,12 +697,11 @@ pub fn select_item(props: &SelectItemProps) -> Html {
     let context = use_context::<SelectContext>();
     let label_ref = use_node_ref();
 
-    // Check if this item is selected via context
+    // Check if this item is selected via context (supports multi-select)
     let is_selected = prop_selected
         || context
             .as_ref()
-            .and_then(|c| c.selected_value.as_ref())
-            .map(|v| *v == value)
+            .map(|c| c.selected_values.contains(&value))
             .unwrap_or(false);
 
     let onclick = {
@@ -1156,8 +1168,8 @@ mod tests {
     fn test_select_context_multiple() {
         let context = SelectContext {
             is_open: false,
-            selected_value: None,
-            selected_label: None,
+            selected_values: vec![],
+            selected_labels: vec![],
             toggle_open: Callback::from(|_: ()| {}),
             select_value: Callback::from(|_: (AttrValue, AttrValue)| {}),
             disabled: false,

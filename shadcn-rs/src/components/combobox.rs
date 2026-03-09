@@ -84,13 +84,26 @@ pub fn combobox(props: &ComboboxProps) -> Html {
     let ComboboxProps {
         open,
         default_open,
-        on_open_change: _,
+        on_open_change,
         class,
         children,
     } = props.clone();
 
-    let (is_open, toggle, _set_open) = use_toggle(open.unwrap_or(default_open));
+    let (is_open, internal_toggle, _set_open) = use_toggle(open.unwrap_or(default_open));
     let filter_query = use_state(String::new);
+
+    // Wrap toggle to also emit on_open_change
+    let toggle = {
+        let internal_toggle = internal_toggle.clone();
+        let on_open_change = on_open_change.clone();
+        let current_open = is_open;
+        Callback::from(move |_: ()| {
+            internal_toggle.emit(());
+            if let Some(cb) = on_open_change.as_ref() {
+                cb.emit(!current_open);
+            }
+        })
+    };
 
     let set_filter_query = {
         let filter_query = filter_query.clone();
@@ -161,11 +174,26 @@ pub fn combobox_trigger(props: &ComboboxTriggerProps) -> Html {
     let is_open = context.as_ref().map(|ctx| ctx.is_open).unwrap_or(false);
     let id = use_memo((), |_| crate::generate_id("combobox"));
 
+    let handle_click = {
+        let context = context.clone();
+        let onclick = onclick.clone();
+        Callback::from(move |e: MouseEvent| {
+            // Toggle open state via context
+            if let Some(ctx) = context.as_ref() {
+                ctx.toggle.emit(());
+            }
+            // Also call user's handler if provided
+            if let Some(cb) = onclick.as_ref() {
+                cb.emit(e);
+            }
+        })
+    };
+
     html! {
         <button
             type="button"
             class={classes}
-            onclick={onclick}
+            onclick={handle_click}
             role="combobox"
             aria-expanded={is_open.to_string()}
             aria-controls={(*id).clone()}
@@ -278,6 +306,7 @@ pub fn combobox_content(props: &ComboboxContentProps) -> Html {
 
     let context = use_context::<ComboboxContext>();
     let content_ref = use_node_ref();
+    let is_open = context.as_ref().map(|ctx| ctx.is_open).unwrap_or(false);
 
     // Close on click outside
     let context_click = context.clone();
@@ -288,7 +317,7 @@ pub fn combobox_content(props: &ComboboxContentProps) -> Html {
                 ctx.toggle.emit(());
             }
         },
-        context.as_ref().map(|ctx| ctx.is_open).unwrap_or(false),
+        is_open,
     );
 
     // Close on Escape key
@@ -299,8 +328,13 @@ pub fn combobox_content(props: &ComboboxContentProps) -> Html {
                 ctx.toggle.emit(());
             }
         },
-        context.as_ref().map(|ctx| ctx.is_open).unwrap_or(false),
+        is_open,
     );
+
+    // Don't render content when closed
+    if !is_open {
+        return html! {};
+    }
 
     let style =
         max_visible_items.map(|n: usize| format!("max-height: {}px; overflow-y: auto;", n * 36));
