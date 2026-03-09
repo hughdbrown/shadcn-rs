@@ -4,7 +4,7 @@
 //!
 //! # Examples
 //!
-//! ```rust,ignore
+//! ```rust,no_run
 //! use yew::prelude::*;
 //! use shadcn_rs::{Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, Button, Variant};
 //!
@@ -20,7 +20,7 @@
 //!     };
 //!
 //!     html! {
-//!         <Dialog {open} {on_open_change}>
+//!         <Dialog open={*open} on_open_change={on_open_change.clone()}>
 //!             <DialogTrigger>
 //!                 <Button>{ "Open Dialog" }</Button>
 //!             </DialogTrigger>

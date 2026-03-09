@@ -95,7 +95,7 @@ pub fn direction_provider(props: &DirectionProviderProps) -> Html {
 ///
 /// # Examples
 ///
-/// ```rust,ignore
+/// ```rust,no_run
 /// use yew::prelude::*;
 /// use shadcn_rs::components::direction::{use_direction, Direction};
 ///

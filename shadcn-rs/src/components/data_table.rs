@@ -4,9 +4,9 @@
 //!
 //! # Examples
 //!
-//! ```rust,ignore
+//! ```rust,no_run
 //! use yew::prelude::*;
-//! use shadcn_rs::{DataTable, DataTableColumn};
+//! use shadcn_rs::DataTable;
 //!
 //! #[derive(Clone, PartialEq)]
 //! struct User {

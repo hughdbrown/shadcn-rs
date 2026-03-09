@@ -4,7 +4,7 @@
 //!
 //! # Examples
 //!
-//! ```rust,ignore
+//! ```rust,no_run
 //! use yew::prelude::*;
 //! use shadcn_rs::{Field, Input};
 //!
@@ -17,7 +17,7 @@
 //!             label="Email"
 //!             required=true
 //!             help_text="We'll never share your email."
-//!             error={if *has_error { Some("Invalid email address".into()) } else { None }}
+//!             error={if *has_error { Some(AttrValue::from("Invalid email address")) } else { None }}
 //!         >
 //!             <Input r#type="email" id="email" />
 //!         </Field>

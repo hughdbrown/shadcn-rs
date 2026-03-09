@@ -9,7 +9,7 @@ use yew::prelude::*;
 ///
 /// # Examples
 ///
-/// ```rust,ignore
+/// ```rust,no_run
 /// use yew::prelude::*;
 /// use shadcn_rs::use_click_outside;
 ///
@@ -20,7 +20,7 @@ use yew::prelude::*;
 ///
 ///     let close = {
 ///         let is_open = is_open.clone();
-///         Callback::from(move |_| is_open.set(false))
+///         move || is_open.set(false)
 ///     };
 ///
 ///     use_click_outside(dropdown_ref.clone(), close);
@@ -70,7 +70,7 @@ where
 ///
 /// # Examples
 ///
-/// ```rust,ignore
+/// ```rust,no_run
 /// use yew::prelude::*;
 /// use shadcn_rs::use_click_outside_conditional;
 ///
@@ -81,7 +81,7 @@ where
 ///
 ///     let close = {
 ///         let is_open = is_open.clone();
-///         Callback::from(move |_| is_open.set(false))
+///         move || is_open.set(false)
 ///     };
 ///
 ///     // Only detect clicks outside when modal is open

@@ -156,7 +156,7 @@ pub fn sidebar_provider(props: &SidebarProviderProps) -> Html {
 ///
 /// # Examples
 ///
-/// ```rust,ignore
+/// ```rust,no_run
 /// use yew::prelude::*;
 /// use shadcn_rs::components::sidebar::use_sidebar;
 ///

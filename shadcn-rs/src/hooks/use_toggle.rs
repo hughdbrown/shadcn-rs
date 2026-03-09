@@ -8,17 +8,17 @@ use yew::prelude::*;
 ///
 /// # Examples
 ///
-/// ```rust,ignore
+/// ```rust,no_run
 /// use yew::prelude::*;
 /// use shadcn_rs::use_toggle;
 ///
 /// #[function_component(Component)]
 /// fn component() -> Html {
-///     let (is_open, toggle, set_open) = use_toggle(false);
+///     let (is_open, toggle, _set_open) = use_toggle(false);
 ///
 ///     html! {
 ///         <>
-///             <button onclick={move |_| toggle()}>
+///             <button onclick={move |_| toggle.emit(())}>
 ///                 { if is_open { "Close" } else { "Open" } }
 ///             </button>
 ///             if is_open {
@@ -55,19 +55,19 @@ pub fn use_toggle(initial: bool) -> (bool, Callback<()>, Callback<bool>) {
 ///
 /// # Examples
 ///
-/// ```rust,ignore
+/// ```rust,no_run
 /// use yew::prelude::*;
 /// use shadcn_rs::use_toggle_with_controls;
 ///
 /// #[function_component(Component)]
 /// fn component() -> Html {
-///     let (is_visible, toggle, show, hide) = use_toggle_with_controls(false);
+///     let (_is_visible, toggle, show, hide) = use_toggle_with_controls(false);
 ///
 ///     html! {
 ///         <>
-///             <button onclick={move |_| show()}>{ "Show" }</button>
-///             <button onclick={move |_| hide()}>{ "Hide" }</button>
-///             <button onclick={move |_| toggle()}>{ "Toggle" }</button>
+///             <button onclick={move |_| show.emit(())}>{ "Show" }</button>
+///             <button onclick={move |_| hide.emit(())}>{ "Hide" }</button>
+///             <button onclick={move |_| toggle.emit(())}>{ "Toggle" }</button>
 ///         </>
 ///     }
 /// }

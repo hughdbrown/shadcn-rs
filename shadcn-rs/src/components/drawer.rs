@@ -4,7 +4,7 @@
 //!
 //! # Examples
 //!
-//! ```rust,ignore
+//! ```rust,no_run
 //! use yew::prelude::*;
 //! use shadcn_rs::{Drawer, DrawerTrigger, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter, Button, Position};
 //!
@@ -20,7 +20,7 @@
 //!     };
 //!
 //!     html! {
-//!         <Drawer {open} {on_open_change} side={Position::Right}>
+//!         <Drawer open={*open} on_open_change={on_open_change} side={Position::Right}>
 //!             <DrawerTrigger>
 //!                 <Button>{ "Open Drawer" }</Button>
 //!             </DrawerTrigger>

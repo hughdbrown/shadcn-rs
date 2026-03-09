@@ -9,7 +9,7 @@ use yew::prelude::*;
 ///
 /// # Examples
 ///
-/// ```rust,ignore
+/// ```rust,no_run
 /// use yew::prelude::*;
 /// use shadcn_rs::use_escape_key;
 ///
@@ -19,7 +19,7 @@ use yew::prelude::*;
 ///
 ///     let close = {
 ///         let is_open = is_open.clone();
-///         Callback::from(move |_| is_open.set(false))
+///         move || is_open.set(false)
 ///     };
 ///
 ///     use_escape_key(close);
@@ -56,7 +56,7 @@ where
 ///
 /// # Examples
 ///
-/// ```rust,ignore
+/// ```rust,no_run
 /// use yew::prelude::*;
 /// use shadcn_rs::use_escape_key_conditional;
 ///
@@ -66,7 +66,7 @@ where
 ///
 ///     let close = {
 ///         let is_open = is_open.clone();
-///         Callback::from(move |_| is_open.set(false))
+///         move || is_open.set(false)
 ///     };
 ///
 ///     // Only handle Escape when modal is open
@@ -112,7 +112,7 @@ where
 ///
 /// # Examples
 ///
-/// ```rust,ignore
+/// ```rust,no_run
 /// use yew::prelude::*;
 /// use shadcn_rs::use_key_press;
 ///

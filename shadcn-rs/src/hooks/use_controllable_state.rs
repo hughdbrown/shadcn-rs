@@ -11,30 +11,35 @@ use yew::prelude::*;
 ///
 /// ## Controlled usage
 ///
-/// ```rust,ignore
+/// ```rust,no_run
 /// use yew::prelude::*;
 /// use shadcn_rs::use_controllable_state;
 ///
-/// #[function_component(Parent)]
-/// fn parent() -> Html {
-///     let value = use_state(|| "controlled".to_string());
-///     let on_change = {
-///         let value = value.clone();
-///         Callback::from(move |new_value: String| value.set(new_value))
-///     };
+/// #[derive(Properties, PartialEq)]
+/// pub struct ControlledInputProps {
+///     #[prop_or_default]
+///     pub value: Option<String>,
+///     #[prop_or_default]
+///     pub on_change: Option<Callback<String>>,
+/// }
+///
+/// #[function_component(ControlledInput)]
+/// fn controlled_input(props: &ControlledInputProps) -> Html {
+///     let (value, set_value) = use_controllable_state(
+///         props.value.clone(),
+///         String::new(),
+///         props.on_change.clone(),
+///     );
 ///
 ///     html! {
-///         <Input
-///             value={Some((*value).clone())}
-///             on_change={on_change}
-///         />
+///         <div>{ format!("Value: {}", value) }</div>
 ///     }
 /// }
 /// ```
 ///
 /// ## Uncontrolled usage
 ///
-/// ```rust,ignore
+/// ```rust,no_run
 /// use yew::prelude::*;
 /// use shadcn_rs::Input;
 ///
@@ -99,7 +104,7 @@ where
 ///
 /// # Examples
 ///
-/// ```rust,ignore
+/// ```rust,no_run
 /// use yew::prelude::*;
 /// use shadcn_rs::use_controllable_state_optional;
 ///
@@ -168,7 +173,7 @@ where
 ///
 /// # Examples
 ///
-/// ```rust,ignore
+/// ```rust,no_run
 /// use yew::prelude::*;
 /// use shadcn_rs::use_controllable_bool;
 ///

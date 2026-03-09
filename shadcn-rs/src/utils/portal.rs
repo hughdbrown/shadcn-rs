@@ -137,7 +137,7 @@ fn portal_inner(props: &PortalInnerProps) -> Html {
 ///
 /// # Examples
 ///
-/// ```rust,ignore
+/// ```rust,no_run
 /// use yew::prelude::*;
 /// use shadcn_rs::{use_portal, Portal};
 ///
