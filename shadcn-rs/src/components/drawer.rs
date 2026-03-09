@@ -104,13 +104,15 @@ pub fn drawer(props: &DrawerProps) -> Html {
     let internal_open = use_state(|| default_open);
 
     // Sync internal state when controlled value changes
+    let has_on_change = on_open_change.is_some();
     {
         let internal_open = internal_open.clone();
         use_effect_with(open, move |&open| {
-            internal_open.set(open);
+            if has_on_change {
+                internal_open.set(open);
+            }
         });
     }
-    let has_on_change = on_open_change.is_some();
     let is_open = if has_on_change { open } else { *internal_open };
 
     let set_open = {
