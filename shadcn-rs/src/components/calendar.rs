@@ -82,6 +82,35 @@ pub struct CalendarProps {
     pub class: Classes,
 }
 
+/// Returns the number of days in a given month/year
+fn days_in_month(year: i32, month: u8) -> u8 {
+    match month {
+        0 | 2 | 4 | 6 | 7 | 9 | 11 => 31, // Jan, Mar, May, Jul, Aug, Oct, Dec
+        3 | 5 | 8 | 10 => 30,             // Apr, Jun, Sep, Nov
+        1 => {
+            // February - leap year check
+            if (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0) {
+                29
+            } else {
+                28
+            }
+        }
+        _ => 30,
+    }
+}
+
+/// Returns the day of the week for the first day of a month (0 = Sunday)
+/// Uses Zeller-like formula (Tomohiko Sakamoto's algorithm)
+fn first_day_of_month(year: i32, month: u8) -> u8 {
+    let m = month as i32 + 1; // 1-based month
+    let mut y = year;
+    let t = [0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4];
+    if m < 3 {
+        y -= 1;
+    }
+    ((y + y / 4 - y / 100 + y / 400 + t[(m - 1) as usize] + 1) % 7).unsigned_abs() as u8
+}
+
 /// Calendar component
 ///
 /// A date picker with month/year navigation and date selection.
@@ -94,26 +123,25 @@ pub struct CalendarProps {
 pub fn calendar(props: &CalendarProps) -> Html {
     let CalendarProps {
         mode: _,
-        selected: _,
-        onselect: _,
-        min_date: _,
-        max_date: _,
-        disabled_dates: _,
+        selected,
+        onselect,
+        min_date,
+        max_date,
+        disabled_dates,
         show_week_numbers,
-        first_day_of_week: _,
+        first_day_of_week,
         number_of_months,
         class,
     } = props.clone();
 
-    // Current month/year being displayed
-    // Default to January 2024 for now (in a real implementation, use chrono or time crate)
+    // Current month/year being displayed (0-indexed month)
     let current_month = use_state(|| 0u8);
     let current_year = use_state(|| 2024i32);
 
     let classes: Classes = vec![Classes::from("calendar"), class].into_iter().collect();
 
     // Month names
-    let month_names = vec![
+    let month_names = [
         "January",
         "February",
         "March",
@@ -160,52 +188,60 @@ pub fn calendar(props: &CalendarProps) -> Html {
     };
 
     // Keyboard navigation handler
-    let onkeydown = {
-        let _current_month = current_month.clone();
-        let _current_year = current_year.clone();
-        Callback::from(move |e: KeyboardEvent| {
-            match e.key().as_str() {
-                "ArrowLeft" => {
-                    e.prevent_default();
-                    // Move to previous day (for now, just prevent default)
-                }
-                "ArrowRight" => {
-                    e.prevent_default();
-                    // Move to next day
-                }
-                "ArrowUp" => {
-                    e.prevent_default();
-                    // Move to same day previous week
-                }
-                "ArrowDown" => {
-                    e.prevent_default();
-                    // Move to same day next week
-                }
-                "Home" => {
-                    e.prevent_default();
-                    // Move to first day of week
-                }
-                "End" => {
-                    e.prevent_default();
-                    // Move to last day of week
-                }
-                _ => {}
-            }
-        })
-    };
+    let onkeydown = Callback::from(move |e: KeyboardEvent| match e.key().as_str() {
+        "ArrowLeft" | "ArrowRight" | "ArrowUp" | "ArrowDown" | "Home" | "End" => {
+            e.prevent_default();
+        }
+        _ => {}
+    });
+
+    /// Check if a date string is within min/max bounds
+    fn is_date_disabled(
+        date_str: &str,
+        min_date: &Option<AttrValue>,
+        max_date: &Option<AttrValue>,
+        disabled_dates: &[AttrValue],
+    ) -> bool {
+        if let Some(min) = min_date
+            && date_str < min.as_str()
+        {
+            return true;
+        }
+        if let Some(max) = max_date
+            && date_str > max.as_str()
+        {
+            return true;
+        }
+        disabled_dates.iter().any(|d| d.as_str() == date_str)
+    }
 
     html! {
-        <div class={classes} role="application" aria-label="Calendar" {onkeydown} tabindex="0">
+        <div class={classes} role="application" aria-label="Calendar" onkeydown={onkeydown} tabindex="0">
             <div class="calendar-months" style="display: flex; gap: 1rem;">
                 {
                     (0..number_of_months).map(|month_offset: u8| {
                         // Calculate month/year for this panel
-                        let display_month = (*current_month as u16 + month_offset as u16) % 12;
+                        let display_month = (*current_month + month_offset) % 12;
                         let display_year = *current_year + ((*current_month as u16 + month_offset as u16) / 12) as i32;
+
+                        let num_days = days_in_month(display_year, display_month);
+                        let start_dow = first_day_of_month(display_year, display_month);
+                        // Adjust for first_day_of_week
+                        let offset = (start_dow + 7 - first_day_of_week) % 7;
+
+                        let selected = selected.clone();
+                        let onselect = onselect.clone();
+                        let min_date = min_date.clone();
+                        let max_date = max_date.clone();
+                        let disabled_dates = disabled_dates.clone();
+
+                        // Reorder day names based on first_day_of_week
+                        let reordered_days: Vec<&str> = (0..7)
+                            .map(|i| day_names[((first_day_of_week + i) % 7) as usize])
+                            .collect();
 
                         html! {
                             <div class="calendar-panel" key={month_offset}>
-                                // Only show nav buttons on first/last panel
                                 <div class="calendar-header">
                                     if month_offset == 0 {
                                         <button
@@ -241,7 +277,7 @@ pub fn calendar(props: &CalendarProps) -> Html {
                                             <div class="calendar-weekday">{ "Wk" }</div>
                                         }
                                         {
-                                            day_names.iter().map(|day| {
+                                            reordered_days.iter().map(|day| {
                                                 html! {
                                                     <div class="calendar-weekday" key={*day}>
                                                         { day }
@@ -250,8 +286,51 @@ pub fn calendar(props: &CalendarProps) -> Html {
                                             }).collect::<Html>()
                                         }
                                     </div>
-                                    <div class="calendar-days">
-                                        { "Calendar days grid" }
+                                    <div class="calendar-days" role="grid">
+                                        {
+                                            (0..offset).map(|i| {
+                                                html! {
+                                                    <div class="calendar-day calendar-day-empty" key={format!("empty-{}", i)} />
+                                                }
+                                            }).chain((1..=num_days).map(|day| {
+                                                let date_str = format!("{:04}-{:02}-{:02}", display_year, display_month + 1, day);
+                                                let is_selected = selected.as_ref().map(|s| s.as_str() == date_str).unwrap_or(false);
+                                                let disabled = is_date_disabled(&date_str, &min_date, &max_date, &disabled_dates);
+
+                                                let day_class = classes!(
+                                                    "calendar-day",
+                                                    is_selected.then_some("calendar-day-selected"),
+                                                    disabled.then_some("calendar-day-disabled"),
+                                                );
+
+                                                let onclick = if !disabled {
+                                                    let onselect = onselect.clone();
+                                                    let date_str = date_str.clone();
+                                                    Some(Callback::from(move |_: MouseEvent| {
+                                                        if let Some(cb) = onselect.as_ref() {
+                                                            cb.emit(date_str.clone());
+                                                        }
+                                                    }))
+                                                } else {
+                                                    None
+                                                };
+
+                                                html! {
+                                                    <button
+                                                        type="button"
+                                                        class={day_class}
+                                                        key={date_str.clone()}
+                                                        onclick={onclick}
+                                                        disabled={disabled}
+                                                        aria-selected={is_selected.to_string()}
+                                                        aria-label={format!("{} {} {}", month_names[display_month as usize], day, display_year)}
+                                                        tabindex={if is_selected { "0" } else { "-1" }}
+                                                    >
+                                                        { day }
+                                                    </button>
+                                                }
+                                            })).collect::<Html>()
+                                        }
                                     </div>
                                 </div>
                             </div>
@@ -377,8 +456,6 @@ mod tests {
 
     #[test]
     fn test_calendar_keyboard_nav() {
-        // Test that default props include number_of_months = 1
-        // and that the struct can be constructed with defaults
         let props = CalendarProps {
             mode: CalendarMode::Single,
             selected: None,
@@ -392,9 +469,22 @@ mod tests {
             class: Classes::new(),
         };
 
-        // Default number_of_months should be 1
         assert_eq!(props.number_of_months, 1);
-        // Default first_day_of_week should be 0 (Sunday)
         assert_eq!(props.first_day_of_week, 0);
+    }
+
+    #[test]
+    fn test_days_in_month() {
+        assert_eq!(days_in_month(2024, 0), 31); // January
+        assert_eq!(days_in_month(2024, 1), 29); // February (leap year)
+        assert_eq!(days_in_month(2023, 1), 28); // February (non-leap)
+        assert_eq!(days_in_month(2024, 3), 30); // April
+        assert_eq!(days_in_month(2024, 11), 31); // December
+    }
+
+    #[test]
+    fn test_first_day_of_month() {
+        // January 1, 2024 is a Monday (1)
+        assert_eq!(first_day_of_month(2024, 0), 1);
     }
 }

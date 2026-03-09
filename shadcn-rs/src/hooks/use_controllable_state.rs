@@ -58,6 +58,16 @@ where
 {
     let internal_state = use_state(|| default_value);
 
+    // Track controlled status in state so the callback always reads current value
+    let is_controlled = use_state(|| controlled_value.is_some());
+    {
+        let is_controlled = is_controlled.clone();
+        let controlled_now = controlled_value.is_some();
+        use_effect_with(controlled_now, move |&controlled_now| {
+            is_controlled.set(controlled_now);
+        });
+    }
+
     // Use controlled value if provided, otherwise use internal state
     let value = controlled_value
         .as_ref()
@@ -66,11 +76,10 @@ where
 
     let set_value = {
         let internal_state = internal_state.clone();
-        let is_controlled = controlled_value.is_some();
 
         Callback::from(move |new_value: T| {
             // Update internal state if uncontrolled
-            if !is_controlled {
+            if !*is_controlled {
                 internal_state.set(new_value.clone());
             }
 
@@ -119,9 +128,18 @@ where
     T: Clone + PartialEq + 'static,
 {
     let internal_state = use_state(|| default_value);
-    let is_controlled = controlled_value.is_some();
 
-    let value = if is_controlled {
+    // Track controlled status in state so the callback always reads current value
+    let is_controlled = use_state(|| controlled_value.is_some());
+    {
+        let is_controlled = is_controlled.clone();
+        let controlled_now = controlled_value.is_some();
+        use_effect_with(controlled_now, move |&controlled_now| {
+            is_controlled.set(controlled_now);
+        });
+    }
+
+    let value = if *is_controlled {
         controlled_value
     } else {
         (*internal_state).clone()
@@ -131,7 +149,7 @@ where
         let internal_state = internal_state.clone();
 
         Callback::from(move |new_value: Option<T>| {
-            if !is_controlled {
+            if !*is_controlled {
                 internal_state.set(new_value.clone());
             }
 

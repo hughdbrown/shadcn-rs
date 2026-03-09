@@ -36,7 +36,7 @@ pub fn use_escape_key<F>(callback: F)
 where
     F: Fn() + 'static,
 {
-    use_effect(move || {
+    use_effect_with((), move |_| {
         let callback = std::rc::Rc::new(callback);
         let listener = EventListener::new(&gloo::utils::document(), "keydown", move |event| {
             if let Some(event) = event.dyn_ref::<KeyboardEvent>()
@@ -132,7 +132,7 @@ pub fn use_key_press<F>(key: &'static str, callback: F)
 where
     F: Fn() + 'static,
 {
-    use_effect(move || {
+    use_effect_with((), move |_| {
         let callback = std::rc::Rc::new(callback);
         let listener = EventListener::new(&gloo::utils::document(), "keydown", move |event| {
             if let Some(event) = event.dyn_ref::<KeyboardEvent>()

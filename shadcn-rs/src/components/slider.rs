@@ -150,9 +150,13 @@ pub fn slider(props: &SliderProps) -> Html {
         })
     };
 
-    // Calculate percentage for a value
-    let value_to_percent =
-        |val: f64| -> f64 { ((val - min) / (max - min) * 100.0).clamp(0.0, 100.0) };
+    // Calculate percentage for a value (guard against min == max)
+    let value_to_percent = |val: f64| -> f64 {
+        if (max - min).abs() < f64::EPSILON {
+            return 0.0;
+        }
+        ((val - min) / (max - min) * 100.0).clamp(0.0, 100.0)
+    };
 
     // Build class names
     let classes = class_names(&[
@@ -168,7 +172,7 @@ pub fn slider(props: &SliderProps) -> Html {
     let final_classes: Classes = vec![classes, class].into_iter().collect();
 
     // Generate marks if enabled
-    let marks = if show_marks {
+    let marks = if show_marks && step > 0.0 && (max - min).abs() >= f64::EPSILON {
         let num_marks = ((max - min) / step) as usize + 1;
         (0..num_marks)
             .map(|i| {

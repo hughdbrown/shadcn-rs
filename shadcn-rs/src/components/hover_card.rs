@@ -32,6 +32,7 @@
 use crate::hooks::use_escape_key_conditional;
 use crate::types::Position;
 use crate::utils::Portal;
+use wasm_bindgen::JsCast;
 use yew::prelude::*;
 
 /// Context for sharing hover card state between parent and children
@@ -93,8 +94,17 @@ pub fn hover_card(props: &HoverCardProps) -> Html {
     // Internal state for uncontrolled mode
     let internal_open = use_state(|| default_open);
 
-    // Use controlled value if provided (open=true), otherwise use internal state
-    let is_open = if open { open } else { *internal_open };
+    // Sync internal state when controlled value changes
+    {
+        let internal_open = internal_open.clone();
+        use_effect_with(open, move |&open| {
+            if open {
+                internal_open.set(true);
+            }
+        });
+    }
+    let has_on_change = on_open_change.is_some();
+    let is_open = if has_on_change { open } else { *internal_open };
 
     let set_open = {
         let internal_open = internal_open.clone();
@@ -167,7 +177,18 @@ pub fn hover_card_trigger(props: &HoverCardTriggerProps) -> Html {
 
     let on_blur = {
         let context = context.clone();
-        Callback::from(move |_: FocusEvent| {
+        Callback::from(move |e: FocusEvent| {
+            // Check if focus moved to a descendant; if so, keep card open
+            if let Some(related) = e.related_target()
+                && let Some(current) = e.current_target()
+                && let (Ok(parent), Ok(child)) = (
+                    current.dyn_into::<web_sys::Node>(),
+                    related.dyn_into::<web_sys::Node>(),
+                )
+                && parent.contains(Some(&child))
+            {
+                return;
+            }
             if let Some(ctx) = context.as_ref() {
                 ctx.set_open.emit(false);
             }
@@ -298,7 +319,7 @@ pub fn hover_card_content(props: &HoverCardContentProps) -> Html {
 
     html! {
         <Portal>
-            <div class={classes} role="tooltip">
+            <div class={classes} role="region">
                 if show_arrow {
                     <div class="hover-card-arrow" aria-hidden="true" />
                 }

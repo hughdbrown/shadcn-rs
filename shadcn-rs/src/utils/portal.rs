@@ -74,12 +74,8 @@ pub fn portal(props: &PortalProps) -> Html {
     if let Some(target) = (*target_ref).as_ref() {
         create_portal(props.children.clone(), target.clone().into())
     } else {
-        // Fallback: render in place if portal target not available yet
-        html! {
-            <div style="display: none;">
-                { props.children.clone() }
-            </div>
-        }
+        // Portal target not resolved yet; render nothing until it's available
+        Html::default()
     }
 }
 

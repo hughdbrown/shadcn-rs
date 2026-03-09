@@ -32,6 +32,7 @@
 //! ```
 
 use crate::hooks::{use_click_outside_conditional, use_escape_key_conditional, use_toggle};
+use wasm_bindgen::JsCast;
 use yew::prelude::*;
 
 /// Context for sharing combobox state with children
@@ -156,14 +157,18 @@ pub fn combobox_trigger(props: &ComboboxTriggerProps) -> Html {
         .into_iter()
         .collect();
 
+    let context = use_context::<ComboboxContext>();
+    let is_open = context.as_ref().map(|ctx| ctx.is_open).unwrap_or(false);
+    let id = use_memo((), |_| crate::generate_id("combobox"));
+
     html! {
         <button
             type="button"
             class={classes}
             onclick={onclick}
             role="combobox"
-            aria-expanded="false"
-            aria-controls="combobox-content"
+            aria-expanded={is_open.to_string()}
+            aria-controls={(*id).clone()}
         >
             { children }
         </button>
@@ -275,10 +280,27 @@ pub fn combobox_content(props: &ComboboxContentProps) -> Html {
     let content_ref = use_node_ref();
 
     // Close on click outside
-    use_click_outside_conditional(content_ref.clone(), || {}, true);
+    let context_click = context.clone();
+    use_click_outside_conditional(
+        content_ref.clone(),
+        move || {
+            if let Some(ctx) = context_click.as_ref() {
+                ctx.toggle.emit(());
+            }
+        },
+        context.as_ref().map(|ctx| ctx.is_open).unwrap_or(false),
+    );
 
     // Close on Escape key
-    use_escape_key_conditional(|| {}, true);
+    let context_esc = context.clone();
+    use_escape_key_conditional(
+        move || {
+            if let Some(ctx) = context_esc.as_ref() {
+                ctx.toggle.emit(());
+            }
+        },
+        context.as_ref().map(|ctx| ctx.is_open).unwrap_or(false),
+    );
 
     let style =
         max_visible_items.map(|n: usize| format!("max-height: {}px; overflow-y: auto;", n * 36));
@@ -488,8 +510,11 @@ pub fn combobox_item(props: &ComboboxItemProps) -> Html {
             match e.key().as_str() {
                 "Enter" | " " => {
                     e.prevent_default();
-                    // Keyboard activation: prevent default to handle Enter/Space
-                    // The browser will fire a click event on focused elements for Enter
+                    if let Some(target) = e.target()
+                        && let Ok(el) = target.dyn_into::<web_sys::HtmlElement>()
+                    {
+                        el.click();
+                    }
                     let _ = onclick.as_ref();
                 }
                 _ => {}

@@ -26,6 +26,7 @@
 //! }
 //! ```
 
+use wasm_bindgen::JsCast;
 use yew::prelude::*;
 
 /// Menubar container properties
@@ -119,24 +120,23 @@ pub fn menubar_trigger(props: &MenubarTriggerProps) -> Html {
         .into_iter()
         .collect();
 
-    let onkeydown = {
-        let onclick = onclick.clone();
-        Callback::from(move |e: KeyboardEvent| {
-            match e.key().as_str() {
-                "ArrowDown" | "Enter" | " " => {
-                    e.prevent_default();
-                    if let Some(cb) = onclick.as_ref() {
-                        // Trigger open - can't synthesize MouseEvent easily
-                        let _ = cb;
-                    }
+    let onkeydown = Callback::from(move |e: KeyboardEvent| {
+        match e.key().as_str() {
+            "ArrowDown" | "Enter" | " " => {
+                e.prevent_default();
+                // Activate via click on the element itself
+                if let Some(target) = e.target()
+                    && let Ok(el) = target.dyn_into::<web_sys::HtmlElement>()
+                {
+                    el.click();
                 }
-                "Escape" => {
-                    e.prevent_default();
-                }
-                _ => {}
             }
-        })
-    };
+            "Escape" => {
+                e.prevent_default();
+            }
+            _ => {}
+        }
+    });
 
     html! {
         <button
@@ -349,6 +349,15 @@ pub fn menubar_checkbox_item(props: &MenubarCheckboxItemProps) -> Html {
     }
 }
 
+/// Context for sharing radio group state within menubar
+#[derive(Clone, PartialEq)]
+pub struct MenubarRadioContext {
+    /// Currently selected value
+    pub value: Option<AttrValue>,
+    /// Callback when value changes
+    pub onchange: Option<Callback<AttrValue>>,
+}
+
 /// Menubar radio group properties
 #[derive(Properties, PartialEq, Clone)]
 pub struct MenubarRadioGroupProps {
@@ -374,20 +383,24 @@ pub struct MenubarRadioGroupProps {
 #[function_component(MenubarRadioGroup)]
 pub fn menubar_radio_group(props: &MenubarRadioGroupProps) -> Html {
     let MenubarRadioGroupProps {
-        value: _,
+        value,
         class,
-        onchange: _,
+        onchange,
         children,
     } = props.clone();
+
+    let radio_context = MenubarRadioContext { value, onchange };
 
     let classes: Classes = vec![Classes::from("menubar-radio-group"), class]
         .into_iter()
         .collect();
 
     html! {
-        <div class={classes} role="group">
-            { children }
-        </div>
+        <ContextProvider<MenubarRadioContext> context={radio_context}>
+            <div class={classes} role="group">
+                { children }
+            </div>
+        </ContextProvider<MenubarRadioContext>>
     }
 }
 

@@ -102,8 +102,17 @@ pub fn alert_dialog(props: &AlertDialogProps) -> Html {
     // Internal state for uncontrolled mode
     let internal_open = use_state(|| default_open);
 
-    // Use controlled value if provided (open=true), otherwise use internal state
-    let is_open = if open { open } else { *internal_open };
+    // Sync internal state when controlled value changes
+    {
+        let internal_open = internal_open.clone();
+        use_effect_with(open, move |&open| {
+            if open {
+                internal_open.set(true);
+            }
+        });
+    }
+    let has_on_change = on_open_change.is_some();
+    let is_open = if has_on_change { open } else { *internal_open };
 
     let set_open = {
         let internal_open = internal_open.clone();

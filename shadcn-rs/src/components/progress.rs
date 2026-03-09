@@ -98,7 +98,13 @@ pub fn progress(props: &ProgressProps) -> Html {
     let percentage = if indeterminate {
         None
     } else {
-        value.map(|v| (v / max * 100.0).clamp(0.0, 100.0))
+        value.map(|v| {
+            if max.abs() < f64::EPSILON {
+                0.0
+            } else {
+                (v / max * 100.0).clamp(0.0, 100.0)
+            }
+        })
     };
 
     // Build class names

@@ -44,10 +44,7 @@ jobs:
 
       - name: Build showcase
         working-directory: ./shadcn-showcase
-        run: |
-          # Update public_url for GitHub Pages deployment
-          sed -i 's|public_url = "/"|public_url = "/shadcn-rs/"|' Trunk.toml
-          trunk build --release
+        run: trunk build --release --public-url /shadcn-rs/
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

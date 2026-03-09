@@ -30,6 +30,15 @@ use crate::hooks::{use_click_outside_conditional, use_escape_key_conditional};
 use crate::utils::Portal;
 use yew::prelude::*;
 
+/// Context for sharing radio group state within dropdown menu
+#[derive(Clone, PartialEq)]
+pub struct DropdownMenuRadioContext {
+    /// Currently selected value
+    pub value: Option<AttrValue>,
+    /// Callback when value changes
+    pub on_value_change: Option<Callback<AttrValue>>,
+}
+
 /// Context for sharing dropdown menu state between parent and children
 #[derive(Clone, PartialEq)]
 pub struct DropdownMenuContext {
@@ -81,8 +90,17 @@ pub fn dropdown_menu(props: &DropdownMenuProps) -> Html {
     // Internal state for uncontrolled mode
     let internal_open = use_state(|| default_open);
 
-    // Use controlled value if provided (open=true), otherwise use internal state
-    let is_open = if open { open } else { *internal_open };
+    // Sync internal state when controlled value changes
+    {
+        let internal_open = internal_open.clone();
+        use_effect_with(open, move |&open| {
+            if open {
+                internal_open.set(true);
+            }
+        });
+    }
+    let has_on_change = on_open_change.is_some();
+    let is_open = if has_on_change { open } else { *internal_open };
 
     let set_open = {
         let internal_open = internal_open.clone();
@@ -426,6 +444,9 @@ pub fn dropdown_menu_checkbox_item(props: &DropdownMenuCheckboxItemProps) -> Htm
 
     let onclick = on_checked_change.map(|cb| {
         Callback::from(move |e: MouseEvent| {
+            if disabled {
+                return;
+            }
             e.prevent_default();
             cb.emit(!checked);
         })
@@ -491,20 +512,27 @@ pub struct DropdownMenuRadioGroupProps {
 #[function_component(DropdownMenuRadioGroup)]
 pub fn dropdown_menu_radio_group(props: &DropdownMenuRadioGroupProps) -> Html {
     let DropdownMenuRadioGroupProps {
-        value: _,
-        on_value_change: _,
+        value,
+        on_value_change,
         class,
         children,
     } = props.clone();
+
+    let radio_context = DropdownMenuRadioContext {
+        value,
+        on_value_change,
+    };
 
     let classes: Classes = vec![Classes::from("dropdown-menu-radio-group"), class]
         .into_iter()
         .collect();
 
     html! {
-        <div class={classes} role="group">
-            { children }
-        </div>
+        <ContextProvider<DropdownMenuRadioContext> context={radio_context}>
+            <div class={classes} role="group">
+                { children }
+            </div>
+        </ContextProvider<DropdownMenuRadioContext>>
     }
 }
 

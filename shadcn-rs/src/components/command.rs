@@ -133,7 +133,7 @@ pub fn command_input(props: &CommandInputProps) -> Html {
         let oninput = oninput.clone();
         Callback::from(move |e: InputEvent| {
             if let Some(target) = e.target()
-                && let Ok(input) = target.dyn_into::<web_sys::HtmlInputElement>()
+                && let Some(input) = target.dyn_ref::<web_sys::HtmlInputElement>()
                 && let Some(ctx) = context.as_ref()
             {
                 ctx.set_search_query.emit(input.value());

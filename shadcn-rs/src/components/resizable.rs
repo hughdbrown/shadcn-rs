@@ -286,7 +286,7 @@ pub fn resizable_handle(props: &ResizableHandleProps) -> Html {
                 }
             });
 
-            // Handle mouse up
+            // Store closures in Rc<RefCell<>> so mouseup can remove them
             let mousemove_closure_rc: MouseClosureRc =
                 std::rc::Rc::new(std::cell::RefCell::new(Some(mousemove_closure)));
             let mouseup_closure_rc: MouseClosureRc =
@@ -301,19 +301,21 @@ pub fn resizable_handle(props: &ResizableHandleProps) -> Html {
                     ctx.set_dragging.emit(false);
                 }
 
-                // Remove event listeners
+                // Remove event listeners and drop closures
                 if let Some(window) = web_sys::window() {
                     if let Some(closure) = mousemove_rc_for_up.borrow_mut().take() {
                         let _ = window.remove_event_listener_with_callback(
                             "mousemove",
                             closure.as_ref().unchecked_ref(),
                         );
+                        // closure is dropped here, properly deallocating
                     }
                     if let Some(closure) = mouseup_closure_rc_clone.borrow_mut().take() {
                         let _ = window.remove_event_listener_with_callback(
                             "mouseup",
                             closure.as_ref().unchecked_ref(),
                         );
+                        // closure is dropped here, properly deallocating
                     }
                 }
             });
@@ -335,14 +337,8 @@ pub fn resizable_handle(props: &ResizableHandleProps) -> Html {
                     );
                 }
             }
-
-            // Keep closures alive by leaking them (they'll be cleaned up on mouseup)
-            if let Some(closure) = mousemove_closure_rc.borrow_mut().take() {
-                closure.forget();
-            }
-            if let Some(closure) = mouseup_closure_rc.borrow_mut().take() {
-                closure.forget();
-            }
+            // Closures are kept alive by the Rc<RefCell<>> references above.
+            // They will be dropped in the mouseup handler after removing listeners.
         })
     };
 

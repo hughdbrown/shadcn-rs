@@ -316,13 +316,24 @@ pub fn toggle_group_item(props: &ToggleGroupItemProps) -> Html {
     .into_iter()
     .collect();
 
+    let is_single = context
+        .as_ref()
+        .map(|ctx| ctx.group_type == ToggleGroupType::Single)
+        .unwrap_or(false);
+
+    // In single mode (radiogroup), items should be role="radio" with aria-checked
+    // In multiple mode (group), items use aria-pressed
+    let role = if is_single { Some("radio") } else { None };
+
     html! {
         <button
             type="button"
             class={classes}
             onclick={handle_click}
             disabled={is_disabled}
-            aria-pressed={is_pressed.to_string()}
+            role={role}
+            aria-checked={if is_single { Some(is_pressed.to_string()) } else { None }}
+            aria-pressed={if !is_single { Some(is_pressed.to_string()) } else { None }}
             data-state={if is_pressed { "on" } else { "off" }}
         >
             { children }

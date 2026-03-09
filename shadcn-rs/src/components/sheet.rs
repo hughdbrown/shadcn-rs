@@ -48,6 +48,19 @@ use crate::types::Position;
 use crate::utils::Portal;
 use yew::prelude::*;
 
+/// Context for sharing sheet state between parent and children
+#[derive(Clone, PartialEq)]
+pub struct SheetContext {
+    /// Whether the sheet is currently open
+    pub is_open: bool,
+    /// Callback to set open state
+    pub set_open: Callback<bool>,
+    /// Callback to toggle open state
+    pub toggle: Callback<()>,
+    /// Side from which the sheet slides in
+    pub side: Position,
+}
+
 /// Sheet component properties
 #[derive(Properties, PartialEq, Clone)]
 pub struct SheetProps {
@@ -84,17 +97,55 @@ pub struct SheetProps {
 #[function_component(Sheet)]
 pub fn sheet(props: &SheetProps) -> Html {
     let SheetProps {
-        open: _,
-        default_open: _,
-        on_open_change: _,
-        side: _,
+        open,
+        default_open,
+        on_open_change,
+        side,
         children,
     } = props.clone();
 
+    // Internal state for uncontrolled mode
+    let internal_open = use_state(|| default_open);
+
+    // Use controlled value if provided (open=true), otherwise use internal state
+    let is_open = if open { open } else { *internal_open };
+
+    let set_open = {
+        let internal_open = internal_open.clone();
+        let on_open_change = on_open_change.clone();
+        Callback::from(move |new_state: bool| {
+            internal_open.set(new_state);
+            if let Some(callback) = on_open_change.as_ref() {
+                callback.emit(new_state);
+            }
+        })
+    };
+
+    let toggle = {
+        let internal_open = internal_open.clone();
+        let on_open_change = on_open_change.clone();
+        Callback::from(move |_: ()| {
+            let new_state = !*internal_open;
+            internal_open.set(new_state);
+            if let Some(callback) = on_open_change.as_ref() {
+                callback.emit(new_state);
+            }
+        })
+    };
+
+    let context = SheetContext {
+        is_open,
+        set_open,
+        toggle,
+        side,
+    };
+
     html! {
-        <div class="sheet-root">
-            { children }
-        </div>
+        <ContextProvider<SheetContext> context={context}>
+            <div class="sheet-root">
+                { children }
+            </div>
+        </ContextProvider<SheetContext>>
     }
 }
 
@@ -116,12 +167,23 @@ pub struct SheetTriggerProps {
 pub fn sheet_trigger(props: &SheetTriggerProps) -> Html {
     let SheetTriggerProps { class, children } = props.clone();
 
+    let context = use_context::<SheetContext>();
+
+    let handle_click = {
+        let context = context.clone();
+        Callback::from(move |_: MouseEvent| {
+            if let Some(ctx) = context.as_ref() {
+                ctx.toggle.emit(());
+            }
+        })
+    };
+
     let classes: Classes = vec![Classes::from("sheet-trigger"), class]
         .into_iter()
         .collect();
 
     html! {
-        <div class={classes}>
+        <div class={classes} onclick={handle_click}>
             { children }
         </div>
     }
@@ -164,41 +226,52 @@ pub struct SheetContentProps {
 #[function_component(SheetContent)]
 pub fn sheet_content(props: &SheetContentProps) -> Html {
     let SheetContentProps {
-        open,
+        open: prop_open,
         on_close,
-        side,
+        side: prop_side,
         close_on_overlay_click,
         close_on_escape,
         class,
         children,
     } = props.clone();
 
+    let context = use_context::<SheetContext>();
     let content_ref = use_node_ref();
 
-    // Handle Escape key
+    // Use context open state if available, otherwise use prop
+    let is_open = context.as_ref().map(|ctx| ctx.is_open).unwrap_or(prop_open);
+    let side = context.as_ref().map(|ctx| ctx.side).unwrap_or(prop_side);
+
+    // Handle Escape key - close via context if available
+    let context_esc = context.clone();
     let on_close_esc = on_close.clone();
     use_escape_key_conditional(
         move || {
-            if let Some(callback) = on_close_esc.as_ref() {
+            if let Some(ctx) = context_esc.as_ref() {
+                ctx.set_open.emit(false);
+            } else if let Some(callback) = on_close_esc.as_ref() {
                 callback.emit(());
             }
         },
-        open && close_on_escape,
+        is_open && close_on_escape,
     );
 
-    // Handle click outside
+    // Handle click outside - close via context if available
+    let context_click = context.clone();
     let on_close_click = on_close.clone();
     use_click_outside_conditional(
         content_ref.clone(),
         move || {
-            if let Some(callback) = on_close_click.as_ref() {
+            if let Some(ctx) = context_click.as_ref() {
+                ctx.set_open.emit(false);
+            } else if let Some(callback) = on_close_click.as_ref() {
                 callback.emit(());
             }
         },
-        open && close_on_overlay_click,
+        is_open && close_on_overlay_click,
     );
 
-    if !open {
+    if !is_open {
         return html! {};
     }
 
@@ -223,6 +296,46 @@ pub fn sheet_content(props: &SheetContentProps) -> Html {
                 </div>
             </div>
         </Portal>
+    }
+}
+
+/// Sheet close properties
+#[derive(Properties, PartialEq, Clone)]
+pub struct SheetCloseProps {
+    /// Additional CSS classes
+    #[prop_or_default]
+    pub class: Classes,
+
+    /// Children elements
+    pub children: Children,
+}
+
+/// Sheet close component
+///
+/// Wraps a button or element to close the sheet when clicked.
+#[function_component(SheetClose)]
+pub fn sheet_close(props: &SheetCloseProps) -> Html {
+    let SheetCloseProps { class, children } = props.clone();
+
+    let context = use_context::<SheetContext>();
+
+    let handle_click = {
+        let context = context.clone();
+        Callback::from(move |_: MouseEvent| {
+            if let Some(ctx) = context.as_ref() {
+                ctx.set_open.emit(false);
+            }
+        })
+    };
+
+    let classes: Classes = vec![Classes::from("sheet-close"), class]
+        .into_iter()
+        .collect();
+
+    html! {
+        <div class={classes} onclick={handle_click}>
+            { children }
+        </div>
     }
 }
 

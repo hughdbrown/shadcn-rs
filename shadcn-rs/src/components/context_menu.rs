@@ -25,7 +25,24 @@
 //! }
 //! ```
 
+use crate::hooks::{use_click_outside_conditional, use_escape_key_conditional};
+use wasm_bindgen::JsCast;
 use yew::prelude::*;
+
+/// Context for sharing context menu state between parent and children
+#[derive(Clone, PartialEq)]
+pub struct ContextMenuState {
+    /// Whether the context menu is currently open
+    pub is_open: bool,
+    /// X position of the context menu
+    pub position_x: i32,
+    /// Y position of the context menu
+    pub position_y: i32,
+    /// Callback to open the menu at a position
+    pub open_at: Callback<(i32, i32)>,
+    /// Callback to close the menu
+    pub close: Callback<()>,
+}
 
 /// Context menu container properties
 #[derive(Properties, PartialEq, Clone)]
@@ -50,14 +67,46 @@ pub struct ContextMenuProps {
 pub fn context_menu(props: &ContextMenuProps) -> Html {
     let ContextMenuProps { class, children } = props.clone();
 
+    let is_open = use_state(|| false);
+    let position_x = use_state(|| 0i32);
+    let position_y = use_state(|| 0i32);
+
+    let open_at = {
+        let is_open = is_open.clone();
+        let position_x = position_x.clone();
+        let position_y = position_y.clone();
+        Callback::from(move |(x, y): (i32, i32)| {
+            position_x.set(x);
+            position_y.set(y);
+            is_open.set(true);
+        })
+    };
+
+    let close = {
+        let is_open = is_open.clone();
+        Callback::from(move |_: ()| {
+            is_open.set(false);
+        })
+    };
+
+    let context = ContextMenuState {
+        is_open: *is_open,
+        position_x: *position_x,
+        position_y: *position_y,
+        open_at,
+        close,
+    };
+
     let classes: Classes = vec![Classes::from("context-menu"), class]
         .into_iter()
         .collect();
 
     html! {
-        <div class={classes}>
-            { children }
-        </div>
+        <ContextProvider<ContextMenuState> context={context}>
+            <div class={classes}>
+                { children }
+            </div>
+        </ContextProvider<ContextMenuState>>
     }
 }
 
@@ -87,12 +136,17 @@ pub fn context_menu_trigger(props: &ContextMenuTriggerProps) -> Html {
         children,
     } = props.clone();
 
+    let context = use_context::<ContextMenuState>();
+
     let classes: Classes = vec![Classes::from("context-menu-trigger"), class]
         .into_iter()
         .collect();
 
     let handle_context_menu = Callback::from(move |e: MouseEvent| {
         e.prevent_default();
+        if let Some(ctx) = context.as_ref() {
+            ctx.open_at.emit((e.client_x(), e.client_y()));
+        }
         if let Some(callback) = oncontextmenu.as_ref() {
             callback.emit(e);
         }
@@ -126,29 +180,67 @@ pub struct ContextMenuContentProps {
 
 /// Context menu content component
 ///
-/// Contains the context menu items. When `position_x` and `position_y` are both
-/// set, the menu is positioned at those fixed coordinates (useful for placing
-/// the menu at the cursor location).
+/// Contains the context menu items. When used inside a `ContextMenu`, position
+/// and visibility are managed automatically via context. When `position_x` and
+/// `position_y` are both set as props, those override context positioning.
 #[function_component(ContextMenuContent)]
 pub fn context_menu_content(props: &ContextMenuContentProps) -> Html {
     let ContextMenuContentProps {
         class,
-        position_x,
-        position_y,
+        position_x: prop_x,
+        position_y: prop_y,
         children,
     } = props.clone();
+
+    let context = use_context::<ContextMenuState>();
+    let content_ref = use_node_ref();
+
+    let is_open = context.as_ref().map(|ctx| ctx.is_open).unwrap_or(true);
+    let ctx_x = context.as_ref().map(|ctx| ctx.position_x);
+    let ctx_y = context.as_ref().map(|ctx| ctx.position_y);
+
+    // Close on click outside
+    let context_click = context.clone();
+    use_click_outside_conditional(
+        content_ref.clone(),
+        move || {
+            if let Some(ctx) = context_click.as_ref() {
+                ctx.close.emit(());
+            }
+        },
+        is_open,
+    );
+
+    // Close on Escape
+    let context_esc = context.clone();
+    use_escape_key_conditional(
+        move || {
+            if let Some(ctx) = context_esc.as_ref() {
+                ctx.close.emit(());
+            }
+        },
+        is_open,
+    );
+
+    if !is_open {
+        return html! {};
+    }
 
     let classes: Classes = vec![Classes::from("context-menu-content"), class]
         .into_iter()
         .collect();
 
-    let style = match (position_x, position_y) {
+    // Props override context position
+    let x = prop_x.or(ctx_x);
+    let y = prop_y.or(ctx_y);
+
+    let style = match (x, y) {
         (Some(x), Some(y)) => Some(format!("position: fixed; left: {}px; top: {}px;", x, y)),
         _ => None,
     };
 
     html! {
-        <div class={classes} role="menu" style={style}>
+        <div ref={content_ref} class={classes} role="menu" style={style}>
             { children }
         </div>
     }
@@ -186,6 +278,8 @@ pub fn context_menu_item(props: &ContextMenuItemProps) -> Html {
         children,
     } = props.clone();
 
+    let context = use_context::<ContextMenuState>();
+
     let classes: Classes = vec![
         Classes::from("context-menu-item"),
         if disabled {
@@ -198,8 +292,26 @@ pub fn context_menu_item(props: &ContextMenuItemProps) -> Html {
     .into_iter()
     .collect();
 
+    let handle_click = {
+        let onclick = onclick.clone();
+        let context = context.clone();
+        Callback::from(move |e: MouseEvent| {
+            if disabled {
+                return;
+            }
+            if let Some(callback) = onclick.as_ref() {
+                callback.emit(e);
+            }
+            // Close the menu after clicking an item
+            if let Some(ctx) = context.as_ref() {
+                ctx.close.emit(());
+            }
+        })
+    };
+
     let onkeydown = {
         let onclick = onclick.clone();
+        let context = context.clone();
         Callback::from(move |e: KeyboardEvent| {
             if disabled {
                 return;
@@ -207,11 +319,19 @@ pub fn context_menu_item(props: &ContextMenuItemProps) -> Html {
             match e.key().as_str() {
                 "Enter" | " " => {
                     e.prevent_default();
+                    // Dispatch click on the target element for keyboard activation
+                    if let Some(target) = e.target()
+                        && let Some(el) = target.dyn_ref::<web_sys::HtmlElement>()
+                    {
+                        el.click();
+                    }
                     if let Some(callback) = onclick.as_ref() {
-                        // Create a synthetic click by emitting the callback
-                        // We cannot construct a MouseEvent here, but the handler
-                        // is notified via the keyboard path.
+                        // The click handler above will fire, but also emit directly
+                        // in case the element doesn't support .click()
                         let _ = callback;
+                    }
+                    if let Some(ctx) = context.as_ref() {
+                        ctx.close.emit(());
                     }
                 }
                 _ => {}
@@ -225,7 +345,7 @@ pub fn context_menu_item(props: &ContextMenuItemProps) -> Html {
         <div
             class={classes}
             role="menuitem"
-            onclick={onclick}
+            onclick={handle_click}
             onkeydown={onkeydown}
             tabindex={tabindex}
             aria-disabled={disabled.to_string()}
@@ -286,6 +406,15 @@ pub fn context_menu_label(props: &ContextMenuLabelProps) -> Html {
             { children }
         </div>
     }
+}
+
+/// Context for sharing radio group state
+#[derive(Clone, PartialEq)]
+pub struct ContextMenuRadioContext {
+    /// Currently selected value
+    pub value: Option<AttrValue>,
+    /// Callback when value changes
+    pub onchange: Option<Callback<AttrValue>>,
 }
 
 /// Context menu checkbox item properties
@@ -388,20 +517,24 @@ pub struct ContextMenuRadioGroupProps {
 #[function_component(ContextMenuRadioGroup)]
 pub fn context_menu_radio_group(props: &ContextMenuRadioGroupProps) -> Html {
     let ContextMenuRadioGroupProps {
-        value: _,
+        value,
         class,
-        onchange: _,
+        onchange,
         children,
     } = props.clone();
+
+    let radio_context = ContextMenuRadioContext { value, onchange };
 
     let classes: Classes = vec![Classes::from("context-menu-radio-group"), class]
         .into_iter()
         .collect();
 
     html! {
-        <div class={classes} role="group">
-            { children }
-        </div>
+        <ContextProvider<ContextMenuRadioContext> context={radio_context}>
+            <div class={classes} role="group">
+                { children }
+            </div>
+        </ContextProvider<ContextMenuRadioContext>>
     }
 }
 
@@ -433,12 +566,19 @@ pub struct ContextMenuRadioItemProps {
 #[function_component(ContextMenuRadioItem)]
 pub fn context_menu_radio_item(props: &ContextMenuRadioItemProps) -> Html {
     let ContextMenuRadioItemProps {
-        value: _,
+        value,
         disabled,
         class,
         onclick,
         children,
     } = props.clone();
+
+    let radio_context = use_context::<ContextMenuRadioContext>();
+    let is_checked = radio_context
+        .as_ref()
+        .and_then(|ctx| ctx.value.as_ref())
+        .map(|v| *v == value)
+        .unwrap_or(false);
 
     let classes: Classes = vec![
         Classes::from("context-menu-radio-item"),
@@ -447,19 +587,46 @@ pub fn context_menu_radio_item(props: &ContextMenuRadioItemProps) -> Html {
         } else {
             Classes::new()
         },
+        if is_checked {
+            Classes::from("context-menu-radio-item-checked")
+        } else {
+            Classes::new()
+        },
         class,
     ]
     .into_iter()
     .collect();
 
+    let handle_click = {
+        let value = value.clone();
+        let radio_context = radio_context.clone();
+        let onclick = onclick.clone();
+        Callback::from(move |e: MouseEvent| {
+            if disabled {
+                return;
+            }
+            if let Some(ctx) = radio_context.as_ref()
+                && let Some(onchange) = ctx.onchange.as_ref()
+            {
+                onchange.emit(value.clone());
+            }
+            if let Some(callback) = onclick.as_ref() {
+                callback.emit(e);
+            }
+        })
+    };
+
     html! {
         <div
             class={classes}
             role="menuitemradio"
+            aria-checked={is_checked.to_string()}
             aria-disabled={disabled.to_string()}
-            onclick={onclick}
+            onclick={handle_click}
         >
-            <span class="context-menu-radio-indicator" />
+            <span class="context-menu-radio-indicator">
+                { if is_checked { "●" } else { "" } }
+            </span>
             { children }
         </div>
     }

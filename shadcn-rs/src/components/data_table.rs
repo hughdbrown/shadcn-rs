@@ -134,6 +134,8 @@ pub fn data_table<T: Clone + PartialEq + 'static>(props: &DataTableProps<T>) -> 
     .into_iter()
     .collect();
 
+    let render_row = &props.render_row;
+
     html! {
         <div class={classes} role="grid">
             <table class="data-table-table">
@@ -144,13 +146,16 @@ pub fn data_table<T: Clone + PartialEq + 'static>(props: &DataTableProps<T>) -> 
                                 <input type="checkbox" aria-label="Select all" />
                             </th>
                         }
-                        <th>{ "Column 1" }</th>
-                        <th>{ "Column 2" }</th>
                     </tr>
                 </thead>
                 <tbody class="data-table-body">
                     {
-                        data.iter().enumerate().map(|(idx, _item)| {
+                        data.iter().enumerate().map(|(idx, item)| {
+                            let row_content = if let Some(renderer) = render_row {
+                                renderer.emit(item.clone())
+                            } else {
+                                html! { <td>{ format!("Row {}", idx + 1) }</td> }
+                            };
                             html! {
                                 <tr key={idx} role="row">
                                     if selectable_val {
@@ -158,8 +163,7 @@ pub fn data_table<T: Clone + PartialEq + 'static>(props: &DataTableProps<T>) -> 
                                             <input type="checkbox" aria-label={format!("Select row {}", idx + 1)} />
                                         </td>
                                     }
-                                    <td>{ format!("Row {} - Col 1", idx + 1) }</td>
-                                    <td>{ format!("Row {} - Col 2", idx + 1) }</td>
+                                    { row_content }
                                 </tr>
                             }
                         }).collect::<Html>()

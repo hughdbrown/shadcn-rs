@@ -22,6 +22,7 @@
 //! }
 //! ```
 
+use gloo::timers::callback::Timeout;
 use yew::prelude::*;
 
 /// Sonner position
@@ -184,13 +185,31 @@ pub fn sonner_toast(props: &SonnerToastProps) -> Html {
         title,
         description,
         dismissible,
-        duration: _,
+        duration,
         action,
         on_action,
         on_dismiss,
         class,
         children,
     } = props.clone();
+
+    // Auto-dismiss timer
+    {
+        let on_dismiss = on_dismiss.clone();
+        use_effect_with(duration, move |&duration| {
+            let handle = if duration > 0 {
+                let timeout = Timeout::new(duration, move || {
+                    if let Some(cb) = on_dismiss.as_ref() {
+                        cb.emit(());
+                    }
+                });
+                Some(timeout)
+            } else {
+                None
+            };
+            move || drop(handle)
+        });
+    }
 
     let type_class = match r#type {
         SonnerType::Default => "sonner-toast-default",

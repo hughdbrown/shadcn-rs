@@ -85,12 +85,12 @@ pub fn date_picker(props: &DatePickerProps) -> Html {
     let DatePickerProps {
         value,
         default_value,
-        onchange: _,
+        onchange,
         placeholder,
         disabled,
-        min_date: _,
-        max_date: _,
-        format: _,
+        min_date,
+        max_date,
+        format,
         class,
     } = props.clone();
 
@@ -100,7 +100,23 @@ pub fn date_picker(props: &DatePickerProps) -> Html {
     let current_value = value.or_else(|| (*internal_value).clone());
 
     // Popover open state
-    let (is_open, toggle, _set_open) = use_toggle(false);
+    let (is_open, toggle, set_open) = use_toggle(false);
+
+    // Format display value
+    let display_value = current_value.as_ref().map(|v| {
+        let v_str = v.to_string();
+        if format.as_str() == "MM/DD/YYYY" {
+            // Convert YYYY-MM-DD to MM/DD/YYYY
+            let parts: Vec<&str> = v_str.split('-').collect();
+            if parts.len() == 3 {
+                AttrValue::from(format!("{}/{}/{}", parts[1], parts[2], parts[0]))
+            } else {
+                v.clone()
+            }
+        } else {
+            v.clone()
+        }
+    });
 
     let classes: Classes = vec![
         Classes::from("date-picker"),
@@ -132,6 +148,26 @@ pub fn date_picker(props: &DatePickerProps) -> Html {
         })
     };
 
+    // Handle date selection from native date input
+    let handle_date_input = {
+        let internal_value = internal_value.clone();
+        let onchange = onchange.clone();
+        let set_open = set_open.clone();
+        Callback::from(move |e: Event| {
+            use wasm_bindgen::JsCast;
+            if let Some(target) = e.target()
+                && let Some(input) = target.dyn_ref::<web_sys::HtmlInputElement>()
+            {
+                let val = input.value();
+                internal_value.set(Some(AttrValue::from(val.clone())));
+                if let Some(cb) = onchange.as_ref() {
+                    cb.emit(val);
+                }
+                set_open.emit(false);
+            }
+        })
+    };
+
     html! {
         <div class={classes}>
             <button
@@ -143,8 +179,8 @@ pub fn date_picker(props: &DatePickerProps) -> Html {
                 aria-expanded={is_open.to_string()}
             >
                 {
-                    if let Some(date_value) = current_value {
-                        html! { <span class="date-picker-value">{ date_value }</span> }
+                    if let Some(dv) = display_value {
+                        html! { <span class="date-picker-value">{ dv }</span> }
                     } else {
                         html! { <span class="date-picker-placeholder">{ placeholder }</span> }
                     }
@@ -153,9 +189,14 @@ pub fn date_picker(props: &DatePickerProps) -> Html {
             </button>
             if is_open {
                 <div class="date-picker-popover">
-                    <div class="date-picker-calendar">
-                        { "Calendar would be rendered here" }
-                    </div>
+                    <input
+                        type="date"
+                        class="date-picker-native-input"
+                        value={current_value.clone().unwrap_or_default()}
+                        min={min_date.clone()}
+                        max={max_date.clone()}
+                        onchange={handle_date_input}
+                    />
                 </div>
             }
         </div>

@@ -118,7 +118,7 @@ pub struct NativeSelectProps {
 pub fn native_select(props: &NativeSelectProps) -> Html {
     let NativeSelectProps {
         value,
-        default_value: _,
+        default_value,
         size,
         disabled,
         required,
@@ -161,7 +161,7 @@ pub fn native_select(props: &NativeSelectProps) -> Html {
             <select
                 ref={node_ref}
                 class={final_classes}
-                value={value}
+                value={value.or(default_value)}
                 disabled={disabled}
                 required={required}
                 name={name}

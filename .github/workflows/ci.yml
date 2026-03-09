@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main, master]
 
+permissions:
+  contents: read
+
 env:
   CARGO_TERM_COLOR: always
 
@@ -35,7 +38,7 @@ jobs:
             ${{ runner.os }}-cargo-
 
       - name: Check compilation
-        run: cargo check --workspace
+        run: cargo check --workspace --target wasm32-unknown-unknown
 
   format:
     name: Format
@@ -77,7 +80,7 @@ jobs:
             ${{ runner.os }}-cargo-
 
       - name: Run Clippy
-        run: cargo clippy --workspace -- -D warnings
+        run: cargo clippy --workspace --target wasm32-unknown-unknown -- -D warnings
 
   test:
     name: Test
@@ -129,7 +132,7 @@ jobs:
             ${{ runner.os }}-cargo-
 
       - name: Build documentation
-        run: cargo doc --workspace --no-deps
+        run: cargo doc --workspace --no-deps --target wasm32-unknown-unknown
         env:
           RUSTDOCFLAGS: -D warnings
 

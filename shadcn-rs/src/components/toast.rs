@@ -28,6 +28,7 @@
 //! }
 //! ```
 
+use gloo::timers::callback::Timeout;
 use yew::prelude::*;
 
 /// Toast position
@@ -121,13 +122,31 @@ pub fn toast(props: &ToastProps) -> Html {
         position,
         title,
         description,
-        duration: _,
+        duration,
         action,
         on_action,
         on_close,
         class,
         children,
     } = props.clone();
+
+    // Auto-dismiss timer
+    {
+        let on_close = on_close.clone();
+        use_effect_with(duration, move |&duration| {
+            let handle = if duration > 0 {
+                let timeout = Timeout::new(duration, move || {
+                    if let Some(cb) = on_close.as_ref() {
+                        cb.emit(());
+                    }
+                });
+                Some(timeout)
+            } else {
+                None
+            };
+            move || drop(handle)
+        });
+    }
 
     let variant_class = match variant {
         ToastVariant::Default => "toast-default",

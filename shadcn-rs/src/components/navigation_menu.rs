@@ -29,6 +29,7 @@
 //! }
 //! ```
 
+use wasm_bindgen::JsCast;
 use yew::prelude::*;
 
 /// Navigation menu container properties
@@ -177,24 +178,23 @@ pub fn navigation_menu_trigger(props: &NavigationMenuTriggerProps) -> Html {
         .into_iter()
         .collect();
 
-    let onkeydown = {
-        let onclick: Option<Callback<MouseEvent>> = onclick.clone();
-        Callback::from(move |e: KeyboardEvent| {
-            match e.key().as_str() {
-                "ArrowDown" | "ArrowRight" => {
-                    e.prevent_default();
-                    if let Some(ref _cb) = onclick {
-                        // Arrow keys prevent default to avoid scrolling;
-                        // actual menu opening is handled by click.
-                    }
+    let onkeydown = Callback::from(move |e: KeyboardEvent| {
+        match e.key().as_str() {
+            "ArrowDown" | "ArrowRight" | "Enter" | " " => {
+                e.prevent_default();
+                // Activate via click on the element itself
+                if let Some(target) = e.target()
+                    && let Ok(el) = target.dyn_into::<web_sys::HtmlElement>()
+                {
+                    el.click();
                 }
-                "Escape" => {
-                    e.prevent_default();
-                }
-                _ => {}
             }
-        })
-    };
+            "Escape" => {
+                e.prevent_default();
+            }
+            _ => {}
+        }
+    });
 
     html! {
         <button

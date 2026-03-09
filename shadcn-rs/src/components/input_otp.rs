@@ -92,10 +92,10 @@ pub fn input_otp(props: &InputOTPProps) -> Html {
     let InputOTPProps {
         length,
         value,
-        default_value: _,
+        default_value,
         disabled,
         masked,
-        pattern: _,
+        pattern,
         on_change,
         on_complete,
         class,
@@ -105,9 +105,10 @@ pub fn input_otp(props: &InputOTPProps) -> Html {
     let disabled_val = disabled;
     let masked_val = masked;
 
-    // Internal state for each field
+    // Internal state for each field; initialize from value or default_value
     let field_values = use_state(|| {
-        if let Some(val) = value.as_ref() {
+        let init = value.as_ref().or(default_value.as_ref());
+        if let Some(val) = init {
             let chars: Vec<String> = val.chars().map(|c| c.to_string()).collect();
             let mut fields = vec![String::new(); length_val];
             for (i, ch) in chars.into_iter().take(length_val).enumerate() {
@@ -118,6 +119,9 @@ pub fn input_otp(props: &InputOTPProps) -> Html {
             vec![String::new(); length_val]
         }
     });
+
+    // Pattern is passed through to the HTML input pattern attribute for native validation
+    let _pattern = pattern;
 
     let classes: Classes = vec![
         Classes::from("input-otp"),
