@@ -46,6 +46,8 @@ pub struct ComboboxContext {
     pub is_open: bool,
     /// Callback to toggle the dropdown open/closed
     pub toggle: Callback<()>,
+    /// Callback to set the dropdown open state directly
+    pub set_open: Callback<bool>,
 }
 
 /// Combobox container properties
@@ -89,8 +91,20 @@ pub fn combobox(props: &ComboboxProps) -> Html {
         children,
     } = props.clone();
 
-    let (is_open, internal_toggle, _set_open) = use_toggle(open.unwrap_or(default_open));
+    let (is_open, internal_toggle, internal_set_open) = use_toggle(open.unwrap_or(default_open));
     let filter_query = use_state(String::new);
+
+    // Wrap set_open to also emit on_open_change
+    let set_open = {
+        let internal_set_open = internal_set_open.clone();
+        let on_open_change = on_open_change.clone();
+        Callback::from(move |value: bool| {
+            internal_set_open.emit(value);
+            if let Some(cb) = on_open_change.as_ref() {
+                cb.emit(value);
+            }
+        })
+    };
 
     // Wrap toggle to also emit on_open_change
     let toggle = {
@@ -117,6 +131,7 @@ pub fn combobox(props: &ComboboxProps) -> Html {
         set_filter_query,
         is_open,
         toggle,
+        set_open,
     };
 
     let classes: Classes = vec![
@@ -314,7 +329,7 @@ pub fn combobox_content(props: &ComboboxContentProps) -> Html {
         content_ref.clone(),
         move || {
             if let Some(ctx) = context_click.as_ref() {
-                ctx.toggle.emit(());
+                ctx.set_open.emit(false);
             }
         },
         is_open,
@@ -325,7 +340,7 @@ pub fn combobox_content(props: &ComboboxContentProps) -> Html {
     use_escape_key_conditional(
         move || {
             if let Some(ctx) = context_esc.as_ref() {
-                ctx.toggle.emit(());
+                ctx.set_open.emit(false);
             }
         },
         is_open,
@@ -699,6 +714,7 @@ mod tests {
             set_filter_query: Callback::from(|_: String| {}),
             is_open: true,
             toggle: Callback::from(|_: ()| {}),
+            set_open: Callback::from(|_: bool| {}),
         };
 
         assert_eq!(ctx.filter_query, "test");
@@ -712,6 +728,7 @@ mod tests {
             set_filter_query: Callback::from(|_: String| {}),
             is_open: false,
             toggle: Callback::from(|_: ()| {}),
+            set_open: Callback::from(|_: bool| {}),
         };
 
         assert!(ctx.filter_query.is_empty());
