@@ -4,6 +4,7 @@
 
 pub mod aria;
 pub mod class_name;
+pub mod focus;
 pub mod portal;
 pub mod touch;
 
@@ -13,6 +14,9 @@ pub use aria::{
     generate_id, generate_id_with_separator,
 };
 pub use class_name::{class_if, class_names, classes_optional, merge_classes};
+pub use focus::{
+    active_element, collect_focusable, focus_element, focus_first_within, trap_tab_navigation,
+};
 pub use portal::{Portal, create_portal, use_portal};
 pub use touch::{
     SwipeConfig, SwipeDirection, TouchPoint, detect_swipe, get_first_touch, touch_point_from_event,

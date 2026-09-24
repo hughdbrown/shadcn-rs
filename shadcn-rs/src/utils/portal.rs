@@ -4,6 +4,7 @@
 //! the DOM hierarchy of the parent component. This is useful for modals,
 //! tooltips, and other overlay components.
 
+use wasm_bindgen::JsCast;
 use web_sys::{Element, Node, window};
 use yew::prelude::*;
 
@@ -98,39 +99,22 @@ struct PortalInnerProps {
     target: Node,
 }
 
+/// Renders children through Yew's native portal so delegated event handlers
+/// (`onclick`, `onkeydown`, ...) keep working after the subtree leaves the app root.
 #[function_component(PortalInner)]
 fn portal_inner(props: &PortalInnerProps) -> Html {
-    let container_ref = use_node_ref();
+    let Some(host) = props.target.dyn_ref::<Element>() else {
+        return Html::default();
+    };
 
-    // Mount children to target
-    {
-        let container_ref = container_ref.clone();
-        let target = props.target.clone();
-
-        use_effect_with(container_ref.clone(), move |container_ref| {
-            let cleanup = if let Some(container) = container_ref.cast::<web_sys::Element>() {
-                // Append container to target
-                let _ = target.append_child(&container);
-
-                // Cleanup: remove on unmount
-                Some((target.clone(), container))
-            } else {
-                None
-            };
-
-            move || {
-                if let Some((target, container)) = cleanup {
-                    let _ = target.remove_child(&container);
-                }
-            }
-        });
-    }
-
-    html! {
-        <div ref={container_ref} class="portal-container">
-            { props.children.clone() }
-        </div>
-    }
+    yew::create_portal(
+        html! {
+            <div class="portal-container">
+                { props.children.clone() }
+            </div>
+        },
+        host.clone(),
+    )
 }
 
 /// Hook for managing portal state

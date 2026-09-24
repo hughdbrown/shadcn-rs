@@ -45,7 +45,7 @@
 //! }
 //! ```
 
-use crate::hooks::{use_click_outside_conditional, use_escape_key_conditional};
+use crate::hooks::{use_click_outside_conditional, use_escape_key_conditional, use_focus_trap};
 use crate::utils::Portal;
 use yew::prelude::*;
 
@@ -260,6 +260,8 @@ pub fn dialog_content(props: &DialogContentProps) -> Html {
         is_open && close_on_overlay_click,
     );
 
+    let onkeydown = use_focus_trap(content_ref.clone(), is_open);
+
     if !is_open {
         return html! {};
     }
@@ -276,6 +278,8 @@ pub fn dialog_content(props: &DialogContentProps) -> Html {
                     class={classes}
                     role="dialog"
                     aria-modal="true"
+                    tabindex="-1"
+                    onkeydown={onkeydown}
                 >
                     { children }
                 </div>
