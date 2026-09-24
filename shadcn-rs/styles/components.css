@@ -1981,6 +1981,40 @@
 }
 
 /* ============================================
+   Chart
+   ============================================ */
+.chart {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.chart-svg {
+  width: 100%;
+  max-width: 100%;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+}
+
+.chart-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: hsl(var(--color-muted-foreground));
+}
+
+.chart-legend-marker {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 9999px;
+}
+
+/* ============================================
    Date Picker
    ============================================ */
 .date-picker {

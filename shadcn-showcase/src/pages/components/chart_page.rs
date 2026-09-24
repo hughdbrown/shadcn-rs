@@ -7,34 +7,7 @@ use crate::components::{ComponentPage, Example, PropDoc};
 
 #[function_component(ChartPage)]
 pub fn chart_page() -> Html {
-    let bar_data = vec![
-        ChartData {
-            label: "Jan".to_string(),
-            value: 186.0,
-        },
-        ChartData {
-            label: "Feb".to_string(),
-            value: 305.0,
-        },
-        ChartData {
-            label: "Mar".to_string(),
-            value: 237.0,
-        },
-        ChartData {
-            label: "Apr".to_string(),
-            value: 73.0,
-        },
-        ChartData {
-            label: "May".to_string(),
-            value: 209.0,
-        },
-        ChartData {
-            label: "Jun".to_string(),
-            value: 214.0,
-        },
-    ];
-
-    let line_data = vec![
+    let revenue_data = vec![
         ChartData {
             label: "Jan".to_string(),
             value: 186.0,
@@ -53,108 +26,116 @@ pub fn chart_page() -> Html {
         },
         ChartData {
             label: "May".to_string(),
-            value: 309.0,
+            value: 209.0,
         },
         ChartData {
             label: "Jun".to_string(),
-            value: 314.0,
+            value: 214.0,
         },
     ];
 
-    let pie_data = vec![
+    let traffic_share = vec![
         ChartData {
             label: "Chrome".to_string(),
-            value: 275.0,
+            value: 52.0,
         },
         ChartData {
             label: "Safari".to_string(),
-            value: 200.0,
+            value: 24.0,
         },
         ChartData {
             label: "Firefox".to_string(),
-            value: 187.0,
+            value: 12.0,
         },
         ChartData {
             label: "Edge".to_string(),
-            value: 173.0,
+            value: 8.0,
         },
         ChartData {
             label: "Other".to_string(),
-            value: 90.0,
+            value: 4.0,
         },
     ];
 
     let examples = vec![
         Example {
-            title: "Bar Chart",
-            description: "A simple bar chart.",
+            title: "Cartesian Charts",
+            description: "Bar, line, and area charts now render actual SVG data with grid and axis support.",
             demo: html! {
-                <Chart
-                    chart_type={ChartType::Bar}
-                    data={bar_data.clone()}
-                    width={500}
-                    height={300}
-                />
+                <div class="space-y-6">
+                    <Chart
+                        chart_type={ChartType::Bar}
+                        data={revenue_data.clone()}
+                        width={560}
+                        height={280}
+                        show_grid={true}
+                        show_axis={true}
+                    />
+                    <Chart
+                        chart_type={ChartType::Line}
+                        data={revenue_data.clone()}
+                        width={560}
+                        height={280}
+                        show_grid={false}
+                        show_axis={true}
+                        colors={Some(vec!["#0f766e".into(), "#99f6e4".into()])}
+                    />
+                    <Chart
+                        chart_type={ChartType::Area}
+                        data={revenue_data.clone()}
+                        width={560}
+                        height={280}
+                        show_grid={true}
+                        show_axis={false}
+                    />
+                </div>
             },
             code: r##"<Chart
     chart_type={ChartType::Bar}
-    data={data}
-    width={500}
-    height={300}
-/>"##,
-        },
-        Example {
-            title: "Line Chart",
-            description: "A line chart for trends.",
-            demo: html! {
-                <Chart
-                    chart_type={ChartType::Line}
-                    data={line_data.clone()}
-                    width={500}
-                    height={300}
-                />
-            },
-            code: r##"<Chart
+    data={revenue_data.clone()}
+    width={560}
+    height={280}
+    show_grid={true}
+    show_axis={true}
+/>
+
+<Chart
     chart_type={ChartType::Line}
-    data={data}
-    width={500}
-    height={300}
+    data={revenue_data.clone()}
+    colors={Some(vec!["#0f766e".into(), "#99f6e4".into()])}
 />"##,
         },
         Example {
-            title: "Pie Chart",
-            description: "A pie chart for proportions.",
+            title: "Pie And Donut",
+            description: "Radial chart types use the same data model and legend system.",
             demo: html! {
-                <Chart
-                    chart_type={ChartType::Pie}
-                    data={pie_data.clone()}
-                    width={400}
-                    height={300}
-                />
+                <div class="grid gap-6 md:grid-cols-2">
+                    <Chart
+                        chart_type={ChartType::Pie}
+                        data={traffic_share.clone()}
+                        width={360}
+                        height={280}
+                    />
+                    <Chart
+                        chart_type={ChartType::Donut}
+                        data={traffic_share.clone()}
+                        width={360}
+                        height={280}
+                        colors={Some(vec![
+                            "#1d4ed8".into(),
+                            "#2563eb".into(),
+                            "#60a5fa".into(),
+                            "#93c5fd".into(),
+                            "#bfdbfe".into(),
+                        ])}
+                    />
+                </div>
             },
             code: r##"<Chart
-    chart_type={ChartType::Pie}
-    data={data}
-    width={400}
-    height={300}
-/>"##,
-        },
-        Example {
-            title: "Area Chart",
-            description: "An area chart showing trends.",
-            demo: html! {
-                <Chart
-                    chart_type={ChartType::Area}
-                    data={line_data.clone()}
-                    width={500}
-                    height={300}
-                />
-            },
-            code: r##"<Chart
-    chart_type={ChartType::Area}
-    data={data}
-    width={500}
-    height={300}
+    chart_type={ChartType::Donut}
+    data={traffic_share}
+    width={360}
+    height={280}
 />"##,
         },
     ];
@@ -163,52 +144,49 @@ pub fn chart_page() -> Html {
         PropDoc {
             name: "chart_type",
             prop_type: "ChartType",
-            default: "Bar",
-            description: "Type of chart (Bar, Line, Area, Pie, Donut)",
+            default: "ChartType::Bar",
+            description: "Selects the SVG rendering strategy: bar, line, area, pie, or donut.",
         },
         PropDoc {
             name: "data",
             prop_type: "Vec<ChartData>",
             default: "-",
-            description: "Chart data points",
-        },
-        PropDoc {
-            name: "width",
-            prop_type: "u32",
-            default: "500",
-            description: "Chart width in pixels",
-        },
-        PropDoc {
-            name: "height",
-            prop_type: "u32",
-            default: "300",
-            description: "Chart height in pixels",
-        },
-        PropDoc {
-            name: "show_legend",
-            prop_type: "bool",
-            default: "true",
-            description: "Show legend",
+            description: "The label/value pairs rendered into the chart.",
         },
         PropDoc {
             name: "show_grid",
             prop_type: "bool",
             default: "true",
-            description: "Show grid lines",
+            description: "Draws cartesian grid lines for bar, line, and area charts.",
         },
         PropDoc {
             name: "show_axis",
             prop_type: "bool",
             default: "true",
-            description: "Show axis labels",
+            description: "Controls cartesian axis labels and tick marks.",
         },
         PropDoc {
             name: "colors",
             prop_type: "Option<Vec<AttrValue>>",
-            default: "-",
-            description: "Custom color scheme",
+            default: "None",
+            description: "Overrides the default palette used for bars, slices, and line/area accents.",
         },
     ];
 
-    html! { <ComponentPage name="Chart" description="Beautiful, responsive charts built with SVG." {examples} {props} /> }
+    let notes = html! {
+        <div class="space-y-3">
+            <p>{ "Cartesian charts use shared scaling logic, so toggling grid and axis rendering changes the actual SVG output rather than only CSS." }</p>
+            <p>{ "Radial charts use the same legend markup and data structure, which keeps bar/line and pie/donut examples interchangeable." }</p>
+        </div>
+    };
+
+    html! {
+        <ComponentPage
+            name="Chart"
+            description="SVG charts with real rendering for cartesian and radial layouts."
+            {examples}
+            {props}
+            notes={Some(notes)}
+        />
+    }
 }
