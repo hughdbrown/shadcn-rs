@@ -208,6 +208,6 @@ pub use input_otp::InputOTP;
 // Re-export Tier 8 components
 pub use carousel::{Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious};
 pub use chart::{Chart, ChartData, ChartType};
-pub use data_table::{DataTable, SelectionMode, SortDirection};
+pub use data_table::{DataTable, DataTableColumn, SelectionMode, SortDirection};
 pub use sonner::{Sonner, SonnerPosition, SonnerToast, SonnerType};
 pub use toast::{Toast, ToastPosition, ToastVariant};
