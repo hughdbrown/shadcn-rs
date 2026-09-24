@@ -6,6 +6,7 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "Interactive showcase for shadcn-rs components"
+publish = false
 
 [dependencies]
 yew = { workspace = true, features = ["csr"] }

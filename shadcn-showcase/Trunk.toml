@@ -16,7 +16,7 @@ ignore = ["dist"]
 [serve]
 # Development server configuration
 addresses = ["127.0.0.1"]
-port = 8080
+port = 8180
 open = false
 
 [[hooks]]

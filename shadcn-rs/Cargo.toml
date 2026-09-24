@@ -9,6 +9,7 @@ homepage.workspace = true
 keywords.workspace = true
 categories.workspace = true
 description = "A comprehensive UI component library for Rust/WebAssembly inspired by shadcn/ui"
+readme = "../README.md"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
