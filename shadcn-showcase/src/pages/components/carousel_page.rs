@@ -9,63 +9,127 @@ use crate::components::{ComponentPage, Example, PropDoc};
 
 #[function_component(CarouselPage)]
 pub fn carousel_page() -> Html {
-    let examples = vec![Example {
-        title: "Default",
-        description: "A basic carousel.",
-        demo: html! {
-            <Carousel class="w-full max-w-xs">
-                <CarouselContent>
-                    { for (1..=5).map(|i| html! {
-                        <CarouselItem>
-                            <Card>
-                                <CardContent class="flex aspect-square items-center justify-center p-6">
-                                    <span class="text-4xl font-semibold">{ i }</span>
-                                </CardContent>
-                            </Card>
-                        </CarouselItem>
-                    })}
-                </CarouselContent>
-                <CarouselPrevious />
-                <CarouselNext />
-            </Carousel>
-        },
-        code: r#"<Carousel>
+    let controlled_index = use_state(|| 1usize);
+    let on_slide_change = {
+        let controlled_index = controlled_index.clone();
+        Callback::from(move |index: usize| controlled_index.set(index))
+    };
+
+    let slides = ["Alpha", "Beta", "Gamma", "Delta"];
+
+    let examples = vec![
+        Example {
+            title: "Navigation And Indicators",
+            description: "The carousel now owns slide state, previous/next controls, keyboard navigation, and indicator buttons.",
+            demo: html! {
+                <Carousel class="w-full max-w-xl">
+                    <CarouselContent>
+                        { for slides.iter().map(|label| html! {
+                            <CarouselItem>
+                                <Card>
+                                    <CardContent class="flex aspect-[16/7] items-center justify-center p-6">
+                                        <span class="text-3xl font-semibold">{ label }</span>
+                                    </CardContent>
+                                </Card>
+                            </CarouselItem>
+                        })}
+                    </CarouselContent>
+                    <CarouselPrevious />
+                    <CarouselNext />
+                </Carousel>
+            },
+            code: r#"<Carousel>
     <CarouselContent>
-        <CarouselItem>{ "Slide 1" }</CarouselItem>
-        <CarouselItem>{ "Slide 2" }</CarouselItem>
-        <CarouselItem>{ "Slide 3" }</CarouselItem>
+        <CarouselItem>{ "Alpha" }</CarouselItem>
+        <CarouselItem>{ "Beta" }</CarouselItem>
+        <CarouselItem>{ "Gamma" }</CarouselItem>
     </CarouselContent>
     <CarouselPrevious />
     <CarouselNext />
 </Carousel>"#,
-    }];
+        },
+        Example {
+            title: "Controlled And Autoplay",
+            description: "Use `current`, `on_slide_change`, and `autoplay` when the surrounding UI needs to react to slide state.",
+            demo: html! {
+                <div class="space-y-4">
+                    <p class="text-sm text-muted-foreground">
+                        { format!("Controlled slide index: {}", *controlled_index) }
+                    </p>
+                    <Carousel
+                        class="w-full max-w-xl"
+                        current={Some(*controlled_index)}
+                        on_slide_change={Some(on_slide_change.clone())}
+                        autoplay={2500}
+                        loop_slides={true}
+                    >
+                        <CarouselContent>
+                            { for slides.iter().enumerate().map(|(index, label)| html! {
+                                <CarouselItem>
+                                    <Card>
+                                        <CardContent class="flex aspect-[16/7] flex-col items-center justify-center gap-2 p-6">
+                                            <span class="text-sm uppercase tracking-[0.2em] text-muted-foreground">{ format!("Slide {}", index + 1) }</span>
+                                            <span class="text-3xl font-semibold">{ label }</span>
+                                        </CardContent>
+                                    </Card>
+                                </CarouselItem>
+                            })}
+                        </CarouselContent>
+                        <CarouselPrevious />
+                        <CarouselNext />
+                    </Carousel>
+                </div>
+            },
+            code: r#"<Carousel
+    current={Some(*controlled_index)}
+    on_slide_change={Some(on_slide_change)}
+    autoplay={2500}
+    loop_slides={true}
+>
+    ...
+</Carousel>"#,
+        },
+    ];
 
     let props = vec![
         PropDoc {
-            name: "orientation",
-            prop_type: "&str",
-            default: "\"horizontal\"",
-            description: "Carousel orientation",
+            name: "autoplay",
+            prop_type: "u32",
+            default: "0",
+            description: "Auto-advance interval in milliseconds. `0` disables autoplay.",
         },
         PropDoc {
             name: "loop_slides",
             prop_type: "bool",
-            default: "false",
-            description: "Enable infinite loop",
+            default: "true",
+            description: "Wraps navigation back to the first slide when the carousel reaches the end.",
         },
         PropDoc {
-            name: "auto_play",
+            name: "show_indicators",
             prop_type: "bool",
-            default: "false",
-            description: "Auto-advance slides",
+            default: "true",
+            description: "Shows clickable indicator buttons below the viewport.",
         },
         PropDoc {
-            name: "auto_play_interval",
-            prop_type: "u32",
-            default: "3000",
-            description: "Auto-play interval (ms)",
+            name: "current",
+            prop_type: "Option<usize>",
+            default: "None",
+            description: "Controlled current slide index.",
+        },
+        PropDoc {
+            name: "on_slide_change",
+            prop_type: "Option<Callback<usize>>",
+            default: "None",
+            description: "Receives the next slide index whenever navigation changes it.",
         },
     ];
 
-    html! { <ComponentPage name="Carousel" description="A carousel with motion and swipe gestures." {examples} {props} /> }
+    html! {
+        <ComponentPage
+            name="Carousel"
+            description="A stateful carousel with internal navigation, indicators, keyboard controls, and optional autoplay."
+            {examples}
+            {props}
+        />
+    }
 }
