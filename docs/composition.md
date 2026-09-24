@@ -163,6 +163,80 @@ fn tabs_example() -> Html {
 }
 ```
 
+## Data Table Composition
+
+`DataTable` is column-driven. Define stable column metadata once, then pass row data separately:
+
+```rust
+use shadcn_rs::{DataTable, DataTableColumn, SortDirection};
+
+#[derive(Clone, PartialEq)]
+struct Invoice {
+    status: &'static str,
+    email: &'static str,
+    amount: u32,
+}
+
+let columns = vec![
+    DataTableColumn::text(
+        "status",
+        "Status",
+        Callback::from(|invoice: Invoice| AttrValue::from(invoice.status)),
+    ),
+    DataTableColumn::text(
+        "email",
+        "Email",
+        Callback::from(|invoice: Invoice| AttrValue::from(invoice.email)),
+    ),
+    DataTableColumn {
+        id: "amount".into(),
+        header: "Amount".into(),
+        accessor: Callback::from(|invoice: Invoice| AttrValue::from(invoice.amount.to_string())),
+        cell: Some(Callback::from(|invoice: Invoice| html! { <strong>{ invoice.amount }</strong> })),
+        sortable: true,
+        searchable: false,
+        class: classes!("text-right"),
+    },
+];
+
+html! {
+    <DataTable<Invoice>
+        columns={columns}
+        data={invoices}
+        sortable={true}
+        filterable={true}
+        paginated={true}
+        rows_per_page={10}
+        default_sort_column={Some(AttrValue::from("email"))}
+        default_sort_direction={SortDirection::Ascending}
+    />
+}
+```
+
+## Calendar And Date Picker Composition
+
+`DatePicker` is now built on top of `Calendar`, so the same selection rules and date bounds flow through both components:
+
+```rust
+use shadcn_rs::{Calendar, CalendarMode, DatePicker};
+
+html! {
+    <>
+        <Calendar
+            mode={CalendarMode::Range}
+            selected={Some(AttrValue::from("2026-04-17..2026-04-22"))}
+        />
+
+        <DatePicker
+            value={Some(AttrValue::from("2026-04-17"))}
+            min_date={Some(AttrValue::from("2026-04-10"))}
+            max_date={Some(AttrValue::from("2026-04-30"))}
+            format="DD/MM/YYYY"
+        />
+    </>
+}
+```
+
 ## Custom Wrappers
 
 Create reusable component wrappers by accepting `Children`:

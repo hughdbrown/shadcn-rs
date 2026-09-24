@@ -1,6 +1,6 @@
 # shadcn-rs
 
-A comprehensive UI component library for Rust/WebAssembly inspired by [shadcn/ui](https://ui.shadcn.com).
+A broad, actively polished UI component library for Rust/WebAssembly inspired by [shadcn/ui](https://ui.shadcn.com).
 
 [![Crates.io](https://img.shields.io/crates/v/shadcn-rs.svg)](https://crates.io/crates/shadcn-rs)
 [![Documentation](https://docs.rs/shadcn-rs/badge.svg)](https://docs.rs/shadcn-rs)
@@ -8,17 +8,16 @@ A comprehensive UI component library for Rust/WebAssembly inspired by [shadcn/ui
 
 ## Overview
 
-shadcn-rs provides 59+ accessible, customizable UI components for building modern web applications with Rust and [Yew](https://yew.rs). All components are built with WCAG 2.1 AA compliance, full keyboard navigation support, and mobile touch gestures.
+shadcn-rs provides a full shadcn/ui-style component surface for building modern web applications with Rust and [Yew](https://yew.rs). The repo currently includes 60 component modules, a matching showcase application, generated Lucide-style icons, and ongoing polish work for the most complex interactive widgets.
 
 ## Features
 
-- **59+ Components** - Complete implementation of shadcn/ui components
-- **Type-Safe** - Rust enums for variants, sizes, and colors
-- **Accessible** - WCAG 2.1 AA compliant with ARIA attributes
-- **Themeable** - Light and dark mode with CSS variables
-- **Mobile-Friendly** - Touch gesture support for key components
-- **No Runtime Overhead** - Pure CSS animations and styling
-- **Icon Library** - Lucide icons as Yew components
+- **Broad Coverage** - 60 component modules with matching showcase pages
+- **Type-Safe** - Rust enums and typed props for variants, sizes, and behavior
+- **Accessible** - keyboard navigation, focus trapping for overlays, and ARIA support
+- **Themeable** - light and dark mode via CSS variables
+- **Interactive Examples** - showcase pages for complex widgets including chart, data table, carousel, calendar, and date picker
+- **Generated Icons** - Lucide-style icons exposed as Yew components from checked-in generated code
 
 ## Quick Start
 
@@ -101,7 +100,15 @@ Select, Combobox, Command, Input OTP, Date Picker, Calendar
 ### Complex (5)
 Carousel, Data Table, Chart, Toast, Sonner
 
-**Total: 59+ components**
+**Total: 60 component modules**
+
+## Complex Component Notes
+
+- `DataTable` now uses explicit `DataTableColumn<T>` metadata for headers, sort/filter participation, and custom cell rendering.
+- `Calendar` supports three selection encodings: single `YYYY-MM-DD`, multiple `YYYY-MM-DD,YYYY-MM-DD`, and range `YYYY-MM-DD..YYYY-MM-DD`.
+- `DatePicker` uses the library `Calendar` popup instead of delegating to the browser's native date input UI.
+- Overlay components such as `Dialog`, `AlertDialog`, `Sheet`, and `Drawer` now trap focus and restore it to the trigger on close.
+- `shadcn-icons` is generated from `shadcn-icons/icons.txt` via `scripts/generate_icons.py`.
 
 ## Documentation
 
@@ -139,6 +146,18 @@ trunk serve
 cargo test --workspace
 ```
 
+### Run Browser Interaction Tests
+
+```bash
+cargo test --target wasm32-unknown-unknown -p shadcn-rs --test browser_interactions
+```
+
+If `wasm-bindgen-test-runner` is missing locally, install it with:
+
+```bash
+cargo install wasm-bindgen-cli
+```
+
 ### Build Documentation
 
 ```bash
@@ -149,11 +168,22 @@ cargo doc --workspace --no-deps --open
 
 ```
 shadcn-rs/
+├── scripts/            # Checked-in maintenance and generation scripts
 ├── shadcn-rs/          # Main component library
-├── shadcn-icons/       # Lucide icons for Yew
+├── shadcn-icons/       # Generated Lucide-style icons for Yew
 ├── shadcn-showcase/    # Interactive demo application
 └── docs/               # User guides
 ```
+
+## Icon Generation
+
+The icon crate is generated from the manifest in `shadcn-icons/icons.txt`.
+
+```bash
+python3 scripts/generate_icons.py
+```
+
+This rewrites `shadcn-icons/src/generated.rs`, which is then re-exported by `shadcn-icons/src/lib.rs`.
 
 ## Browser Support
 

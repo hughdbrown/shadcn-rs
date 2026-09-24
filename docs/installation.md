@@ -25,6 +25,8 @@ For icons (optional):
 shadcn-icons = "0.1"
 ```
 
+The icon crate ships with checked-in generated components. If you need to expand the bundled icon set locally, update `shadcn-icons/icons.txt` and run `python3 scripts/generate_icons.py` from the workspace root.
+
 ## Including Styles
 
 ### Option 1: CDN (Recommended for Quick Start)
@@ -75,6 +77,15 @@ fn main() {
     yew::Renderer::<App>::new().render();
 }
 ```
+
+## Complex Component Encodings
+
+Some higher-level components use compact string encodings so their values stay easy to store in app state:
+
+- `CalendarMode::Single`: `YYYY-MM-DD`
+- `CalendarMode::Multiple`: comma-separated ISO dates, for example `2026-04-17,2026-04-18`
+- `CalendarMode::Range`: `start..end`, for example `2026-04-17..2026-04-22`
+- `DatePicker`: stores the selected date as a single ISO date string and formats only the trigger label
 
 ## Project Structure
 
@@ -151,6 +162,14 @@ Install Trunk:
 cargo install trunk
 ```
 
+### Browser Tests Cannot Start
+
+The repo config expects `wasm-bindgen-test-runner` for `wasm32-unknown-unknown` tests. Install it with:
+
+```bash
+cargo install wasm-bindgen-cli
+```
+
 ### CSS Not Loading
 
 Ensure the CSS file path is correct and the file is being served. Check browser developer tools for 404 errors.
@@ -159,4 +178,4 @@ Ensure the CSS file path is correct and the file is being served. Check browser 
 
 - [Theming Guide](./theming.md) - Customize colors and styles
 - [Accessibility Guide](./accessibility.md) - Build accessible applications
-- [Component Guide](./components.md) - Explore all components
+- [Composition Guide](./composition.md) - Compose complex UIs from the component building blocks

@@ -218,6 +218,18 @@ Some React-specific features don't apply in the WASM context:
 
 - **Server Components** - Yew runs entirely client-side
 - **Next.js integration** - Use Trunk for bundling instead
+
+## API Differences For Complex Widgets
+
+Some of the higher-level widgets are intentionally more explicit than their React counterparts:
+
+- `DataTable` is column-driven via `DataTableColumn<T>` instead of ad hoc render props for headers and rows.
+- `Calendar` selection values are string-encoded for easy storage in Yew state:
+  - single: `YYYY-MM-DD`
+  - multiple: comma-separated ISO dates
+  - range: `start..end`
+- `DatePicker` stores an ISO date value and formats only the visible trigger label.
+- Overlay components restore focus to their trigger when they close, so controlled usage should keep the trigger mounted when possible.
 - **Radix UI primitives** - shadcn-rs implements accessibility directly
 - **CSS-in-JS** - Static CSS is used instead
 - **Framer Motion animations** - Use CSS animations/transitions

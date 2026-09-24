@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed (breaking)
+
+- `DataTable` is now column-driven: `render_header`/`render_row` are replaced by a required `columns: Vec<DataTableColumn<T>>`.
+- `Calendar` `onselect` now emits mode-specific encodings: `YYYY-MM-DD` (single), comma-separated dates (multiple), `start..end` (range).
+- `DatePicker` renders the library `Calendar` in a popover instead of a native `<input type="date">`.
+
+### Added
+
+- `Chart` renders real SVG bar, line, area, pie, and donut charts with a legend.
+- `DataTable` filtering, numeric-aware sorting, pagination, and single/multiple row selection.
+- `Carousel` controlled/uncontrolled state, autoplay, arrow-key navigation, and indicators.
+- `Calendar` single/multiple/range selection, ISO week numbers, and multi-month display.
+- `use_focus_trap` hook; `Dialog`, `AlertDialog`, `Sheet`, and `Drawer` trap focus and restore it on close.
+- `SidebarProvider` tracks the viewport and reports `is_mobile` below 768px.
+- `shadcn-icons` generated from `shadcn-icons/icons.txt` (55 Lucide icons) via `scripts/generate_icons.py`.
+- Browser interaction tests (`cargo test --target wasm32-unknown-unknown -p shadcn-rs --test browser_interactions`).
+
+### Fixed
+
+- `Portal` uses Yew's native portal so event handlers inside overlays fire.
+
 ## [0.1.0] - 2026-01-07
 
 ### Added

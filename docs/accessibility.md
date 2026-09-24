@@ -35,6 +35,7 @@ All components support full keyboard navigation:
 - **Focus Trap**: Dialogs, sheets, and drawers trap focus within the overlay
 - **Focus Restoration**: Focus returns to the trigger element when overlays close
 - **Visible Focus**: All focusable elements have visible focus indicators
+- **Browser Interaction Coverage**: Focus trapping, focus restoration, carousel navigation, calendar range selection, and data-table interactions are exercised with `wasm-bindgen-test`
 
 ## Component Examples
 
@@ -222,6 +223,14 @@ Use browser developer tools:
 - Chrome DevTools Accessibility panel
 - Firefox Accessibility Inspector
 - [axe DevTools](https://www.deque.com/axe/devtools/) browser extension
+
+Run the browser interaction suite with:
+
+```bash
+cargo test --target wasm32-unknown-unknown -p shadcn-rs --test browser_interactions
+```
+
+If the runner is missing, install it with `cargo install wasm-bindgen-cli`.
 
 ### Manual Testing
 
