@@ -1,36 +1,23 @@
 //! Date Picker component
 //!
 //! A date input with a calendar popup for selecting dates.
-//!
-//! # Examples
-//!
-//! ```rust,no_run
-//! use yew::prelude::*;
-//! use shadcn_rs::{DatePicker, Button};
-//!
-//! #[function_component(App)]
-//! fn app() -> Html {
-//!     let date = use_state(|| None::<String>);
-//!
-//!     let onchange = {
-//!         let date = date.clone();
-//!         Callback::from(move |new_date: String| {
-//!             date.set(Some(new_date));
-//!         })
-//!     };
-//!
-//!     html! {
-//!         <DatePicker
-//!             value={(*date).clone()}
-//!             {onchange}
-//!             placeholder="Pick a date"
-//!         />
-//!     }
-//! }
-//! ```
 
-use crate::hooks::use_toggle;
+use crate::components::{Calendar, CalendarMode};
+use crate::hooks::{use_click_outside_conditional, use_escape_key_conditional, use_toggle};
 use yew::prelude::*;
+
+fn format_display_value(value: &str, format: &str) -> String {
+    let parts: Vec<&str> = value.split('-').collect();
+    if parts.len() != 3 {
+        return value.to_string();
+    }
+
+    match format {
+        "MM/DD/YYYY" => format!("{}/{}/{}", parts[1], parts[2], parts[0]),
+        "DD/MM/YYYY" => format!("{}/{}/{}", parts[2], parts[1], parts[0]),
+        _ => value.to_string(),
+    }
+}
 
 /// Date picker component properties
 #[derive(Properties, PartialEq, Clone)]
@@ -73,66 +60,48 @@ pub struct DatePickerProps {
 }
 
 /// Date picker component
-///
-/// Combines an input field with a calendar popup for date selection.
-///
-/// # Accessibility
-/// - Full keyboard navigation
-/// - Screen reader support
-/// - Proper ARIA attributes
 #[function_component(DatePicker)]
 pub fn date_picker(props: &DatePickerProps) -> Html {
-    let DatePickerProps {
-        value,
-        default_value,
-        onchange,
-        placeholder,
-        disabled,
-        min_date,
-        max_date,
-        format,
-        class,
-    } = props.clone();
-
-    // Internal state for uncontrolled mode
-    let internal_value = use_state(|| value.clone().or_else(|| default_value.clone()));
-
-    let current_value = value.or_else(|| (*internal_value).clone());
-
-    // Popover open state
+    let internal_value = use_state(|| props.value.clone().or_else(|| props.default_value.clone()));
+    let current_value = props.value.clone().or_else(|| (*internal_value).clone());
     let (is_open, toggle, set_open) = use_toggle(false);
+    let root_ref = use_node_ref();
 
-    // Format display value
-    let display_value = current_value.as_ref().map(|v| {
-        let v_str = v.to_string();
-        if format.as_str() == "MM/DD/YYYY" {
-            // Convert YYYY-MM-DD to MM/DD/YYYY
-            let parts: Vec<&str> = v_str.split('-').collect();
-            if parts.len() == 3 {
-                AttrValue::from(format!("{}/{}/{}", parts[1], parts[2], parts[0]))
-            } else {
-                v.clone()
-            }
-        } else {
-            v.clone()
-        }
-    });
+    use_click_outside_conditional(
+        root_ref.clone(),
+        {
+            let set_open = set_open.clone();
+            move || set_open.emit(false)
+        },
+        is_open,
+    );
+    use_escape_key_conditional(
+        {
+            let set_open = set_open.clone();
+            move || set_open.emit(false)
+        },
+        is_open,
+    );
+
+    let display_value = current_value
+        .as_ref()
+        .map(|value| AttrValue::from(format_display_value(value.as_str(), props.format.as_str())));
 
     let classes: Classes = vec![
         Classes::from("date-picker"),
-        if disabled {
+        if props.disabled {
             Classes::from("date-picker-disabled")
         } else {
             Classes::new()
         },
-        class,
+        props.class.clone(),
     ]
     .into_iter()
     .collect();
 
     let button_classes: Classes = vec![
         Classes::from("date-picker-trigger"),
-        if disabled {
+        if props.disabled {
             Classes::from("date-picker-trigger-disabled")
         } else {
             Classes::new()
@@ -143,25 +112,18 @@ pub fn date_picker(props: &DatePickerProps) -> Html {
 
     let toggle_calendar = {
         let toggle = toggle.clone();
-        Callback::from(move |_| {
-            toggle.emit(());
-        })
+        Callback::from(move |_: MouseEvent| toggle.emit(()))
     };
 
-    // Handle date selection from native date input
-    let handle_date_input = {
+    let handle_select = {
         let internal_value = internal_value.clone();
-        let onchange = onchange.clone();
+        let onchange = props.onchange.clone();
         let set_open = set_open.clone();
-        Callback::from(move |e: Event| {
-            use wasm_bindgen::JsCast;
-            if let Some(target) = e.target()
-                && let Some(input) = target.dyn_ref::<web_sys::HtmlInputElement>()
-            {
-                let val = input.value();
-                internal_value.set(Some(AttrValue::from(val.clone())));
-                if let Some(cb) = onchange.as_ref() {
-                    cb.emit(val);
+        Callback::from(move |date: String| {
+            if !date.is_empty() {
+                internal_value.set(Some(AttrValue::from(date.clone())));
+                if let Some(callback) = onchange.as_ref() {
+                    callback.emit(date);
                 }
                 set_open.emit(false);
             }
@@ -169,33 +131,38 @@ pub fn date_picker(props: &DatePickerProps) -> Html {
     };
 
     html! {
-        <div class={classes}>
+        <div class={classes} ref={root_ref}>
             <button
                 type="button"
                 class={button_classes}
                 onclick={toggle_calendar}
-                disabled={disabled}
+                disabled={props.disabled}
                 aria-haspopup="dialog"
                 aria-expanded={is_open.to_string()}
             >
-                {
-                    if let Some(dv) = display_value {
-                        html! { <span class="date-picker-value">{ dv }</span> }
-                    } else {
-                        html! { <span class="date-picker-placeholder">{ placeholder }</span> }
-                    }
+                if let Some(value) = display_value {
+                    <span class="date-picker-value">{ value }</span>
+                } else {
+                    <span class="date-picker-placeholder">{ props.placeholder.clone() }</span>
                 }
-                <span class="date-picker-icon">{ "📅" }</span>
+                <span class="date-picker-icon" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M8 2v4" />
+                        <path d="M16 2v4" />
+                        <rect width="18" height="18" x="3" y="4" rx="2" />
+                        <path d="M3 10h18" />
+                    </svg>
+                </span>
             </button>
             if is_open {
-                <div class="date-picker-popover">
-                    <input
-                        type="date"
-                        class="date-picker-native-input"
-                        value={current_value.clone().unwrap_or_default()}
-                        min={min_date.clone()}
-                        max={max_date.clone()}
-                        onchange={handle_date_input}
+                <div class="date-picker-popover" role="dialog" aria-modal="false">
+                    <Calendar
+                        mode={CalendarMode::Single}
+                        selected={current_value.clone()}
+                        onselect={handle_select}
+                        min_date={props.min_date.clone()}
+                        max_date={props.max_date.clone()}
                     />
                 </div>
             }
@@ -206,6 +173,18 @@ pub fn date_picker(props: &DatePickerProps) -> Html {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_format_display_value() {
+        assert_eq!(
+            format_display_value("2024-01-15", "MM/DD/YYYY"),
+            "01/15/2024"
+        );
+        assert_eq!(
+            format_display_value("2024-01-15", "DD/MM/YYYY"),
+            "15/01/2024"
+        );
+    }
 
     #[test]
     fn test_date_picker_props_default() {
@@ -223,57 +202,6 @@ mod tests {
 
         assert!(!props.disabled);
         assert_eq!(props.placeholder, AttrValue::from("Select date"));
-    }
-
-    #[test]
-    fn test_date_picker_with_value() {
-        let props = DatePickerProps {
-            value: Some(AttrValue::from("2024-01-15")),
-            default_value: None,
-            onchange: None,
-            placeholder: AttrValue::from("Select date"),
-            disabled: false,
-            min_date: None,
-            max_date: None,
-            format: AttrValue::from("MM/DD/YYYY"),
-            class: Classes::new(),
-        };
-
-        assert_eq!(props.value, Some(AttrValue::from("2024-01-15")));
-    }
-
-    #[test]
-    fn test_date_picker_disabled() {
-        let props = DatePickerProps {
-            value: None,
-            default_value: None,
-            onchange: None,
-            placeholder: AttrValue::from("Select date"),
-            disabled: true,
-            min_date: None,
-            max_date: None,
-            format: AttrValue::from("MM/DD/YYYY"),
-            class: Classes::new(),
-        };
-
-        assert!(props.disabled);
-    }
-
-    #[test]
-    fn test_date_picker_custom_format() {
-        let props = DatePickerProps {
-            value: None,
-            default_value: None,
-            onchange: None,
-            placeholder: AttrValue::from("Select date"),
-            disabled: false,
-            min_date: None,
-            max_date: None,
-            format: AttrValue::from("YYYY-MM-DD"),
-            class: Classes::new(),
-        };
-
-        assert_eq!(props.format, AttrValue::from("YYYY-MM-DD"));
     }
 
     #[test]
