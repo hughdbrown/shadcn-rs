@@ -35,7 +35,16 @@
 //! }
 //! ```
 
+use gloo::events::EventListener;
+use web_sys::window;
 use yew::prelude::*;
+
+fn is_mobile_viewport() -> bool {
+    window()
+        .and_then(|window| window.inner_width().ok())
+        .and_then(|value| value.as_f64())
+        .is_some_and(|width| width < 768.0)
+}
 
 /// Sidebar state shared via context
 #[derive(Clone, Debug, PartialEq)]
@@ -92,6 +101,21 @@ pub fn sidebar_provider(props: &SidebarProviderProps) -> Html {
     } = props.clone();
 
     let internal_open = use_state(|| default_open);
+    // `use_state_eq` so resize events only re-render when crossing the breakpoint.
+    let is_mobile = use_state_eq(is_mobile_viewport);
+
+    {
+        let is_mobile = is_mobile.clone();
+        use_effect_with((), move |_| {
+            let listener = window().map(|window| {
+                EventListener::new(&window, "resize", move |_| {
+                    is_mobile.set(is_mobile_viewport());
+                })
+            });
+
+            move || drop(listener)
+        });
+    }
 
     let is_open = controlled_open.unwrap_or(*internal_open);
 
@@ -122,7 +146,7 @@ pub fn sidebar_provider(props: &SidebarProviderProps) -> Html {
 
     let context = SidebarContext {
         open: is_open,
-        is_mobile: false,
+        is_mobile: *is_mobile,
         toggle,
         set_open,
     };
@@ -349,6 +373,10 @@ pub fn sidebar(props: &SidebarProps) -> Html {
         children,
     } = props.clone();
 
+    let context = use_context::<SidebarContext>();
+    // An explicit `is_mobile` prop still forces mobile layout inside a provider.
+    let effective_mobile = is_mobile || context.as_ref().is_some_and(|sidebar| sidebar.is_mobile);
+
     let classes: Classes = vec![
         Classes::from("sidebar"),
         if collapsed {
@@ -356,7 +384,7 @@ pub fn sidebar(props: &SidebarProps) -> Html {
         } else {
             Classes::new()
         },
-        if is_mobile {
+        if effective_mobile {
             Classes::from("sidebar-mobile")
         } else {
             Classes::new()
@@ -368,7 +396,7 @@ pub fn sidebar(props: &SidebarProps) -> Html {
 
     html! {
         <>
-            if is_mobile && !collapsed {
+            if effective_mobile && !collapsed {
                 <div class="sidebar-backdrop" onclick={on_backdrop_click} aria-hidden="true" />
             }
             <aside class={classes} aria-label="Sidebar">

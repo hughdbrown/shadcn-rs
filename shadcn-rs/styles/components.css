@@ -1943,6 +1943,29 @@
 }
 
 /* ============================================
+   Sidebar
+   ============================================ */
+.sidebar-provider {
+  position: relative;
+}
+
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 39;
+  background-color: rgb(0 0 0 / 0.45);
+}
+
+.sidebar-mobile {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 40;
+  background-color: hsl(var(--color-background));
+}
+
+/* ============================================
    Field
    ============================================ */
 .field {
