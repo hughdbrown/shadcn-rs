@@ -4,13 +4,14 @@ use wasm_bindgen_test::{wasm_bindgen_test as test, wasm_bindgen_test_configure};
 use yew::prelude::*;
 
 use shadcn_rs::{
-    Checkbox, Radio, RadioGroup, Switch, Toggle, ToggleGroup, ToggleGroupItem, ToggleGroupType,
+    Checkbox, InputOTP, Radio, RadioGroup, Switch, Toggle, ToggleGroup, ToggleGroupItem,
+    ToggleGroupType,
 };
 
 #[allow(dead_code)]
 mod utils;
 
-use utils::{attr, click, is_checked, mount_root, settle, text};
+use utils::{attr, click, input, input_value, is_checked, mount_root, settle, text};
 
 wasm_bindgen_test_configure!(run_in_browser);
 
@@ -408,4 +409,67 @@ async fn toggle_group_emits_selection() {
     click("#tgs [data-value='right']");
     settle().await;
     assert_eq!(text("#tgs-value"), "");
+}
+
+// ---------------------------------------------------------------------------
+// Input OTP
+// ---------------------------------------------------------------------------
+
+#[function_component(OtpHarness)]
+fn otp_harness() -> Html {
+    let code = use_state(String::new);
+    let on_change = {
+        let code = code.clone();
+        Callback::from(move |value: String| code.set(value))
+    };
+    let clear = {
+        let code = code.clone();
+        Callback::from(move |_: MouseEvent| code.set(String::new()))
+    };
+    let preset = {
+        let code = code.clone();
+        Callback::from(move |_: MouseEvent| code.set(String::from("987")))
+    };
+
+    html! {
+        <div>
+            <div id="otp-controlled">
+                <InputOTP length={3} value={(*code).clone()} {on_change} />
+            </div>
+            <div id="otp-value">{ (*code).clone() }</div>
+            <button id="otp-clear" type="button" onclick={clear}>{ "clear" }</button>
+            <button id="otp-preset" type="button" onclick={preset}>{ "preset" }</button>
+            <div id="otp-uncontrolled">
+                <InputOTP length={3} default_value="42" />
+            </div>
+        </div>
+    }
+}
+
+#[test]
+async fn input_otp_follows_controlled_value() {
+    let root = mount_root("otp-test");
+    let _app = yew::Renderer::<OtpHarness>::with_root(root).render();
+    settle().await;
+
+    assert_eq!(input_value("#otp-uncontrolled input:nth-child(1)"), "4");
+    assert_eq!(input_value("#otp-uncontrolled input:nth-child(2)"), "2");
+
+    input("#otp-controlled input:nth-child(1)", "1");
+    settle().await;
+    input("#otp-controlled input:nth-child(2)", "2");
+    settle().await;
+    assert_eq!(text("#otp-value"), "12");
+    assert_eq!(input_value("#otp-controlled input:nth-child(2)"), "2");
+
+    // The parent clears the code after mount; the fields must follow.
+    click("#otp-clear");
+    settle().await;
+    assert_eq!(input_value("#otp-controlled input:nth-child(1)"), "");
+    assert_eq!(input_value("#otp-controlled input:nth-child(2)"), "");
+
+    click("#otp-preset");
+    settle().await;
+    assert_eq!(input_value("#otp-controlled input:nth-child(1)"), "9");
+    assert_eq!(input_value("#otp-controlled input:nth-child(3)"), "7");
 }

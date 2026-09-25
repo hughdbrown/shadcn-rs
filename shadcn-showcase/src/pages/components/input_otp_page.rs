@@ -1,13 +1,48 @@
 //! InputOTP component showcase page
 
-use shadcn_rs::InputOTP;
+use shadcn_rs::{Button, InputOTP, Size, Variant};
 use yew::prelude::*;
 
 use crate::components::{ComponentPage, Example, PropDoc};
 
 #[function_component(InputOtpPage)]
 pub fn input_otp_page() -> Html {
+    let code = use_state(String::new);
+    let on_change = {
+        let code = code.clone();
+        Callback::from(move |value: String| code.set(value))
+    };
+    let clear = {
+        let code = code.clone();
+        Callback::from(move |_: MouseEvent| code.set(String::new()))
+    };
+
     let examples = vec![
+        Example {
+            title: "Controlled",
+            description: "The parent owns the code and can clear it at any time.",
+            demo: html! {
+                <div class="space-y-2">
+                    <InputOTP length={6} value={(*code).clone()} on_change={on_change.clone()} />
+                    <div class="flex items-center space-x-2">
+                        <Button variant={Variant::Outline} size={Size::Sm} onclick={clear.clone()}>
+                            { "Clear" }
+                        </Button>
+                        <span class="text-sm text-muted-foreground">
+                            { format!("Value: \"{}\"", *code) }
+                        </span>
+                    </div>
+                </div>
+            },
+            code: r##"let code = use_state(String::new);
+let on_change = {
+    let code = code.clone();
+    Callback::from(move |value: String| code.set(value))
+};
+
+<InputOTP length={6} value={(*code).clone()} {on_change} />
+<Button onclick={move |_| code.set(String::new())}>{ "Clear" }</Button>"##,
+        },
         Example {
             title: "Default",
             description: "A one-time password input with 6 digits.",
@@ -53,7 +88,7 @@ pub fn input_otp_page() -> Html {
             name: "value",
             prop_type: "Option<String>",
             default: "-",
-            description: "Current value",
+            description: "Controlled value (followed on every change)",
         },
         PropDoc {
             name: "masked",
