@@ -100,3 +100,37 @@ pub fn active_id() -> String {
         .expect("no active element")
         .id()
 }
+
+#[allow(dead_code)]
+pub fn attr(selector: &str, name: &str) -> String {
+    query(selector).get_attribute(name).unwrap_or_default()
+}
+
+#[allow(dead_code)]
+pub fn exists(selector: &str) -> bool {
+    gloo::utils::document()
+        .query_selector(selector)
+        .expect("query selector failed")
+        .is_some()
+}
+
+#[allow(dead_code)]
+pub fn count(selector: &str) -> u32 {
+    gloo::utils::document()
+        .query_selector_all(selector)
+        .expect("query selector failed")
+        .length()
+}
+
+/// Dispatches a `mousedown` on the document body (an "outside" click).
+#[allow(dead_code)]
+pub fn mousedown_body() {
+    let event_init = web_sys::MouseEventInit::new();
+    event_init.set_bubbles(true);
+    event_init.set_cancelable(true);
+    let event = web_sys::MouseEvent::new_with_mouse_event_init_dict("mousedown", &event_init)
+        .expect("failed to create mouse event");
+    gloo::utils::body()
+        .dispatch_event(&event)
+        .expect("failed to dispatch mousedown");
+}

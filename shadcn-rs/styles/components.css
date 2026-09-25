@@ -1161,6 +1161,33 @@
   display: none;
 }
 
+.tabs-trigger:focus-visible,
+.tabs-content:focus-visible {
+  outline: 2px solid hsl(var(--color-ring));
+  outline-offset: 2px;
+}
+
+.tabs-trigger:disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.tabs-vertical {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tabs-list[data-orientation="vertical"] {
+  flex-direction: column;
+  height: auto;
+  align-items: stretch;
+}
+
+.tabs-vertical .tabs-content {
+  margin-top: 0;
+  flex: 1;
+}
+
 /* ============================================
    Dialog
    ============================================ */

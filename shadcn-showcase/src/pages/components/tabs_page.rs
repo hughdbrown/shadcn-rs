@@ -2,7 +2,7 @@
 
 use shadcn_rs::{
     Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Input, Label,
-    Tabs, TabsContent, TabsList, TabsTrigger,
+    Tabs, TabsContent, TabsList, TabsOrientation, TabsTrigger,
 };
 use yew::prelude::*;
 
@@ -10,60 +10,61 @@ use crate::components::{ComponentPage, Example, PropDoc};
 
 #[function_component(TabsPage)]
 pub fn tabs_page() -> Html {
-    let examples = vec![Example {
-        title: "Default",
-        description: "A basic tabs component.",
-        demo: html! {
-            <Tabs default_value="account" class="w-[400px]">
-                <TabsList>
-                    <TabsTrigger value="account">{ "Account" }</TabsTrigger>
-                    <TabsTrigger value="password">{ "Password" }</TabsTrigger>
-                </TabsList>
-                <TabsContent value="account">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>{ "Account" }</CardTitle>
-                            <CardDescription>
-                                { "Make changes to your account here." }
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent class="space-y-2">
-                            <div class="space-y-1">
-                                <Label html_for="name">{ "Name" }</Label>
-                                <Input id="name" value="Pedro Duarte" />
-                            </div>
-                        </CardContent>
-                        <CardFooter>
-                            <Button>{ "Save changes" }</Button>
-                        </CardFooter>
-                    </Card>
-                </TabsContent>
-                <TabsContent value="password">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>{ "Password" }</CardTitle>
-                            <CardDescription>
-                                { "Change your password here." }
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent class="space-y-2">
-                            <div class="space-y-1">
-                                <Label html_for="current">{ "Current password" }</Label>
-                                <Input id="current" r#type="password" />
-                            </div>
-                            <div class="space-y-1">
-                                <Label html_for="new">{ "New password" }</Label>
-                                <Input id="new" r#type="password" />
-                            </div>
-                        </CardContent>
-                        <CardFooter>
-                            <Button>{ "Save password" }</Button>
-                        </CardFooter>
-                    </Card>
-                </TabsContent>
-            </Tabs>
-        },
-        code: r#"<Tabs default_value="account">
+    let examples = vec![
+        Example {
+            title: "Default",
+            description: "A basic tabs component.",
+            demo: html! {
+                <Tabs default_value="account" class="w-[400px]">
+                    <TabsList>
+                        <TabsTrigger value="account">{ "Account" }</TabsTrigger>
+                        <TabsTrigger value="password">{ "Password" }</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="account">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>{ "Account" }</CardTitle>
+                                <CardDescription>
+                                    { "Make changes to your account here." }
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent class="space-y-2">
+                                <div class="space-y-1">
+                                    <Label html_for="name">{ "Name" }</Label>
+                                    <Input id="name" value="Pedro Duarte" />
+                                </div>
+                            </CardContent>
+                            <CardFooter>
+                                <Button>{ "Save changes" }</Button>
+                            </CardFooter>
+                        </Card>
+                    </TabsContent>
+                    <TabsContent value="password">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>{ "Password" }</CardTitle>
+                                <CardDescription>
+                                    { "Change your password here." }
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent class="space-y-2">
+                                <div class="space-y-1">
+                                    <Label html_for="current">{ "Current password" }</Label>
+                                    <Input id="current" r#type="password" />
+                                </div>
+                                <div class="space-y-1">
+                                    <Label html_for="new">{ "New password" }</Label>
+                                    <Input id="new" r#type="password" />
+                                </div>
+                            </CardContent>
+                            <CardFooter>
+                                <Button>{ "Save password" }</Button>
+                            </CardFooter>
+                        </Card>
+                    </TabsContent>
+                </Tabs>
+            },
+            code: r#"<Tabs default_value="account">
     <TabsList>
         <TabsTrigger value="account">{ "Account" }</TabsTrigger>
         <TabsTrigger value="password">{ "Password" }</TabsTrigger>
@@ -75,19 +76,52 @@ pub fn tabs_page() -> Html {
         { /* Password content */ }
     </TabsContent>
 </Tabs>"#,
-    }];
+        },
+        Example {
+            title: "Vertical",
+            description: "Vertical tabs. Use Arrow Up/Down, Home and End to move between tabs.",
+            demo: html! {
+                <Tabs orientation={TabsOrientation::Vertical} class="w-[400px]">
+                    <TabsList>
+                        <TabsTrigger value="general">{ "General" }</TabsTrigger>
+                        <TabsTrigger value="security">{ "Security" }</TabsTrigger>
+                        <TabsTrigger value="billing" disabled=true>{ "Billing" }</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="general">
+                        <p class="text-sm">{ "General settings." }</p>
+                    </TabsContent>
+                    <TabsContent value="security">
+                        <p class="text-sm">{ "Security settings." }</p>
+                    </TabsContent>
+                    <TabsContent value="billing">
+                        <p class="text-sm">{ "Billing settings." }</p>
+                    </TabsContent>
+                </Tabs>
+            },
+            code: r#"<Tabs orientation={TabsOrientation::Vertical}>
+    <TabsList>
+        <TabsTrigger value="general">{ "General" }</TabsTrigger>
+        <TabsTrigger value="security">{ "Security" }</TabsTrigger>
+        <TabsTrigger value="billing" disabled=true>{ "Billing" }</TabsTrigger>
+    </TabsList>
+    <TabsContent value="general">{ "General settings." }</TabsContent>
+    <TabsContent value="security">{ "Security settings." }</TabsContent>
+    <TabsContent value="billing">{ "Billing settings." }</TabsContent>
+</Tabs>"#,
+        },
+    ];
 
     let props = vec![
         PropDoc {
             name: "value",
-            prop_type: "Option<String>",
+            prop_type: "Option<AttrValue>",
             default: "-",
             description: "Controlled active tab",
         },
         PropDoc {
             name: "default_value",
-            prop_type: "Option<String>",
-            default: "-",
+            prop_type: "Option<AttrValue>",
+            default: "first enabled tab",
             description: "Default active tab",
         },
         PropDoc {
@@ -98,8 +132,8 @@ pub fn tabs_page() -> Html {
         },
         PropDoc {
             name: "orientation",
-            prop_type: "&str",
-            default: "\"horizontal\"",
+            prop_type: "TabsOrientation",
+            default: "Horizontal",
             description: "Tab orientation",
         },
     ];
