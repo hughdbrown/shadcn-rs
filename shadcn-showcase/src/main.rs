@@ -6,6 +6,7 @@ mod components;
 mod pages;
 mod routes;
 
+use shadcn_rs::Toaster;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
@@ -33,6 +34,7 @@ fn app() -> Html {
 
     html! {
         <BrowserRouter>
+            <Toaster>
             <div class="app-layout">
                 <Sidebar open={*menu_open} on_close={close_menu} />
                 if *menu_open {
@@ -62,6 +64,7 @@ fn app() -> Html {
                     </main>
                 </div>
             </div>
+            </Toaster>
         </BrowserRouter>
     }
 }

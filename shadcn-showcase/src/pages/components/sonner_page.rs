@@ -1,92 +1,156 @@
 //! Sonner component showcase page
+//!
+//! Sonner is deprecated in shadcn-rs: upstream folded it into Toast. The
+//! demos here use the same `use_toast()` API as the Toast page.
 
-use shadcn_rs::{Button, Variant};
+use gloo::timers::future::TimeoutFuture;
+use shadcn_rs::{Button, PromiseMessages, ToastOptions, Variant, use_toast};
 use yew::prelude::*;
 
 use crate::components::{ComponentPage, Example, PropDoc};
 
 #[function_component(SonnerPage)]
 pub fn sonner_page() -> Html {
+    let toast = use_toast();
+
+    let show_message = {
+        let toast = toast.clone();
+        Callback::from(move |_: MouseEvent| {
+            toast.message("Event has been created");
+        })
+    };
+    let show_type = |kind: &'static str| {
+        let toast = toast.clone();
+        Callback::from(move |_: MouseEvent| {
+            match kind {
+                "success" => toast.success("Success message"),
+                "info" => toast.info("Info message"),
+                "warning" => toast.warning("Warning message"),
+                "error" => toast.error("Error message"),
+                _ => toast.message("Default message"),
+            };
+        })
+    };
+    let show_promise = {
+        let toast = toast.clone();
+        Callback::from(move |_: MouseEvent| {
+            toast.promise(
+                async {
+                    TimeoutFuture::new(2_000).await;
+                    Ok::<(), String>(())
+                },
+                PromiseMessages::new("Loading...", "Data loaded!", "Failed to load"),
+            );
+        })
+    };
+    let show_custom = {
+        let toast = toast.clone();
+        Callback::from(move |_: MouseEvent| {
+            toast.add(ToastOptions::custom(html! {
+                <div class="flex items-center gap-2">
+                    <span class="avatar size-sm shape-circle">
+                        <span class="avatar-fallback">{ "JD" }</span>
+                    </span>
+                    <div>
+                        <p class="toast-title">{ "John Doe" }</p>
+                        <p class="toast-description">{ "Sent you a message" }</p>
+                    </div>
+                </div>
+            }));
+        })
+    };
+
     let examples = vec![
         Example {
             title: "Default",
-            description: "An opinionated toast component for Rust.",
+            description: "Sonner is a deprecated alias of Toast: mount <Toaster /> and call use_toast().",
             demo: html! {
-                <Button variant={Variant::Outline}>
-                    { "Show Sonner Toast" }
+                <Button variant={Variant::Outline} onclick={show_message}>
+                    { "Show Toast" }
                 </Button>
             },
-            code: r#"use shadcn_rs::sonner;
+            code: r#"use shadcn_rs::use_toast;
 
-sonner::toast("Event has been created");"#,
+let toast = use_toast();
+toast.message("Event has been created");"#,
         },
         Example {
             title: "Types",
             description: "Different toast types.",
             demo: html! {
                 <div class="flex flex-wrap gap-2">
-                    <Button variant={Variant::Outline}>{ "Default" }</Button>
-                    <Button variant={Variant::Outline}>{ "Success" }</Button>
-                    <Button variant={Variant::Outline}>{ "Info" }</Button>
-                    <Button variant={Variant::Outline}>{ "Warning" }</Button>
-                    <Button variant={Variant::Outline}>{ "Error" }</Button>
+                    <Button variant={Variant::Outline} onclick={show_type("default")}>{ "Default" }</Button>
+                    <Button variant={Variant::Outline} onclick={show_type("success")}>{ "Success" }</Button>
+                    <Button variant={Variant::Outline} onclick={show_type("info")}>{ "Info" }</Button>
+                    <Button variant={Variant::Outline} onclick={show_type("warning")}>{ "Warning" }</Button>
+                    <Button variant={Variant::Outline} onclick={show_type("error")}>{ "Error" }</Button>
                 </div>
             },
-            code: r#"sonner::toast("Default message");
-sonner::success("Success message");
-sonner::info("Info message");
-sonner::warning("Warning message");
-sonner::error("Error message");"#,
+            code: r#"toast.message("Default message");
+toast.success("Success message");
+toast.info("Info message");
+toast.warning("Warning message");
+toast.error("Error message");"#,
         },
         Example {
             title: "Promise",
-            description: "Toast that tracks promise state.",
+            description: "Toast that tracks a future: loading, then success or error.",
             demo: html! {
-                <Button variant={Variant::Outline}>
+                <Button variant={Variant::Outline} onclick={show_promise}>
                     { "Promise Toast" }
                 </Button>
             },
-            code: r#"sonner::promise(
-    async_operation(),
-    PromiseOptions {
-        loading: "Loading...".to_string(),
-        success: "Data loaded!".to_string(),
-        error: "Failed to load".to_string(),
+            code: r#"use gloo::timers::future::TimeoutFuture;
+use shadcn_rs::PromiseMessages;
+
+toast.promise(
+    async {
+        TimeoutFuture::new(2_000).await;
+        Ok::<(), String>(())
     },
+    PromiseMessages::new("Loading...", "Data loaded!", "Failed to load"),
 );"#,
         },
         Example {
             title: "Rich Content",
             description: "Toast with custom content.",
             demo: html! {
-                <Button variant={Variant::Outline}>
+                <Button variant={Variant::Outline} onclick={show_custom}>
                     { "Custom Toast" }
                 </Button>
             },
-            code: r#"sonner::custom(html! {
+            code: r#"toast.add(ToastOptions::custom(html! {
     <div class="flex items-center gap-2">
-        <Avatar>...</Avatar>
+        <span class="avatar size-sm shape-circle">
+            <span class="avatar-fallback">{ "JD" }</span>
+        </span>
         <div>
-            <p>{ "John Doe" }</p>
-            <p>{ "Sent you a message" }</p>
+            <p class="toast-title">{ "John Doe" }</p>
+            <p class="toast-description">{ "Sent you a message" }</p>
         </div>
     </div>
-});"#,
+}));"#,
         },
     ];
 
     let props = vec![
         PropDoc {
-            name: "position",
-            prop_type: "&str",
-            default: "\"bottom-right\"",
-            description: "Toast position",
+            name: "Sonner",
+            prop_type: "deprecated",
+            default: "-",
+            description: "Use Toaster (same position enum: SonnerPosition = ToastPosition)",
         },
         PropDoc {
-            name: "expand",
-            prop_type: "bool",
-            default: "false",
-            description: "Expand toasts by default",
+            name: "SonnerToast",
+            prop_type: "deprecated",
+            default: "-",
+            description: "Use use_toast().add(ToastOptions) (SonnerType = ToastType)",
+        },
+        PropDoc {
+            name: "position",
+            prop_type: "ToastPosition",
+            default: "BottomRight",
+            description: "Toaster position",
         },
         PropDoc {
             name: "rich_colors",
@@ -97,7 +161,7 @@ sonner::error("Error message");"#,
         PropDoc {
             name: "close_button",
             prop_type: "bool",
-            default: "false",
+            default: "true",
             description: "Show close button",
         },
         PropDoc {
@@ -108,5 +172,5 @@ sonner::error("Error message");"#,
         },
     ];
 
-    html! { <ComponentPage name="Sonner" description="An opinionated toast component." {examples} {props} /> }
+    html! { <ComponentPage name="Sonner" description="Sonner (deprecated alias of Toast): an opinionated toast component." {examples} {props} /> }
 }
