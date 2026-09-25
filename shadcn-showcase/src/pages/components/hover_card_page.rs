@@ -54,7 +54,19 @@ pub fn hover_card_page() -> Html {
             name: "close_delay",
             prop_type: "u32",
             default: "300",
-            description: "Delay before hiding (ms)",
+            description: "Delay before hiding (ms); lets the pointer move into the card",
+        },
+        PropDoc {
+            name: "open",
+            prop_type: "Option<bool>",
+            default: "None",
+            description: "Controlled open state (Some = controlled)",
+        },
+        PropDoc {
+            name: "on_open_change",
+            prop_type: "Callback<bool>",
+            default: "-",
+            description: "Open state change handler",
         },
     ];
 

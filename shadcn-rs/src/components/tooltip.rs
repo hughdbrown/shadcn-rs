@@ -23,7 +23,10 @@
 //! }
 //! ```
 
+use crate::hooks::{use_controllable_bool, use_escape_key_conditional};
 use crate::types::Position;
+use crate::utils::generate_id;
+use gloo::timers::callback::Timeout;
 use yew::prelude::*;
 
 /// Context for sharing tooltip configuration through the component tree
@@ -43,6 +46,8 @@ pub struct TooltipProviderProps {
     pub delay_duration: u32,
 
     /// Duration to skip delay when quickly moving between tooltips (in milliseconds)
+    ///
+    /// Not applied yet: each tooltip currently waits its full delay.
     #[prop_or(300)]
     pub skip_delay_duration: u32,
 
@@ -98,14 +103,55 @@ pub fn tooltip_provider(props: &TooltipProviderProps) -> Html {
     }
 }
 
+/// Delay used when neither the tooltip nor a [`TooltipProvider`] sets one (ms).
+pub const DEFAULT_TOOLTIP_DELAY: u32 = 200;
+
+/// Resolves the open delay: the tooltip's own value wins, then the nearest
+/// [`TooltipProvider`], then [`DEFAULT_TOOLTIP_DELAY`].
+pub fn resolve_tooltip_delay(own: Option<u32>, provider: Option<&TooltipContext>) -> u32 {
+    own.or_else(|| provider.map(|ctx| ctx.delay_duration))
+        .unwrap_or(DEFAULT_TOOLTIP_DELAY)
+}
+
+/// State shared by a [`Tooltip`] root with its trigger and content.
+#[derive(Clone, PartialEq)]
+pub struct TooltipStateContext {
+    /// Whether the tooltip is currently shown
+    pub is_open: bool,
+    /// Id of the content element, referenced by the trigger's `aria-describedby`
+    pub content_id: AttrValue,
+    /// Pointer entered the trigger: open after the delay
+    pub on_pointer_enter: Callback<()>,
+    /// Keyboard focus reached the trigger: open immediately
+    pub on_focus: Callback<()>,
+    /// Pointer left, focus left or Escape: close (and cancel a pending open)
+    pub on_close: Callback<()>,
+}
+
 /// Tooltip component properties
 #[derive(Properties, PartialEq, Clone)]
 pub struct TooltipProps {
-    /// Delay before showing tooltip (in milliseconds)
-    #[prop_or(200)]
-    pub delay_duration: u32,
+    /// Delay before showing the tooltip on hover (in milliseconds).
+    ///
+    /// `None` (the default) uses the nearest [`TooltipProvider`]'s
+    /// `delay_duration`, or 200 ms without a provider. Keyboard focus opens
+    /// immediately.
+    #[prop_or_default]
+    pub delay_duration: Option<u32>,
 
-    /// Whether tooltip is disabled
+    /// Whether the tooltip is shown (controlled). `None` leaves it uncontrolled.
+    #[prop_or_default]
+    pub open: Option<bool>,
+
+    /// Initial open state for an uncontrolled tooltip
+    #[prop_or(false)]
+    pub default_open: bool,
+
+    /// Called with the requested open state on hover, focus, leave, blur and Escape
+    #[prop_or_default]
+    pub on_open_change: Option<Callback<bool>>,
+
+    /// Whether tooltip is disabled (never opens)
     #[prop_or(false)]
     pub disabled: bool,
 
@@ -118,24 +164,88 @@ pub struct TooltipProps {
 /// A container for tooltip trigger and content.
 ///
 /// # Accessibility
-/// - Uses aria-describedby to link trigger and content
-/// - Shows on hover and focus
-/// - Hides on blur and mouse leave
-/// - Keyboard accessible
+/// - The trigger references the open content with `aria-describedby`
+/// - Shows on pointer hover (after the delay) and immediately on keyboard focus
+/// - Hides on pointer leave, blur and Escape
 #[function_component(Tooltip)]
 pub fn tooltip(props: &TooltipProps) -> Html {
     let TooltipProps {
-        delay_duration: _,
-        disabled: _,
+        delay_duration,
+        open,
+        default_open,
+        on_open_change,
+        disabled,
         children,
     } = props.clone();
 
-    let _is_open = use_state(|| false);
+    let provider = use_context::<TooltipContext>();
+    let delay = resolve_tooltip_delay(delay_duration, provider.as_ref());
+    let content_id = use_state(|| AttrValue::from(generate_id("tooltip")));
+    let pending_open = use_mut_ref(|| None::<Timeout>);
+
+    let (is_open, set_open) = use_controllable_bool(open, default_open, on_open_change);
+    let is_open = is_open && !disabled;
+
+    let on_pointer_enter = {
+        let set_open = set_open.clone();
+        let pending_open = pending_open.clone();
+        Callback::from(move |_: ()| {
+            if disabled || is_open {
+                return;
+            }
+            if delay == 0 {
+                set_open.emit(true);
+                return;
+            }
+            let set_open = set_open.clone();
+            // Replacing the handle drops (cancels) any earlier pending open.
+            *pending_open.borrow_mut() = Some(Timeout::new(delay, move || set_open.emit(true)));
+        })
+    };
+
+    let on_focus = {
+        let set_open = set_open.clone();
+        let pending_open = pending_open.clone();
+        Callback::from(move |_: ()| {
+            pending_open.borrow_mut().take();
+            if !disabled && !is_open {
+                set_open.emit(true);
+            }
+        })
+    };
+
+    let on_close = {
+        let pending_open = pending_open.clone();
+        Callback::from(move |_: ()| {
+            pending_open.borrow_mut().take();
+            if is_open {
+                set_open.emit(false);
+            }
+        })
+    };
+
+    {
+        let on_close = on_close.clone();
+        use_escape_key_conditional(move || on_close.emit(()), is_open);
+    }
+
+    let context = TooltipStateContext {
+        is_open,
+        content_id: (*content_id).clone(),
+        on_pointer_enter,
+        on_focus,
+        on_close,
+    };
 
     html! {
-        <div class="tooltip-root">
-            { children }
-        </div>
+        <ContextProvider<TooltipStateContext> {context}>
+            <div
+                class="tooltip-root tooltip"
+                data-state={if is_open { "open" } else { "closed" }}
+            >
+                { children }
+            </div>
+        </ContextProvider<TooltipStateContext>>
     }
 }
 
@@ -150,6 +260,19 @@ pub struct TooltipTriggerProps {
     pub children: Children,
 }
 
+/// Builds a DOM event handler that forwards to one of the root's callbacks.
+fn forward<E: 'static>(
+    context: &Option<TooltipStateContext>,
+    pick: fn(&TooltipStateContext) -> &Callback<()>,
+) -> Callback<E> {
+    let context = context.clone();
+    Callback::from(move |_: E| {
+        if let Some(ctx) = context.as_ref() {
+            pick(ctx).emit(());
+        }
+    })
+}
+
 /// Tooltip trigger component
 ///
 /// The element that triggers the tooltip on hover/focus.
@@ -157,12 +280,31 @@ pub struct TooltipTriggerProps {
 pub fn tooltip_trigger(props: &TooltipTriggerProps) -> Html {
     let TooltipTriggerProps { class, children } = props.clone();
 
+    let context = use_context::<TooltipStateContext>();
+
+    let onmouseenter: Callback<MouseEvent> = forward(&context, |ctx| &ctx.on_pointer_enter);
+    let onmouseleave: Callback<MouseEvent> = forward(&context, |ctx| &ctx.on_close);
+    let onfocusin: Callback<FocusEvent> = forward(&context, |ctx| &ctx.on_focus);
+    let onfocusout: Callback<FocusEvent> = forward(&context, |ctx| &ctx.on_close);
+
+    let describedby = context
+        .as_ref()
+        .filter(|ctx| ctx.is_open)
+        .map(|ctx| ctx.content_id.clone());
+
     let classes: Classes = vec![Classes::from("tooltip-trigger"), class]
         .into_iter()
         .collect();
 
     html! {
-        <div class={classes}>
+        <div
+            class={classes}
+            aria-describedby={describedby}
+            {onmouseenter}
+            {onmouseleave}
+            {onfocusin}
+            {onfocusout}
+        >
             { children }
         </div>
     }
@@ -185,7 +327,8 @@ pub struct TooltipContentProps {
 
 /// Tooltip content component
 ///
-/// The content that appears in the tooltip popup.
+/// The content that appears in the tooltip popup. Rendered only while the
+/// parent [`Tooltip`] is open; outside a `Tooltip` it is always shown.
 #[function_component(TooltipContent)]
 pub fn tooltip_content(props: &TooltipContentProps) -> Html {
     let TooltipContentProps {
@@ -193,6 +336,12 @@ pub fn tooltip_content(props: &TooltipContentProps) -> Html {
         class,
         children,
     } = props.clone();
+
+    let context = use_context::<TooltipStateContext>();
+    if context.as_ref().is_some_and(|ctx| !ctx.is_open) {
+        return html! {};
+    }
+    let id = context.map(|ctx| ctx.content_id);
 
     let classes: Classes = vec![
         Classes::from("tooltip-content"),
@@ -203,7 +352,7 @@ pub fn tooltip_content(props: &TooltipContentProps) -> Html {
     .collect();
 
     html! {
-        <div class={classes} role="tooltip">
+        <div {id} class={classes} role="tooltip" data-state="open">
             { children }
         </div>
     }
@@ -216,30 +365,39 @@ mod tests {
     #[test]
     fn test_tooltip_props_default() {
         let props = TooltipProps {
-            delay_duration: 200,
+            delay_duration: Some(200),
+            open: None,
+            default_open: false,
+            on_open_change: None,
             disabled: false,
             children: Children::new(vec![]),
         };
 
-        assert_eq!(props.delay_duration, 200);
+        assert_eq!(props.delay_duration, Some(200));
         assert!(!props.disabled);
     }
 
     #[test]
     fn test_tooltip_with_custom_delay() {
         let props = TooltipProps {
-            delay_duration: 500,
+            delay_duration: Some(500),
+            open: None,
+            default_open: false,
+            on_open_change: None,
             disabled: false,
             children: Children::new(vec![]),
         };
 
-        assert_eq!(props.delay_duration, 500);
+        assert_eq!(props.delay_duration, Some(500));
     }
 
     #[test]
     fn test_tooltip_disabled() {
         let props = TooltipProps {
-            delay_duration: 200,
+            delay_duration: None,
+            open: None,
+            default_open: false,
+            on_open_change: None,
             disabled: true,
             children: Children::new(vec![]),
         };
@@ -269,6 +427,19 @@ mod tests {
 
         assert_eq!(props.delay_duration, 500);
         assert_eq!(props.skip_delay_duration, 100);
+    }
+
+    #[test]
+    fn test_resolve_tooltip_delay_precedence() {
+        let provider = TooltipContext {
+            delay_duration: 700,
+            skip_delay_duration: 300,
+        };
+
+        assert_eq!(resolve_tooltip_delay(None, None), DEFAULT_TOOLTIP_DELAY);
+        assert_eq!(resolve_tooltip_delay(None, Some(&provider)), 700);
+        assert_eq!(resolve_tooltip_delay(Some(0), Some(&provider)), 0);
+        assert_eq!(resolve_tooltip_delay(Some(50), None), 50);
     }
 
     #[test]

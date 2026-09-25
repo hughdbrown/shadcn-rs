@@ -23,6 +23,7 @@
 //! }
 //! ```
 
+use crate::hooks::use_controllable_bool;
 use yew::prelude::*;
 
 /// Context for sharing collapsible state with children
@@ -75,23 +76,11 @@ pub fn collapsible(props: &CollapsibleProps) -> Html {
         children,
     } = props.clone();
 
-    // Internal state for uncontrolled mode
-    let internal_open = use_state(|| default_open);
+    let (is_open, set_open) = use_controllable_bool(open, default_open, on_open_change);
 
-    // Use controlled value if provided, otherwise use internal state
-    let is_open = open.unwrap_or(*internal_open);
-
-    let toggle = {
-        let internal_open = internal_open.clone();
-        let on_open_change = on_open_change.clone();
-        Callback::from(move |_: ()| {
-            let new_state = !*internal_open;
-            internal_open.set(new_state);
-            if let Some(callback) = on_open_change.as_ref() {
-                callback.emit(new_state);
-            }
-        })
-    };
+    // Flip the effective state (not the internal one) so a controlled
+    // `open=Some(true)` requests `false` and the trigger can close it.
+    let toggle = Callback::from(move |_: ()| set_open.emit(!is_open));
 
     let context = CollapsibleContext { is_open, toggle };
 

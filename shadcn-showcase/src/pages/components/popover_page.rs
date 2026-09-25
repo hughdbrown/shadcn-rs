@@ -50,9 +50,9 @@ pub fn popover_page() -> Html {
     let props = vec![
         PropDoc {
             name: "open",
-            prop_type: "bool",
-            default: "false",
-            description: "Controlled open state",
+            prop_type: "Option<bool>",
+            default: "None",
+            description: "Controlled open state (Some = controlled)",
         },
         PropDoc {
             name: "default_open",
@@ -67,18 +67,18 @@ pub fn popover_page() -> Html {
             description: "Open state change handler",
         },
         PropDoc {
-            name: "side",
+            name: "position",
             prop_type: "Position",
             default: "Bottom",
-            description: "Preferred side",
+            description: "PopoverContent: side of the trigger to open on",
         },
         PropDoc {
             name: "align",
-            prop_type: "Alignment",
-            default: "Center",
-            description: "Alignment",
+            prop_type: "Option<AttrValue>",
+            default: "center",
+            description: "PopoverContent: start, center or end along the trigger edge",
         },
     ];
 
-    html! { <ComponentPage name="Popover" description="Displays rich content in a portal, triggered by a button." {examples} {props} /> }
+    html! { <ComponentPage name="Popover" description="Displays rich content next to a trigger. Closes on outside click and Escape." {examples} {props} /> }
 }

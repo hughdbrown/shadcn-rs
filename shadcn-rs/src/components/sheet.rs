@@ -43,7 +43,10 @@
 //! }
 //! ```
 
-use crate::hooks::{use_click_outside_conditional, use_escape_key_conditional, use_focus_trap};
+use crate::hooks::{
+    use_click_outside_conditional, use_controllable_bool, use_escape_key_conditional,
+    use_focus_trap,
+};
 use crate::types::Position;
 use crate::utils::Portal;
 use yew::prelude::*;
@@ -65,8 +68,12 @@ pub struct SheetContext {
 #[derive(Properties, PartialEq, Clone)]
 pub struct SheetProps {
     /// Whether the sheet is open
-    #[prop_or(false)]
-    pub open: bool,
+    ///
+    /// `Some(_)` makes the component controlled: the value is always honored and
+    /// user interaction only reports the requested state through `on_open_change`.
+    /// `None` (the default) leaves it uncontrolled, starting from `default_open`.
+    #[prop_or_default]
+    pub open: Option<bool>,
 
     /// Default open state (for uncontrolled sheets)
     #[prop_or(false)]
@@ -104,42 +111,12 @@ pub fn sheet(props: &SheetProps) -> Html {
         children,
     } = props.clone();
 
-    // Internal state for uncontrolled mode
-    let internal_open = use_state(|| default_open);
+    let (is_open, set_open) = use_controllable_bool(open, default_open, on_open_change);
 
-    // Sync internal state when controlled value changes
-    let has_on_change = on_open_change.is_some();
-    {
-        let internal_open = internal_open.clone();
-        use_effect_with(open, move |&open| {
-            if has_on_change {
-                internal_open.set(open);
-            }
-        });
-    }
-    let is_open = if has_on_change { open } else { *internal_open };
-
-    let set_open = {
-        let internal_open = internal_open.clone();
-        let on_open_change = on_open_change.clone();
-        Callback::from(move |new_state: bool| {
-            internal_open.set(new_state);
-            if let Some(callback) = on_open_change.as_ref() {
-                callback.emit(new_state);
-            }
-        })
-    };
-
+    // Toggle from the effective state so controlled and uncontrolled modes agree.
     let toggle = {
-        let internal_open = internal_open.clone();
-        let on_open_change = on_open_change.clone();
-        Callback::from(move |_: ()| {
-            let new_state = !*internal_open;
-            internal_open.set(new_state);
-            if let Some(callback) = on_open_change.as_ref() {
-                callback.emit(new_state);
-            }
-        })
+        let set_open = set_open.clone();
+        Callback::from(move |_: ()| set_open.emit(!is_open))
     };
 
     let context = SheetContext {
@@ -475,14 +452,14 @@ mod tests {
     #[test]
     fn test_sheet_props_default() {
         let props = SheetProps {
-            open: false,
+            open: None,
             default_open: false,
             on_open_change: None,
             side: Position::Right,
             children: Children::new(vec![]),
         };
 
-        assert!(!props.open);
+        assert_eq!(props.open, None);
         assert!(!props.default_open);
         assert_eq!(props.side, Position::Right);
     }
@@ -498,7 +475,7 @@ mod tests {
 
         for side in sides {
             let props = SheetProps {
-                open: true,
+                open: Some(true),
                 default_open: false,
                 on_open_change: None,
                 side: side.clone(),
