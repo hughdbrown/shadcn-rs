@@ -9,7 +9,7 @@ public_url = "/"
 
 [watch]
 # Files/directories to watch for changes
-watch = ["src", "index.html", "showcase.css"]
+watch = ["src", "index.html", "showcase.css", "../shadcn-rs/src", "../shadcn-rs/styles", "../shadcn-icons/src"]
 # Files to ignore
 ignore = ["dist"]
 
