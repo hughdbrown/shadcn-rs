@@ -1750,6 +1750,11 @@
   width: 4rem;
 }
 
+.avatar.size-2xl {
+  height: 5rem;
+  width: 5rem;
+}
+
 .avatar.shape-circle {
   border-radius: 9999px;
 }
@@ -1775,6 +1780,34 @@
   background-color: hsl(var(--color-muted));
   font-size: 0.875rem;
   font-weight: 500;
+}
+
+.avatar-initials {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  background-color: hsl(var(--color-muted));
+  color: hsl(var(--color-foreground));
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+/* Fallbacks follow the avatar's shape. */
+.avatar.shape-square .avatar-fallback {
+  border-radius: inherit;
+}
+
+.avatar.size-xs .avatar-initials,
+.avatar.size-xs .avatar-fallback {
+  font-size: 0.625rem;
+}
+
+.avatar.size-xl .avatar-initials,
+.avatar.size-2xl .avatar-initials {
+  font-size: 1.25rem;
 }
 
 /* ============================================

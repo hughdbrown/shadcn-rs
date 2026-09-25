@@ -32,6 +32,16 @@ pub enum AvatarShape {
     Square,
 }
 
+impl AvatarShape {
+    /// CSS class for this shape (`.avatar.shape-*` in the stylesheet)
+    pub fn to_class(&self) -> &'static str {
+        match self {
+            AvatarShape::Circle => "shape-circle",
+            AvatarShape::Square => "shape-square",
+        }
+    }
+}
+
 /// Avatar component properties
 #[derive(Properties, PartialEq, Clone)]
 pub struct AvatarProps {
@@ -86,19 +96,10 @@ pub fn avatar(props: &AvatarProps) -> Html {
 
     let image_error = use_state(|| false);
 
-    let size_class = match size {
-        Size::Xs => "avatar-xs",
-        Size::Sm => "avatar-sm",
-        Size::Md => "avatar-md",
-        Size::Lg => "avatar-lg",
-        Size::Xl => "avatar-xl",
-        Size::Xl2 => "avatar-2xl",
-    };
-
-    let shape_class = match shape {
-        AvatarShape::Circle => "avatar-circle",
-        AvatarShape::Square => "avatar-square",
-    };
+    // These must match the `.avatar.size-*` / `.avatar.shape-*` rules in
+    // styles/components.css.
+    let size_class = size.to_class();
+    let shape_class = shape.to_class();
 
     let classes: Classes = vec![
         Classes::from("avatar"),
@@ -145,6 +146,21 @@ pub fn avatar(props: &AvatarProps) -> Html {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_avatar_classes_match_stylesheet() {
+        // styles/components.css defines `.avatar.size-*` and `.avatar.shape-*`.
+        let css = include_str!("../../styles/components.css");
+        for size in [Size::Xs, Size::Sm, Size::Md, Size::Lg, Size::Xl, Size::Xl2] {
+            let selector = format!(".avatar.{} {{", size.to_class());
+            assert!(css.contains(&selector), "missing CSS rule {selector}");
+        }
+        for shape in [AvatarShape::Circle, AvatarShape::Square] {
+            let selector = format!(".avatar.{} {{", shape.to_class());
+            assert!(css.contains(&selector), "missing CSS rule {selector}");
+        }
+        assert!(css.contains(".avatar-initials {"));
+    }
 
     #[test]
     fn test_avatar_with_image() {
