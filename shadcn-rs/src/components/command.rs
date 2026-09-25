@@ -34,6 +34,10 @@
 //! }
 //! ```
 
+use std::collections::BTreeMap;
+use std::rc::Rc;
+
+use crate::utils::generate_id;
 use wasm_bindgen::JsCast;
 use yew::prelude::*;
 
@@ -44,6 +48,101 @@ pub struct CommandContext {
     pub search_query: String,
     /// Callback to update the search query
     pub set_search_query: Callback<String>,
+    /// Number of items that match the current query
+    pub match_count: usize,
+    /// Items report `(id, Some(matches))` when rendered and `(id, None)`
+    /// when removed, so the root can count matches for `CommandEmpty`
+    pub report_match: Callback<(AttrValue, Option<bool>)>,
+}
+
+/// Whether any candidate contains `query`, ignoring case. An empty query
+/// matches everything.
+pub(crate) fn matches_query(query: &str, candidates: &[&str]) -> bool {
+    let query = query.trim().to_lowercase();
+    query.is_empty()
+        || candidates
+            .iter()
+            .any(|candidate| candidate.to_lowercase().contains(&query))
+}
+
+/// Which registered items currently match the filter.
+#[derive(Default, PartialEq)]
+pub(crate) struct MatchRegistry(BTreeMap<AttrValue, bool>);
+
+impl MatchRegistry {
+    pub(crate) fn count(&self) -> usize {
+        self.0.values().filter(|matches| **matches).count()
+    }
+}
+
+impl Reducible for MatchRegistry {
+    type Action = (AttrValue, Option<bool>);
+
+    fn reduce(self: Rc<Self>, (id, matches): Self::Action) -> Rc<Self> {
+        if self.0.get(&id).copied() == matches {
+            return self;
+        }
+        let mut map = self.0.clone();
+        match matches {
+            Some(matches) => map.insert(id, matches),
+            None => map.remove(&id),
+        };
+        Rc::new(MatchRegistry(map))
+    }
+}
+
+/// Registry of item matches for a filterable list. Returns the match count
+/// and the callback items use to report themselves.
+#[hook]
+pub(crate) fn use_match_registry() -> (usize, Callback<(AttrValue, Option<bool>)>) {
+    let registry = use_reducer_eq(MatchRegistry::default);
+    let dispatcher = registry.dispatcher();
+    (
+        registry.count(),
+        Callback::from(move |action| dispatcher.dispatch(action)),
+    )
+}
+
+/// Reports whether this item matches to the list root, and unregisters it on
+/// unmount.
+#[hook]
+pub(crate) fn use_report_match(report: Option<Callback<(AttrValue, Option<bool>)>>, matches: bool) {
+    let id = use_memo((), |_| AttrValue::from(generate_id("list-item")));
+    {
+        let report = report.clone();
+        let id = (*id).clone();
+        use_effect_with(matches, move |&matches| {
+            if let Some(report) = report.as_ref() {
+                report.emit((id, Some(matches)));
+            }
+        });
+    }
+    let id = (*id).clone();
+    use_effect_with((), move |_| {
+        move || {
+            if let Some(report) = report.as_ref() {
+                report.emit((id, None));
+            }
+        }
+    });
+}
+
+/// Text content of the referenced element, refreshed after each render.
+#[hook]
+pub(crate) fn use_text_content(node_ref: NodeRef) -> String {
+    let text = use_state(String::new);
+    {
+        let text = text.clone();
+        use_effect(move || {
+            if let Some(element) = node_ref.cast::<web_sys::Element>() {
+                let current = element.text_content().unwrap_or_default();
+                if current != *text {
+                    text.set(current);
+                }
+            }
+        });
+    }
+    (*text).clone()
 }
 
 /// Command container properties
@@ -78,9 +177,13 @@ pub fn command(props: &CommandProps) -> Html {
         })
     };
 
+    let (match_count, report_match) = use_match_registry();
+
     let context = CommandContext {
         search_query: (*search_query).clone(),
         set_search_query,
+        match_count,
+        report_match,
     };
 
     let classes: Classes = vec![Classes::from("command"), class].into_iter().collect();
@@ -206,10 +309,15 @@ pub struct CommandEmptyProps {
 
 /// Command empty component
 ///
-/// Displays when no results match the search.
+/// Displays only when no items match the search.
 #[function_component(CommandEmpty)]
 pub fn command_empty(props: &CommandEmptyProps) -> Html {
     let CommandEmptyProps { class, children } = props.clone();
+
+    let context = use_context::<CommandContext>();
+    if context.is_some_and(|ctx| ctx.match_count > 0) {
+        return html! {};
+    }
 
     let classes: Classes = vec![Classes::from("command-empty"), class]
         .into_iter()
@@ -308,27 +416,26 @@ pub fn command_item(props: &CommandItemProps) -> Html {
     } = props.clone();
 
     let context = use_context::<CommandContext>();
+    let node_ref = use_node_ref();
+    // Items without a `value` are matched against their rendered text.
+    let label = use_text_content(node_ref.clone());
 
-    // Filter based on search query from context
-    let is_visible = context
-        .as_ref()
-        .map(|ctx: &CommandContext| {
-            if ctx.search_query.is_empty() {
-                true
-            } else {
-                let query = ctx.search_query.to_lowercase();
-                // Check value if available; otherwise show item (children text not inspectable)
-                value
-                    .as_ref()
-                    .map(|v: &AttrValue| v.to_lowercase().contains(&query))
-                    .unwrap_or(true)
+    let is_visible = context.as_ref().is_none_or(|ctx: &CommandContext| {
+        let candidate: &str = value.as_deref().unwrap_or(label.as_str());
+        matches_query(&ctx.search_query, &[candidate, label.as_str()])
+    });
+    use_report_match(
+        context.as_ref().map(|ctx| ctx.report_match.clone()),
+        is_visible,
+    );
+
+    let onclick = onclick.map(|onclick: Callback<MouseEvent>| {
+        Callback::from(move |e: MouseEvent| {
+            if !disabled {
+                onclick.emit(e);
             }
         })
-        .unwrap_or(true);
-
-    if !is_visible {
-        return html! {};
-    }
+    });
 
     let onkeydown = {
         Callback::from(move |e: KeyboardEvent| {
@@ -367,9 +474,12 @@ pub fn command_item(props: &CommandItemProps) -> Html {
 
     html! {
         <div
+            ref={node_ref}
             class={classes}
             role="option"
             aria-disabled={disabled.to_string()}
+            data-value={value}
+            hidden={!is_visible}
             onclick={onclick}
             onkeydown={onkeydown}
             tabindex={tabindex}
@@ -490,6 +600,8 @@ mod tests {
         let ctx1 = CommandContext {
             search_query: "hello".to_string(),
             set_search_query: Callback::noop(),
+            match_count: 0,
+            report_match: Callback::noop(),
         };
         let ctx2 = ctx1.clone();
 
@@ -502,6 +614,8 @@ mod tests {
         let ctx = CommandContext {
             search_query: String::new(),
             set_search_query: Callback::noop(),
+            match_count: 0,
+            report_match: Callback::noop(),
         };
 
         assert!(ctx.search_query.is_empty());
@@ -570,9 +684,35 @@ mod tests {
         let ctx = CommandContext {
             search_query: String::new(),
             set_search_query: cb,
+            match_count: 0,
+            report_match: Callback::noop(),
         };
 
         ctx.set_search_query.emit("test query".to_string());
         assert_eq!(*captured.borrow(), "test query");
+    }
+
+    #[test]
+    fn test_matches_query() {
+        assert!(matches_query("", &["anything"]));
+        assert!(matches_query("  ", &["anything"]));
+        assert!(matches_query("CAL", &["calendar"]));
+        assert!(matches_query("moji", &["", "Search Emoji"]));
+        assert!(!matches_query("xyz", &["calendar", "Calendar"]));
+    }
+
+    #[test]
+    fn test_match_registry_counts_and_removes() {
+        let registry = Rc::new(MatchRegistry::default());
+        let registry = registry.reduce((AttrValue::from("a"), Some(true)));
+        let registry = registry.reduce((AttrValue::from("b"), Some(false)));
+        assert_eq!(registry.count(), 1);
+        let registry = registry.reduce((AttrValue::from("b"), Some(true)));
+        assert_eq!(registry.count(), 2);
+        let registry = registry.reduce((AttrValue::from("a"), None));
+        assert_eq!(registry.count(), 1);
+        // Re-reporting the same state returns the same Rc (no re-render).
+        let same = registry.clone().reduce((AttrValue::from("b"), Some(true)));
+        assert!(Rc::ptr_eq(&registry, &same));
     }
 }

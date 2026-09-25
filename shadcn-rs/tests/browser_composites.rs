@@ -4,16 +4,18 @@ use wasm_bindgen_test::{wasm_bindgen_test as test, wasm_bindgen_test_configure};
 use yew::prelude::*;
 
 use shadcn_rs::{
-    Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarRadioGroup, MenubarRadioItem,
-    MenubarTrigger, NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink,
+    Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxTrigger,
+    Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, Menubar,
+    MenubarContent, MenubarItem, MenubarMenu, MenubarRadioGroup, MenubarRadioItem, MenubarTrigger,
+    NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink,
     NavigationMenuList, NavigationMenuTrigger, Tabs, TabsContent, TabsList, TabsTrigger,
 };
 
 mod utils;
 
 use utils::{
-    active_id, attr, click, click_nth, count, exists, focus, keydown, mount_root, mousedown_body,
-    query, settle, text,
+    active_id, attr, click, click_nth, count, exists, focus, input, keydown, mount_root,
+    mousedown_body, query, settle, text,
 };
 
 wasm_bindgen_test_configure!(run_in_browser);
@@ -289,4 +291,125 @@ async fn navigation_menu_shows_only_active_content() {
     settle().await;
     assert_eq!(text("#nav-test #nav-open"), "none");
     assert_eq!(count("#nav-test .navigation-menu-content"), 0);
+}
+
+#[function_component(CommandHarness)]
+fn command_harness() -> Html {
+    html! {
+        <Command>
+            <CommandInput placeholder="Search" />
+            <CommandList>
+                <CommandEmpty>{ "No results found." }</CommandEmpty>
+                <CommandGroup heading="Suggestions">
+                    <CommandItem>{ "Calendar" }</CommandItem>
+                    <CommandItem value="emoji">{ "Search Emoji" }</CommandItem>
+                </CommandGroup>
+            </CommandList>
+        </Command>
+    }
+}
+
+#[test]
+async fn command_empty_only_without_matches() {
+    let root = mount_root("command-test");
+    let _app = yew::Renderer::<CommandHarness>::with_root(root).render();
+    settle().await;
+    settle().await;
+
+    assert_eq!(count("#command-test .command-empty"), 0);
+
+    // Items without a value match on their text.
+    input("#command-test .command-input", "cal");
+    settle().await;
+    assert_eq!(count("#command-test .command-empty"), 0);
+    assert_eq!(count("#command-test .command-item:not([hidden])"), 1);
+
+    input("#command-test .command-input", "zzz");
+    settle().await;
+    assert_eq!(count("#command-test .command-item:not([hidden])"), 0);
+    assert_eq!(count("#command-test .command-empty"), 1);
+
+    input("#command-test .command-input", "");
+    settle().await;
+    assert_eq!(count("#command-test .command-empty"), 0);
+    assert_eq!(count("#command-test .command-item:not([hidden])"), 2);
+}
+
+#[function_component(ComboboxHarness)]
+fn combobox_harness() -> Html {
+    let value = use_state(|| None::<AttrValue>);
+    let forced_open = use_state(|| None::<bool>);
+    let on_value_change = {
+        let value = value.clone();
+        Callback::from(move |next: AttrValue| value.set(Some(next)))
+    };
+    let open_externally = {
+        let forced_open = forced_open.clone();
+        Callback::from(move |_: MouseEvent| forced_open.set(Some(true)))
+    };
+
+    html! {
+        <div>
+            <div id="combobox-value">{ value.as_deref().unwrap_or("none").to_string() }</div>
+            <button id="open-externally" type="button" onclick={open_externally}>{ "Open" }</button>
+            <Combobox open={*forced_open} on_value_change={Some(on_value_change)}>
+                <ComboboxTrigger>{ "Select framework..." }</ComboboxTrigger>
+                <ComboboxContent>
+                    <ComboboxInput placeholder="Search..." />
+                    <ComboboxEmpty>{ "No framework found." }</ComboboxEmpty>
+                    <ComboboxItem value="next">{ "Next.js" }</ComboboxItem>
+                    <ComboboxItem value="astro">{ "Astro" }</ComboboxItem>
+                </ComboboxContent>
+            </Combobox>
+        </div>
+    }
+}
+
+#[test]
+async fn combobox_filters_selects_and_closes() {
+    let root = mount_root("combobox-test");
+    let _app = yew::Renderer::<ComboboxHarness>::with_root(root).render();
+    settle().await;
+
+    // A later change to `open` is respected.
+    assert_eq!(count("#combobox-test .combobox-content"), 0);
+    click("#combobox-test #open-externally");
+    settle().await;
+    settle().await;
+    assert_eq!(count("#combobox-test .combobox-content"), 1);
+    assert_eq!(count("#combobox-test .combobox-empty"), 0);
+
+    input("#combobox-test .combobox-input", "zzz");
+    settle().await;
+    assert_eq!(count("#combobox-test .combobox-empty"), 1);
+
+    input("#combobox-test .combobox-input", "ast");
+    settle().await;
+    assert_eq!(count("#combobox-test .combobox-empty"), 0);
+    assert_eq!(count("#combobox-test .combobox-item:not([hidden])"), 1);
+
+    // Selecting commits the value, fills the trigger, and closes.
+    click("#combobox-test .combobox-item[data-value='astro']");
+    settle().await;
+    assert_eq!(text("#combobox-test #combobox-value"), "astro");
+    assert_eq!(count("#combobox-test .combobox-content"), 0);
+    assert_eq!(text("#combobox-test .combobox-trigger"), "Astro");
+    assert_eq!(
+        attr("#combobox-test .combobox-trigger", "aria-expanded"),
+        "false"
+    );
+
+    // Reopening shows every item (the label is not used as a filter) and
+    // marks the selected one.
+    click("#combobox-test .combobox-trigger");
+    settle().await;
+    settle().await;
+    assert_eq!(count("#combobox-test .combobox-item:not([hidden])"), 2);
+    assert_eq!(
+        attr(
+            "#combobox-test .combobox-item[data-value='astro']",
+            "aria-selected"
+        ),
+        "true"
+    );
 }
