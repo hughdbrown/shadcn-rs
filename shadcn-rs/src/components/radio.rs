@@ -271,6 +271,12 @@ pub fn radio(props: &RadioProps) -> Html {
     }
 }
 
+/// Type alias for [`Radio`] to match upstream shadcn/ui naming
+pub type RadioGroupItem = Radio;
+
+/// Type alias for [`RadioProps`] to match upstream shadcn/ui naming
+pub type RadioGroupItemProps = RadioProps;
+
 /// State a [`RadioGroup`] shares with the [`Radio`] items inside it
 #[derive(Clone, PartialEq)]
 pub struct RadioGroupContext {

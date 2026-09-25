@@ -80,12 +80,20 @@ pub mod data_table;
 pub mod sonner;
 pub mod toast;
 
+// Tier 9 - Conversational & Multi-step Components
+pub mod attachment;
+pub mod bubble;
+pub mod marker;
+pub mod message;
+pub mod message_scroller;
+pub mod questionnaire;
+
 // Re-export utility components
 pub use direction::{Direction, DirectionContext, DirectionProvider, use_direction};
 
 // Re-export Tier 1 components
 pub use alert::{Alert, AlertDescription, AlertTitle};
-pub use avatar::{Avatar, AvatarShape};
+pub use avatar::{Avatar, AvatarFallback, AvatarImage, AvatarShape};
 pub use badge::Badge;
 pub use button::Button;
 pub use card::{Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle};
@@ -105,7 +113,7 @@ pub use input::Input;
 pub use label::Label;
 pub use native_select::{NativeSelect, NativeSelectOptGroup, NativeSelectOption};
 pub use progress::Progress;
-pub use radio::{Radio, RadioGroup};
+pub use radio::{Radio, RadioGroup, RadioGroupItem, RadioGroupItemProps};
 pub use select::{
     Select, SelectAdvanced, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator,
     SelectTrigger, SelectValue,
@@ -214,4 +222,27 @@ pub use sonner::{Sonner, SonnerPosition, SonnerToast, SonnerType};
 pub use toast::{
     PromiseMessages, Toast, ToastAction, ToastDuration, ToastHandle, ToastId, ToastOptions,
     ToastPosition, ToastType, ToastVariant, Toaster, ToasterProps, use_toast,
+};
+
+// Re-export Tier 9 components
+pub use attachment::{
+    Attachment, AttachmentAction, AttachmentActions, AttachmentContent, AttachmentDescription,
+    AttachmentGroup, AttachmentMedia, AttachmentMediaVariant, AttachmentOrientation,
+    AttachmentSize, AttachmentStatus, AttachmentTitle, AttachmentTrigger,
+};
+pub use bubble::{Bubble, BubbleAlign, BubbleContent, BubbleGroup, BubbleReactions, BubbleVariant};
+pub use marker::{Marker, MarkerContent, MarkerIcon, MarkerVariant};
+pub use message::{
+    Message, MessageAlign, MessageAvatar, MessageContent, MessageFooter, MessageGroup,
+    MessageHeader,
+};
+pub use message_scroller::{
+    MessageScroller, MessageScrollerButton, MessageScrollerContent, MessageScrollerContext,
+    MessageScrollerItem, MessageScrollerProvider, MessageScrollerViewport, use_message_scroller,
+};
+pub use questionnaire::{
+    Questionnaire, QuestionnaireActions, QuestionnaireChoice, QuestionnaireChoices,
+    QuestionnaireContext, QuestionnaireDescription, QuestionnaireError, QuestionnaireInput,
+    QuestionnaireItem, QuestionnaireNext, QuestionnairePrevious, QuestionnaireProgress,
+    QuestionnaireSkip, QuestionnaireSubmit, QuestionnaireTitle, use_questionnaire,
 };

@@ -4,6 +4,8 @@
 //!
 //! # Examples
 //!
+//! Props-based usage:
+//!
 //! ```rust,no_run
 //! use yew::prelude::*;
 //! use shadcn_rs::{Avatar, AvatarShape};
@@ -19,14 +21,32 @@
 //!     }
 //! }
 //! ```
+//!
+//! Compound component usage:
+//!
+//! ```rust,no_run
+//! use yew::prelude::*;
+//! use shadcn_rs::{Avatar, AvatarImage, AvatarFallback};
+//!
+//! #[function_component(App)]
+//! fn app() -> Html {
+//!     html! {
+//!         <Avatar>
+//!             <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+//!             <AvatarFallback>{ "CN" }</AvatarFallback>
+//!         </Avatar>
+//!     }
+//! }
+//! ```
 
 use crate::types::Size;
 use yew::prelude::*;
 
 /// Avatar shape
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum AvatarShape {
     /// Circular avatar
+    #[default]
     Circle,
     /// Square avatar
     Square,
@@ -34,7 +54,7 @@ pub enum AvatarShape {
 
 impl AvatarShape {
     /// CSS class for this shape (`.avatar.shape-*` in the stylesheet)
-    pub fn to_class(&self) -> &'static str {
+    pub fn to_class(self) -> &'static str {
         match self {
             AvatarShape::Circle => "shape-circle",
             AvatarShape::Square => "shape-square",
@@ -66,12 +86,16 @@ pub struct AvatarProps {
     pub size: Size,
 
     /// Shape of the avatar
-    #[prop_or(AvatarShape::Circle)]
+    #[prop_or_default]
     pub shape: AvatarShape,
 
     /// Additional CSS classes
     #[prop_or_default]
     pub class: Classes,
+
+    /// Children elements (for compound AvatarImage / AvatarFallback usage)
+    #[prop_or_default]
+    pub children: Children,
 }
 
 /// Avatar component
@@ -92,23 +116,25 @@ pub fn avatar(props: &AvatarProps) -> Html {
         size,
         shape,
         class,
+        children,
     } = props.clone();
 
     let image_error = use_state(|| false);
 
-    // These must match the `.avatar.size-*` / `.avatar.shape-*` rules in
-    // styles/components.css.
+    // These must match the `.avatar.size-*` / `.avatar.shape-*` rules in styles/components.css.
     let size_class = size.to_class();
     let shape_class = shape.to_class();
 
-    let classes: Classes = vec![
-        Classes::from("avatar"),
-        Classes::from(size_class),
-        Classes::from(shape_class),
-        class,
-    ]
-    .into_iter()
-    .collect();
+    let classes = classes!("avatar", size_class, shape_class, class);
+
+    if children.iter().count() > 0 {
+        let aria_label = alt.unwrap_or_else(|| AttrValue::from("Avatar"));
+        return html! {
+            <div class={classes} role="img" aria-label={aria_label}>
+                { children }
+            </div>
+        };
+    }
 
     let on_error = {
         let image_error = image_error.clone();
@@ -118,21 +144,21 @@ pub fn avatar(props: &AvatarProps) -> Html {
     };
 
     let show_image = src.is_some() && !*image_error;
-    let show_initials = !show_image && initials.is_some();
     let show_fallback = !show_image && initials.is_none();
+    let aria_label_val = alt.clone().unwrap_or_else(|| AttrValue::from("Avatar"));
 
     html! {
-        <div class={classes} role="img" aria-label={alt.clone().or_else(|| Some(AttrValue::from("Avatar")))}>
+        <div class={classes} role="img" aria-label={aria_label_val}>
             if show_image {
                 <img
                     class="avatar-image"
-                    src={src.clone()}
+                    src={src}
                     alt={alt.unwrap_or_else(|| AttrValue::from("Avatar"))}
                     onerror={on_error}
                 />
-            } else if show_initials {
+            } else if let Some(initials_text) = initials {
                 <span class="avatar-initials" aria-hidden="true">
-                    { initials.unwrap() }
+                    { initials_text }
                 </span>
             } else if show_fallback {
                 <span class="avatar-fallback" aria-hidden="true">
@@ -140,6 +166,62 @@ pub fn avatar(props: &AvatarProps) -> Html {
                 </span>
             }
         </div>
+    }
+}
+
+/// Properties for [`AvatarImage`]
+#[derive(Properties, PartialEq, Clone)]
+pub struct AvatarImageProps {
+    /// Image source URL
+    pub src: AttrValue,
+
+    /// Alt text for image
+    #[prop_or_default]
+    pub alt: Option<AttrValue>,
+
+    /// Additional CSS classes
+    #[prop_or_default]
+    pub class: Classes,
+}
+
+/// Image component for compound [`Avatar`]
+#[function_component(AvatarImage)]
+pub fn avatar_image(props: &AvatarImageProps) -> Html {
+    let classes = classes!("avatar-image", props.class.clone());
+    let alt_val = props
+        .alt
+        .clone()
+        .unwrap_or_else(|| AttrValue::from("Avatar"));
+
+    html! {
+        <img
+            class={classes}
+            src={props.src.clone()}
+            alt={alt_val}
+        />
+    }
+}
+
+/// Properties for [`AvatarFallback`]
+#[derive(Properties, PartialEq, Clone)]
+pub struct AvatarFallbackProps {
+    /// Additional CSS classes
+    #[prop_or_default]
+    pub class: Classes,
+
+    /// Fallback content (initials, icon, etc.)
+    pub children: Children,
+}
+
+/// Fallback component for compound [`Avatar`]
+#[function_component(AvatarFallback)]
+pub fn avatar_fallback(props: &AvatarFallbackProps) -> Html {
+    let classes = classes!("avatar-fallback", props.class.clone());
+
+    html! {
+        <span class={classes} aria-hidden="true">
+            { props.children.clone() }
+        </span>
     }
 }
 
@@ -160,6 +242,8 @@ mod tests {
             assert!(css.contains(&selector), "missing CSS rule {selector}");
         }
         assert!(css.contains(".avatar-initials {"));
+        assert!(css.contains(".avatar-image {"));
+        assert!(css.contains(".avatar-fallback {"));
     }
 
     #[test]
@@ -172,6 +256,7 @@ mod tests {
             size: Size::Md,
             shape: AvatarShape::Circle,
             class: Classes::new(),
+            children: Children::new(vec![]),
         };
 
         assert_eq!(
@@ -191,6 +276,7 @@ mod tests {
             size: Size::Md,
             shape: AvatarShape::Circle,
             class: Classes::new(),
+            children: Children::new(vec![]),
         };
 
         assert_eq!(props.initials, Some(AttrValue::from("JD")));
@@ -206,6 +292,7 @@ mod tests {
             size: Size::Md,
             shape: AvatarShape::Circle,
             class: Classes::new(),
+            children: Children::new(vec![]),
         };
 
         assert_eq!(props.fallback_icon, AttrValue::from("🙂"));
@@ -221,6 +308,7 @@ mod tests {
             size: Size::Lg,
             shape: AvatarShape::Circle,
             class: Classes::new(),
+            children: Children::new(vec![]),
         };
 
         assert_eq!(props.size, Size::Lg);
@@ -236,6 +324,7 @@ mod tests {
             size: Size::Md,
             shape: AvatarShape::Square,
             class: Classes::new(),
+            children: Children::new(vec![]),
         };
 
         assert_eq!(props.shape, AvatarShape::Square);
