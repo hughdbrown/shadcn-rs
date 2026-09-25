@@ -8,7 +8,8 @@ use yew::prelude::*;
 use shadcn_rs::{
     AlertDialog, AlertDialogContent, AlertDialogTrigger, Collapsible, CollapsibleContent,
     CollapsibleTrigger, Dialog, DialogContent, DialogTrigger, Drawer, DrawerContent, DrawerTrigger,
-    Popover, PopoverContent, PopoverTrigger, Sheet, SheetContent, SheetTrigger,
+    Popover, PopoverContent, PopoverTrigger, Sheet, SheetContent, SheetTrigger, Tooltip,
+    TooltipContent, TooltipProvider, TooltipTrigger,
 };
 
 mod utils;
@@ -386,6 +387,163 @@ async fn popover_escape_closes_and_restores_focus() {
     settle().await;
     assert!(!exists("#popover-inner"), "Escape must close");
     assert_eq!(active_id(), "popover-trigger", "focus returns to trigger");
+    app.destroy();
+    settle().await;
+}
+
+// ---------------------------------------------------------------------------
+// Tooltip: hidden by default; hover (after delay) and focus show it; leave,
+// blur and Escape hide it; open/default_open; provider delay.
+// ---------------------------------------------------------------------------
+
+#[derive(Properties, PartialEq, Default)]
+struct TooltipHarnessProps {
+    #[prop_or_default]
+    delay: Option<u32>,
+    #[prop_or_default]
+    open: Option<bool>,
+    #[prop_or_default]
+    default_open: bool,
+    #[prop_or_default]
+    provider_delay: Option<u32>,
+}
+
+#[function_component(TooltipHarness)]
+fn tooltip_harness(props: &TooltipHarnessProps) -> Html {
+    let tooltip = html! {
+        <Tooltip delay_duration={props.delay} open={props.open} default_open={props.default_open}>
+            <TooltipTrigger>
+                <button id="tip-trigger" type="button">{ "Hover" }</button>
+            </TooltipTrigger>
+            <TooltipContent>{ "Tip" }</TooltipContent>
+        </Tooltip>
+    };
+    match props.provider_delay {
+        Some(delay) => html! {
+            <TooltipProvider delay_duration={delay}>{ tooltip }</TooltipProvider>
+        },
+        None => tooltip,
+    }
+}
+
+fn render_tooltip(id: &str, props: TooltipHarnessProps) -> yew::AppHandle<TooltipHarness> {
+    yew::Renderer::<TooltipHarness>::with_root_and_props(mount_root(id), props).render()
+}
+
+#[test]
+async fn tooltip_hidden_until_hover_delay_then_hides_on_leave() {
+    let app = render_tooltip(
+        "tooltip-hover",
+        TooltipHarnessProps {
+            delay: Some(50),
+            ..TooltipHarnessProps::default()
+        },
+    );
+    settle().await;
+    assert!(!exists("[role='tooltip']"), "tooltip must start hidden");
+
+    mouse(".tooltip-trigger", "mouseenter");
+    settle().await;
+    assert!(!exists("[role='tooltip']"), "must wait for the delay");
+    wait_ms(120).await;
+    assert!(exists("[role='tooltip']"), "must show after the delay");
+    let id = attr("[role='tooltip']", "id");
+    assert!(!id.is_empty());
+    assert_eq!(attr(".tooltip-trigger", "aria-describedby"), id);
+
+    mouse(".tooltip-trigger", "mouseleave");
+    settle().await;
+    assert!(!exists("[role='tooltip']"), "must hide on pointer leave");
+
+    // Leaving before the delay elapses cancels the pending open.
+    mouse(".tooltip-trigger", "mouseenter");
+    settle().await;
+    mouse(".tooltip-trigger", "mouseleave");
+    wait_ms(120).await;
+    assert!(!exists("[role='tooltip']"), "cancelled open must not fire");
+    app.destroy();
+    settle().await;
+}
+
+#[test]
+async fn tooltip_focus_shows_and_blur_or_escape_hides() {
+    let app = render_tooltip(
+        "tooltip-focus",
+        TooltipHarnessProps {
+            delay: Some(10_000),
+            ..TooltipHarnessProps::default()
+        },
+    );
+    settle().await;
+
+    // Keyboard focus opens immediately, regardless of the hover delay.
+    focus("#tip-trigger");
+    settle().await;
+    assert!(exists("[role='tooltip']"), "focus must show");
+
+    keydown("#tip-trigger", "Escape", false);
+    settle().await;
+    assert!(!exists("[role='tooltip']"), "Escape must hide");
+
+    blur_active();
+    settle().await;
+    focus("#tip-trigger");
+    settle().await;
+    assert!(exists("[role='tooltip']"));
+    blur_active();
+    settle().await;
+    assert!(!exists("[role='tooltip']"), "blur must hide");
+    app.destroy();
+    settle().await;
+}
+
+#[test]
+async fn tooltip_open_and_default_open() {
+    let app = render_tooltip(
+        "tooltip-open",
+        TooltipHarnessProps {
+            open: Some(true),
+            ..TooltipHarnessProps::default()
+        },
+    );
+    settle().await;
+    assert!(exists("[role='tooltip']"), "open=Some(true) must show");
+    // Controlled: leaving only reports the request.
+    mouse(".tooltip-trigger", "mouseleave");
+    settle().await;
+    assert!(exists("[role='tooltip']"), "controlled tooltip stays open");
+    app.destroy();
+    settle().await;
+
+    let app = render_tooltip(
+        "tooltip-default-open",
+        TooltipHarnessProps {
+            default_open: true,
+            ..TooltipHarnessProps::default()
+        },
+    );
+    settle().await;
+    assert!(exists("[role='tooltip']"), "default_open must show");
+    mouse(".tooltip-trigger", "mouseleave");
+    settle().await;
+    assert!(!exists("[role='tooltip']"));
+    app.destroy();
+    settle().await;
+}
+
+#[test]
+async fn tooltip_uses_provider_delay() {
+    let app = render_tooltip(
+        "tooltip-provider",
+        TooltipHarnessProps {
+            provider_delay: Some(0),
+            ..TooltipHarnessProps::default()
+        },
+    );
+    settle().await;
+    mouse(".tooltip-trigger", "mouseenter");
+    settle().await;
+    assert!(exists("[role='tooltip']"), "provider delay 0 opens at once");
     app.destroy();
     settle().await;
 }

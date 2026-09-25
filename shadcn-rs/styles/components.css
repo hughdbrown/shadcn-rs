@@ -1345,6 +1345,16 @@
   white-space: nowrap;
 }
 
+/* Reset the generic .position-* utilities (which pin to an edge, e.g.
+   top: 0) so only the side rules below apply. */
+.tooltip-root > .tooltip-content {
+  inset: auto;
+}
+
+.tooltip-trigger {
+  display: inline-block;
+}
+
 .tooltip-content.position-top {
   bottom: 100%;
   left: 50%;
