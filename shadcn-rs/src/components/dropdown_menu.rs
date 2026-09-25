@@ -576,13 +576,32 @@ pub fn dropdown_menu_radio_item(props: &DropdownMenuRadioItemProps) -> Html {
         children,
     } = props.clone();
 
-    let onclick = on_select.map(|cb| {
+    // Checked when the enclosing radio group's value is ours (or when the
+    // standalone `selected` prop says so).
+    let group = use_context::<DropdownMenuRadioContext>();
+    let selected = selected
+        || group
+            .as_ref()
+            .is_some_and(|group| group.value.as_ref() == Some(&value));
+
+    let onclick = {
         let value = value.clone();
         Callback::from(move |e: MouseEvent| {
             e.prevent_default();
-            cb.emit(value.clone());
+            if disabled {
+                return;
+            }
+            if let Some(cb) = on_select.as_ref() {
+                cb.emit(value.clone());
+            }
+            if let Some(cb) = group
+                .as_ref()
+                .and_then(|group| group.on_value_change.as_ref())
+            {
+                cb.emit(value.clone());
+            }
         })
-    });
+    };
 
     let classes: Classes = vec![
         Classes::from("dropdown-menu-radio-item"),
@@ -607,9 +626,11 @@ pub fn dropdown_menu_radio_item(props: &DropdownMenuRadioItemProps) -> Html {
             role="menuitemradio"
             aria-checked={selected.to_string()}
             aria-disabled={disabled.to_string()}
+            data-state={if selected { "checked" } else { "unchecked" }}
+            data-value={value}
             onclick={onclick}
         >
-            <span class="dropdown-menu-item-indicator">
+            <span class="dropdown-menu-item-indicator" aria-hidden="true">
                 if selected {
                     { "●" }
                 }

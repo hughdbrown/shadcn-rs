@@ -1465,6 +1465,43 @@
   font-weight: 600;
 }
 
+.dropdown-menu-checkbox-item,
+.dropdown-menu-radio-item {
+  position: relative;
+  display: flex;
+  cursor: pointer;
+  user-select: none;
+  align-items: center;
+  border-radius: calc(var(--radius) - 2px);
+  padding: 0.375rem 0.5rem 0.375rem 2rem;
+  font-size: 0.875rem;
+  transition: background-color 0.15s;
+}
+
+.dropdown-menu-checkbox-item:hover,
+.dropdown-menu-radio-item:hover {
+  background-color: hsl(var(--color-accent));
+  color: hsl(var(--color-accent-foreground));
+}
+
+.dropdown-menu-checkbox-item-disabled,
+.dropdown-menu-radio-item-disabled,
+.dropdown-menu-item-disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.dropdown-menu-item-indicator {
+  position: absolute;
+  left: 0.5rem;
+  display: flex;
+  width: 0.875rem;
+  height: 0.875rem;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+}
+
 /* ============================================
    Menubar
    ============================================ */

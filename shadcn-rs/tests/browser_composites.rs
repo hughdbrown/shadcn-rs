@@ -5,9 +5,10 @@ use yew::prelude::*;
 
 use shadcn_rs::{
     Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxTrigger,
-    Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, Menubar,
-    MenubarContent, MenubarItem, MenubarMenu, MenubarRadioGroup, MenubarRadioItem, MenubarTrigger,
-    NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink,
+    Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, DropdownMenu,
+    DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger,
+    Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarRadioGroup, MenubarRadioItem,
+    MenubarTrigger, NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink,
     NavigationMenuList, NavigationMenuTrigger, Tabs, TabsContent, TabsList, TabsTrigger,
 };
 
@@ -412,4 +413,48 @@ async fn combobox_filters_selects_and_closes() {
         ),
         "true"
     );
+}
+
+#[function_component(DropdownRadioHarness)]
+fn dropdown_radio_harness() -> Html {
+    let position = use_state(|| AttrValue::from("top"));
+    let on_value_change = {
+        let position = position.clone();
+        Callback::from(move |value: AttrValue| position.set(value))
+    };
+
+    html! {
+        <div>
+            <div id="dropdown-position">{ position.to_string() }</div>
+            <DropdownMenu default_open={true}>
+                <DropdownMenuTrigger><button type="button">{ "Open" }</button></DropdownMenuTrigger>
+                <DropdownMenuContent class="dropdown-radio-test">
+                    <DropdownMenuRadioGroup value={Some((*position).clone())} on_value_change={Some(on_value_change)}>
+                        <DropdownMenuRadioItem value="top">{ "Top" }</DropdownMenuRadioItem>
+                        <DropdownMenuRadioItem value="bottom">{ "Bottom" }</DropdownMenuRadioItem>
+                    </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        </div>
+    }
+}
+
+#[test]
+async fn dropdown_radio_items_follow_group_value() {
+    let root = mount_root("dropdown-test");
+    let _app = yew::Renderer::<DropdownRadioHarness>::with_root(root).render();
+    settle().await;
+    settle().await;
+
+    // Content is portaled to the body, so select by its class.
+    let item =
+        |value: &str| format!(".dropdown-radio-test [role='menuitemradio'][data-value='{value}']");
+    assert_eq!(attr(&item("top"), "aria-checked"), "true");
+    assert_eq!(attr(&item("bottom"), "aria-checked"), "false");
+
+    click(&item("bottom"));
+    settle().await;
+    assert_eq!(text("#dropdown-test #dropdown-position"), "bottom");
+    assert_eq!(attr(&item("bottom"), "aria-checked"), "true");
+    assert_eq!(attr(&item("top"), "aria-checked"), "false");
 }
