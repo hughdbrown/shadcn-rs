@@ -2589,6 +2589,283 @@
 }
 
 /* ============================================
+   Toast / Toaster
+   ============================================ */
+.toaster {
+  position: fixed;
+  z-index: calc(var(--z-tooltip, 1600) + 100);
+  display: flex;
+  flex-direction: column;
+  gap: var(--toast-gap, 14px);
+  width: min(356px, calc(100vw - 2rem));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;
+}
+
+/* Newest toast is first in the DOM, so it sits nearest the screen edge. */
+.toaster-top-left,
+.toaster-top-center,
+.toaster-top-right {
+  top: 1rem;
+}
+
+.toaster-bottom-left,
+.toaster-bottom-center,
+.toaster-bottom-right {
+  bottom: 1rem;
+  flex-direction: column-reverse;
+}
+
+.toaster-top-left,
+.toaster-bottom-left {
+  left: 1rem;
+}
+
+.toaster-top-right,
+.toaster-bottom-right {
+  right: 1rem;
+}
+
+.toaster-top-center,
+.toaster-bottom-center {
+  left: 0;
+  right: 0;
+  margin-inline: auto;
+}
+
+.toast {
+  --toast-offset: 100%;
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 1rem;
+  border: 1px solid hsl(var(--color-border));
+  border-radius: var(--radius);
+  background-color: hsl(var(--color-background));
+  color: hsl(var(--color-foreground));
+  box-shadow: var(--shadow-lg);
+  font-size: var(--text-sm);
+  pointer-events: auto;
+  animation: toast-enter 200ms cubic-bezier(0.21, 1.02, 0.73, 1);
+}
+
+.toaster-top-left .toast,
+.toaster-top-center .toast,
+.toaster-top-right .toast,
+.toast-standalone.toast-top-left,
+.toast-standalone.toast-top-center,
+.toast-standalone.toast-top-right {
+  --toast-offset: -100%;
+}
+
+.toast[data-state="closed"] {
+  animation: toast-exit 200ms ease-in forwards;
+  pointer-events: none;
+}
+
+@keyframes toast-enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--toast-offset));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes toast-exit {
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast,
+  .toast[data-state="closed"] {
+    animation-duration: 1ms;
+  }
+}
+
+.toast-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.toast-success .toast-icon {
+  color: hsl(var(--color-success));
+}
+
+.toast-info .toast-icon {
+  color: hsl(var(--color-info));
+}
+
+.toast-warning .toast-icon {
+  color: hsl(var(--color-warning));
+}
+
+.toast-error .toast-icon {
+  color: hsl(var(--color-destructive));
+}
+
+.toast-loading .toast-icon {
+  color: hsl(var(--color-muted-foreground));
+}
+
+.toast-loading .toast-icon svg {
+  animation: spin 1s linear infinite;
+}
+
+.toast-content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.toast-title {
+  font-weight: var(--font-semibold);
+  line-height: 1.25;
+}
+
+.toast-description {
+  color: hsl(var(--color-muted-foreground));
+  line-height: 1.4;
+}
+
+.toast-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.toast-action {
+  height: 1.75rem;
+  padding: 0 0.625rem;
+  border: none;
+  border-radius: calc(var(--radius) - 2px);
+  background-color: hsl(var(--color-primary));
+  color: hsl(var(--color-primary-foreground));
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+}
+
+.toast-action:hover {
+  background-color: hsl(var(--color-primary) / 0.9);
+}
+
+.toast-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: none;
+  border-radius: calc(var(--radius) - 2px);
+  background: transparent;
+  color: hsl(var(--color-muted-foreground));
+  cursor: pointer;
+}
+
+.toast-close:hover {
+  background-color: hsl(var(--color-accent));
+  color: hsl(var(--color-foreground));
+}
+
+.toast-action:focus-visible,
+.toast-close:focus-visible {
+  outline: 2px solid hsl(var(--color-ring));
+  outline-offset: 2px;
+}
+
+/* Rich colors: tint the whole toast with its type color. */
+.toaster-rich-colors .toast-success {
+  border-color: hsl(var(--color-success) / 0.4);
+  background-color: hsl(var(--color-success) / 0.12);
+  color: hsl(var(--color-success));
+}
+
+.toaster-rich-colors .toast-info {
+  border-color: hsl(var(--color-info) / 0.4);
+  background-color: hsl(var(--color-info) / 0.12);
+  color: hsl(var(--color-info));
+}
+
+.toaster-rich-colors .toast-warning {
+  border-color: hsl(var(--color-warning) / 0.5);
+  background-color: hsl(var(--color-warning) / 0.14);
+  color: hsl(var(--color-foreground));
+}
+
+.toaster-rich-colors .toast-error {
+  border-color: hsl(var(--color-destructive) / 0.4);
+  background-color: hsl(var(--color-destructive) / 0.12);
+  color: hsl(var(--color-destructive));
+}
+
+.toaster-rich-colors .toast-success .toast-description,
+.toaster-rich-colors .toast-info .toast-description,
+.toaster-rich-colors .toast-warning .toast-description,
+.toaster-rich-colors .toast-error .toast-description {
+  color: inherit;
+  opacity: 0.85;
+}
+
+.toaster-rich-colors .toast-success .toast-icon,
+.toaster-rich-colors .toast-info .toast-icon,
+.toaster-rich-colors .toast-error .toast-icon {
+  color: inherit;
+}
+
+/* Standalone <Toast> positions itself. */
+.toast-standalone {
+  position: fixed;
+  z-index: calc(var(--z-tooltip, 1600) + 100);
+  width: min(356px, calc(100vw - 2rem));
+}
+
+.toast-standalone.toast-top-left,
+.toast-standalone.toast-top-center,
+.toast-standalone.toast-top-right {
+  top: 1rem;
+}
+
+.toast-standalone.toast-bottom-left,
+.toast-standalone.toast-bottom-center,
+.toast-standalone.toast-bottom-right {
+  bottom: 1rem;
+}
+
+.toast-standalone.toast-top-left,
+.toast-standalone.toast-bottom-left {
+  left: 1rem;
+}
+
+.toast-standalone.toast-top-right,
+.toast-standalone.toast-bottom-right {
+  right: 1rem;
+}
+
+.toast-standalone.toast-top-center,
+.toast-standalone.toast-bottom-center {
+  left: 0;
+  right: 0;
+  margin-inline: auto;
+}
+
+/* ============================================
    Animations
    ============================================ */
 @keyframes fade-in {

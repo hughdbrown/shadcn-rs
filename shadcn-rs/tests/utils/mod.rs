@@ -100,3 +100,16 @@ pub fn active_id() -> String {
         .expect("no active element")
         .id()
 }
+
+#[allow(dead_code)]
+pub async fn wait_ms(ms: u64) {
+    sleep(Duration::from_millis(ms)).await;
+}
+
+#[allow(dead_code)]
+pub fn count(selector: &str) -> u32 {
+    gloo::utils::document()
+        .query_selector_all(selector)
+        .expect("query selector failed")
+        .length()
+}
