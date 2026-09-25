@@ -40,3 +40,5 @@ lcov.info
 # Environment
 .env
 .env.local
+
+.claude/worktrees/
