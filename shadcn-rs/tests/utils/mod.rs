@@ -103,6 +103,7 @@ pub fn active_id() -> String {
 
 /// Loads the library stylesheet into the test page (once), for tests whose
 /// assertions depend on layout.
+#[allow(dead_code)]
 pub fn inject_component_styles() {
     const ID: &str = "shadcn-test-styles";
     let document = gloo::utils::document();
@@ -117,4 +118,17 @@ pub fn inject_component_styles() {
     gloo::utils::head()
         .append_child(&style)
         .expect("failed to append style element");
+}
+
+#[allow(dead_code)]
+pub async fn wait_ms(ms: u64) {
+    sleep(Duration::from_millis(ms)).await;
+}
+
+#[allow(dead_code)]
+pub fn count(selector: &str) -> u32 {
+    gloo::utils::document()
+        .query_selector_all(selector)
+        .expect("query selector failed")
+        .length()
 }
