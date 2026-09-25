@@ -172,5 +172,5 @@ toast.promise(
         },
     ];
 
-    html! { <ComponentPage name="Sonner" description="Sonner (deprecated alias of Toast): an opinionated toast component." {examples} {props} /> }
+    html! { <ComponentPage name="Sonner" description="Sonner (deprecated alias of Toast): an opinionated toast component." import_code="use shadcn_rs::{use_toast, Toaster};" {examples} {props} /> }
 }

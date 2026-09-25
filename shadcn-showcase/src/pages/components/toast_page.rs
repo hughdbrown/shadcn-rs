@@ -243,5 +243,5 @@ wasm_bindgen_futures::spawn_local(async move {
         },
     ];
 
-    html! { <ComponentPage name="Toast" description="A succinct message that is displayed temporarily." {examples} {props} /> }
+    html! { <ComponentPage name="Toast" description="A succinct message that is displayed temporarily." import_code="use shadcn_rs::{use_toast, Toaster};" {examples} {props} /> }
 }
