@@ -2985,6 +2985,216 @@
   background-color: hsl(var(--color-border));
 }
 
+/* ============================================
+   Empty
+   ============================================ */
+.empty {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  border-radius: var(--radius);
+  border: 1px dashed hsl(var(--color-border));
+  padding: 3rem 1.5rem;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.empty-icon {
+  display: flex;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  background-color: hsl(var(--color-muted));
+  color: hsl(var(--color-foreground));
+  font-size: 1.25rem;
+}
+
+.empty-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+}
+
+.empty-description {
+  margin: 0;
+  max-width: 24rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: hsl(var(--color-muted-foreground));
+}
+
+.empty-action {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* ============================================
+   Item
+   ============================================ */
+.item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  padding: 1rem;
+  font-size: 0.875rem;
+  outline: none;
+  transition: background-color 0.15s, border-color 0.15s;
+  cursor: pointer;
+}
+
+.item:hover {
+  background-color: hsl(var(--color-accent) / 0.5);
+}
+
+.item:focus-visible {
+  outline: 2px solid hsl(var(--color-ring));
+  outline-offset: 2px;
+}
+
+.item-selected {
+  border-color: hsl(var(--color-border));
+  background-color: hsl(var(--color-accent));
+  color: hsl(var(--color-accent-foreground));
+}
+
+.item-disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.item-icon {
+  display: flex;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid hsl(var(--color-border));
+  background-color: hsl(var(--color-muted));
+}
+
+.item-content {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.item-text {
+  font-weight: 500;
+  line-height: 1.375;
+}
+
+.item-description {
+  color: hsl(var(--color-muted-foreground));
+  line-height: 1.5;
+}
+
+/* ============================================
+   Kbd
+   ============================================ */
+.kbd {
+  display: inline-flex;
+  height: 1.25rem;
+  min-width: 1.25rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  border-radius: calc(var(--radius) - 4px);
+  background-color: hsl(var(--color-muted));
+  color: hsl(var(--color-muted-foreground));
+  padding: 0 0.25rem;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  pointer-events: none;
+  user-select: none;
+}
+
+.kbd.kbd-xs {
+  height: 1rem;
+  min-width: 1rem;
+  font-size: 0.625rem;
+}
+
+.kbd.kbd-sm {
+  height: 1.125rem;
+  min-width: 1.125rem;
+  font-size: 0.6875rem;
+}
+
+.kbd.kbd-lg {
+  height: 1.5rem;
+  min-width: 1.5rem;
+  font-size: 0.8125rem;
+}
+
+.kbd.kbd-xl {
+  height: 1.75rem;
+  min-width: 1.75rem;
+  font-size: 0.875rem;
+}
+
+.kbd.kbd-2xl {
+  height: 2rem;
+  min-width: 2rem;
+  font-size: 1rem;
+}
+
+/* ============================================
+   Input OTP
+   ============================================ */
+.input-otp {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.input-otp-field {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius);
+  border: 1px solid hsl(var(--color-input));
+  background-color: transparent;
+  color: hsl(var(--color-foreground));
+  text-align: center;
+  font-size: 0.875rem;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.input-otp-field:focus-visible {
+  border-color: hsl(var(--color-ring));
+  box-shadow: 0 0 0 3px hsl(var(--color-ring) / 0.3);
+}
+
+.input-otp-field[aria-invalid="true"] {
+  border-color: hsl(var(--color-destructive));
+}
+
+.input-otp-disabled,
+.input-otp-field:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 .command-separator {
   height: 1px;
   margin: 0.25rem -0.25rem;

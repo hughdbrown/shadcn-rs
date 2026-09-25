@@ -110,6 +110,20 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_empty_classes_have_css() {
+        let css = include_str!("../../styles/components.css");
+        for class in [
+            "empty",
+            "empty-icon",
+            "empty-title",
+            "empty-description",
+            "empty-action",
+        ] {
+            assert!(css.contains(&format!(".{class} {{")), "missing .{class}");
+        }
+    }
+
+    #[test]
     fn test_empty_with_icon() {
         let props = EmptyProps {
             icon: Some(AttrValue::from("📭")),

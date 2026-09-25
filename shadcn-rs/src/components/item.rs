@@ -129,6 +129,22 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_item_classes_have_css() {
+        let css = include_str!("../../styles/components.css");
+        for class in [
+            "item",
+            "item-selected",
+            "item-disabled",
+            "item-icon",
+            "item-content",
+            "item-text",
+            "item-description",
+        ] {
+            assert!(css.contains(&format!(".{class} {{")), "missing .{class}");
+        }
+    }
+
+    #[test]
     fn test_item_default() {
         let props = ItemProps {
             icon: None,

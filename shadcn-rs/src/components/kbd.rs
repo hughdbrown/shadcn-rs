@@ -78,6 +78,16 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_kbd_classes_have_css() {
+        let css = include_str!("../../styles/components.css");
+        assert!(css.contains(".kbd {"));
+        // Md is the base `.kbd` size; the others need their own rule.
+        for class in ["kbd-xs", "kbd-sm", "kbd-lg", "kbd-xl", "kbd-2xl"] {
+            assert!(css.contains(&format!(".kbd.{class} {{")), "missing {class}");
+        }
+    }
+
+    #[test]
     fn test_kbd_default_size() {
         let props = KbdProps {
             size: Size::Md,
