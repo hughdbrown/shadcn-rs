@@ -332,10 +332,17 @@ pub fn sidebar_inset(props: &SidebarInsetProps) -> Html {
     }
 }
 
+/// Whether a sidebar is collapsed: forced by its own prop, or following a
+/// provider's open state when it has one.
+fn sidebar_collapsed(forced: bool, provider_open: Option<bool>) -> bool {
+    forced || provider_open == Some(false)
+}
+
 /// Sidebar container properties
 #[derive(Properties, PartialEq, Clone)]
 pub struct SidebarProps {
-    /// Collapsed state
+    /// Forces the collapsed state. Inside a `SidebarProvider` the sidebar
+    /// also collapses whenever the provider is closed.
     #[prop_or(false)]
     pub collapsed: bool,
 
@@ -376,6 +383,16 @@ pub fn sidebar(props: &SidebarProps) -> Html {
     let context = use_context::<SidebarContext>();
     // An explicit `is_mobile` prop still forces mobile layout inside a provider.
     let effective_mobile = is_mobile || context.as_ref().is_some_and(|sidebar| sidebar.is_mobile);
+    // Follow the provider (toggled by SidebarTrigger / SidebarRail).
+    let collapsed = sidebar_collapsed(collapsed, context.as_ref().map(|sidebar| sidebar.open));
+
+    // Without a caller handler, a backdrop click closes the provider.
+    let on_backdrop_click = on_backdrop_click.or_else(|| {
+        context.as_ref().map(|sidebar| {
+            let set_open = sidebar.set_open.clone();
+            Callback::from(move |_: MouseEvent| set_open.emit(false))
+        })
+    });
 
     let classes: Classes = vec![
         Classes::from("sidebar"),
@@ -399,7 +416,12 @@ pub fn sidebar(props: &SidebarProps) -> Html {
             if effective_mobile && !collapsed {
                 <div class="sidebar-backdrop" onclick={on_backdrop_click} aria-hidden="true" />
             }
-            <aside class={classes} aria-label="Sidebar">
+            <aside
+                class={classes}
+                aria-label="Sidebar"
+                data-state={if collapsed { "collapsed" } else { "expanded" }}
+                data-mobile={effective_mobile.to_string()}
+            >
                 { children }
             </aside>
         </>
@@ -776,6 +798,17 @@ pub fn sidebar_separator(props: &SidebarSeparatorProps) -> Html {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_sidebar_collapsed_follows_provider() {
+        // No provider: only the prop decides.
+        assert!(!sidebar_collapsed(false, None));
+        assert!(sidebar_collapsed(true, None));
+        // Provider open/closed drives the state; the prop can still force it.
+        assert!(!sidebar_collapsed(false, Some(true)));
+        assert!(sidebar_collapsed(false, Some(false)));
+        assert!(sidebar_collapsed(true, Some(true)));
+    }
 
     #[test]
     fn test_sidebar_collapsed() {

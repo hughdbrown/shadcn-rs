@@ -16,7 +16,7 @@ pub fn navigation_menu_page() -> Html {
         demo: html! {
             <NavigationMenu>
                 <NavigationMenuList>
-                    <NavigationMenuItem>
+                    <NavigationMenuItem value="getting-started">
                         <NavigationMenuTrigger>{ "Getting Started" }</NavigationMenuTrigger>
                         <NavigationMenuContent>
                             <ul class="grid gap-3 p-4 w-[400px]">
@@ -39,7 +39,7 @@ pub fn navigation_menu_page() -> Html {
                             </ul>
                         </NavigationMenuContent>
                     </NavigationMenuItem>
-                    <NavigationMenuItem>
+                    <NavigationMenuItem value="components">
                         <NavigationMenuTrigger>{ "Components" }</NavigationMenuTrigger>
                         <NavigationMenuContent>
                             <ul class="grid gap-3 p-4 w-[400px]">
@@ -59,7 +59,7 @@ pub fn navigation_menu_page() -> Html {
         },
         code: r#"<NavigationMenu>
     <NavigationMenuList>
-        <NavigationMenuItem>
+        <NavigationMenuItem value="menu">
             <NavigationMenuTrigger>{ "Menu" }</NavigationMenuTrigger>
             <NavigationMenuContent>
                 { /* Content */ }
@@ -70,6 +70,24 @@ pub fn navigation_menu_page() -> Html {
     }];
 
     let props = vec![
+        PropDoc {
+            name: "value",
+            prop_type: "Option<AttrValue>",
+            default: "-",
+            description: "Value of the open item (controlled); Some(\"\") means closed",
+        },
+        PropDoc {
+            name: "default_value",
+            prop_type: "Option<AttrValue>",
+            default: "-",
+            description: "Item open initially (uncontrolled)",
+        },
+        PropDoc {
+            name: "on_value_change",
+            prop_type: "Callback<Option<AttrValue>>",
+            default: "-",
+            description: "Called with the open item's value, or None when closed",
+        },
         PropDoc {
             name: "class",
             prop_type: "Classes",

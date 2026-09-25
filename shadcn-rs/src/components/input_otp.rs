@@ -368,6 +368,14 @@ mod tests {
     }
 
     #[test]
+    fn test_input_otp_classes_have_css() {
+        let css = include_str!("../../styles/components.css");
+        assert!(css.contains(".input-otp {"));
+        assert!(css.contains(".input-otp-field {"));
+        assert!(css.contains(".input-otp-disabled"));
+    }
+
+    #[test]
     fn test_input_otp_default() {
         let props = InputOTPProps {
             length: 6,

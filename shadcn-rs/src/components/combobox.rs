@@ -31,31 +31,58 @@
 //! }
 //! ```
 
+use crate::components::command::{
+    matches_query, use_match_registry, use_report_match, use_text_content,
+};
 use crate::hooks::{use_click_outside_conditional, use_escape_key_conditional};
 use wasm_bindgen::JsCast;
 use yew::prelude::*;
 
-/// Context for sharing combobox state with children
+/// Context for sharing combobox state between parent and children
 #[derive(Clone, PartialEq)]
 pub struct ComboboxContext {
-    /// Current filter query string
+    /// Current filter/search query
     pub filter_query: String,
     /// Callback to update the filter query
     pub set_filter_query: Callback<String>,
     /// Whether the combobox dropdown is open
     pub is_open: bool,
-    /// Callback to toggle the dropdown open/closed
+    /// Callback to toggle open state
     pub toggle: Callback<()>,
-    /// Callback to set the dropdown open state directly
+    /// Callback to set open state
     pub set_open: Callback<bool>,
-    /// Shared id for ARIA association between trigger and content
+    /// Unique ID for the content element (used for aria-controls)
     pub content_id: String,
+    /// Currently selected value
+    pub value: Option<AttrValue>,
+    /// Label (text) of the selected item, once one has been picked
+    pub selected_label: Option<AttrValue>,
+    /// Commits a selection: `(value, label)`. Closes the popup.
+    pub select: Callback<(AttrValue, AttrValue)>,
+    /// True while `filter_query` holds the selected label rather than typed
+    /// text; items then ignore the filter
+    pub query_is_selection: bool,
+    /// Number of items that match the current filter
+    pub match_count: usize,
+    /// Items report `(id, Some(matches))` / `(id, None)` to the root
+    pub report_match: Callback<(AttrValue, Option<bool>)>,
 }
 
-/// Combobox container properties
+impl ComboboxContext {
+    /// Query items should filter by (empty right after a selection)
+    pub fn effective_query(&self) -> &str {
+        if self.query_is_selection {
+            ""
+        } else {
+            &self.filter_query
+        }
+    }
+}
+
+/// Combobox component properties
 #[derive(Properties, PartialEq, Clone)]
 pub struct ComboboxProps {
-    /// Open state (controlled)
+    /// Whether the combobox is open. Later changes are applied too.
     #[prop_or_default]
     pub open: Option<bool>,
 
@@ -63,9 +90,21 @@ pub struct ComboboxProps {
     #[prop_or(false)]
     pub default_open: bool,
 
-    /// Open state change handler
+    /// Callback when open state changes
     #[prop_or_default]
     pub on_open_change: Option<Callback<bool>>,
+
+    /// Selected value (controlled)
+    #[prop_or_default]
+    pub value: Option<AttrValue>,
+
+    /// Initially selected value (uncontrolled)
+    #[prop_or_default]
+    pub default_value: Option<AttrValue>,
+
+    /// Called with the value of the item the user selects
+    #[prop_or_default]
+    pub on_value_change: Option<Callback<AttrValue>>,
 
     /// Additional CSS classes
     #[prop_or_default]
@@ -75,20 +114,20 @@ pub struct ComboboxProps {
     pub children: Children,
 }
 
-/// Combobox container component
+/// Combobox component
 ///
-/// The main container for a combobox (searchable select).
-///
-/// # Accessibility
-/// - Full keyboard navigation
-/// - Screen reader support
-/// - ARIA attributes
+/// Container for the combobox trigger, input and content. Selecting an item
+/// commits its value, shows its label in the trigger and input, and closes
+/// the popup. Clicking outside the combobox or pressing Escape closes it.
 #[function_component(Combobox)]
 pub fn combobox(props: &ComboboxProps) -> Html {
     let ComboboxProps {
         open,
         default_open,
         on_open_change,
+        value,
+        default_value,
+        on_value_change,
         class,
         children,
     } = props.clone();
@@ -96,7 +135,29 @@ pub fn combobox(props: &ComboboxProps) -> Html {
     let open_state = use_state(|| open.unwrap_or(default_open));
     let is_open = *open_state;
     let filter_query = use_state(String::new);
+    let query_is_selection = use_state(|| false);
+    let internal_value = use_state(|| default_value);
+    let selected_label = use_state(|| None::<AttrValue>);
     let content_id = use_memo((), |_| crate::generate_id("combobox"));
+    let root_ref = use_node_ref();
+    let (match_count, report_match) = use_match_registry();
+
+    // Follow later changes to the `open` prop, not just the initial one.
+    {
+        let open_state = open_state.clone();
+        use_effect_with(open, move |open| {
+            if let Some(open) = *open {
+                open_state.set(open);
+            }
+        });
+    }
+
+    let is_value_controlled = value.is_some();
+    let current_value = if is_value_controlled {
+        value
+    } else {
+        (*internal_value).clone()
+    };
 
     let set_open = {
         let open_state = open_state.clone();
@@ -110,23 +171,47 @@ pub fn combobox(props: &ComboboxProps) -> Html {
     };
 
     let toggle = {
-        let open_state = open_state.clone();
-        let on_open_change = on_open_change.clone();
-        Callback::from(move |_: ()| {
-            let new_value = !*open_state;
-            open_state.set(new_value);
-            if let Some(cb) = on_open_change.as_ref() {
-                cb.emit(new_value);
-            }
-        })
+        let set_open = set_open.clone();
+        Callback::from(move |_: ()| set_open.emit(!is_open))
     };
 
     let set_filter_query = {
         let filter_query = filter_query.clone();
+        let query_is_selection = query_is_selection.clone();
         Callback::from(move |query: String| {
             filter_query.set(query);
+            query_is_selection.set(false);
         })
     };
+
+    let select = {
+        let internal_value = internal_value.clone();
+        let selected_label = selected_label.clone();
+        let filter_query = filter_query.clone();
+        let query_is_selection = query_is_selection.clone();
+        let set_open = set_open.clone();
+        Callback::from(move |(value, label): (AttrValue, AttrValue)| {
+            if !is_value_controlled {
+                internal_value.set(Some(value.clone()));
+            }
+            filter_query.set(label.to_string());
+            query_is_selection.set(true);
+            selected_label.set(Some(label));
+            if let Some(cb) = on_value_change.as_ref() {
+                cb.emit(value);
+            }
+            set_open.emit(false);
+        })
+    };
+
+    {
+        let set_open = set_open.clone();
+        use_click_outside_conditional(root_ref.clone(), move || set_open.emit(false), is_open);
+    }
+    {
+        let set_open = set_open.clone();
+        use_escape_key_conditional(move || set_open.emit(false), is_open);
+    }
 
     let context = ComboboxContext {
         filter_query: (*filter_query).clone(),
@@ -135,6 +220,12 @@ pub fn combobox(props: &ComboboxProps) -> Html {
         toggle,
         set_open,
         content_id: (*content_id).clone(),
+        value: current_value,
+        selected_label: (*selected_label).clone(),
+        select,
+        query_is_selection: *query_is_selection,
+        match_count,
+        report_match,
     };
 
     let classes: Classes = vec![
@@ -151,7 +242,7 @@ pub fn combobox(props: &ComboboxProps) -> Html {
 
     html! {
         <ContextProvider<ComboboxContext> context={context}>
-            <div class={classes}>
+            <div ref={root_ref} class={classes}>
                 { children }
             </div>
         </ContextProvider<ComboboxContext>>
@@ -169,13 +260,13 @@ pub struct ComboboxTriggerProps {
     #[prop_or_default]
     pub onclick: Option<Callback<MouseEvent>>,
 
-    /// Children elements
+    /// Children elements, shown until an item is selected
     pub children: Children,
 }
 
 /// Combobox trigger component
 ///
-/// Triggers the combobox dropdown.
+/// Toggles the popup. After a selection it shows the selected item's label.
 #[function_component(ComboboxTrigger)]
 pub fn combobox_trigger(props: &ComboboxTriggerProps) -> Html {
     let ComboboxTriggerProps {
@@ -194,32 +285,57 @@ pub fn combobox_trigger(props: &ComboboxTriggerProps) -> Html {
         .as_ref()
         .map(|ctx| ctx.content_id.clone())
         .unwrap_or_default();
+    let selected_label = context.as_ref().and_then(|ctx| ctx.selected_label.clone());
+    let trigger_ref = use_node_ref();
 
     let handle_click = {
         let context = context.clone();
         let onclick = onclick.clone();
         Callback::from(move |e: MouseEvent| {
-            // Toggle open state via context
+            // Clicks inside an input nested in the trigger shouldn't toggle.
+            let from_input = e
+                .target()
+                .and_then(|target| target.dyn_into::<web_sys::HtmlInputElement>().ok())
+                .is_some();
             if let Some(ctx) = context.as_ref() {
-                ctx.toggle.emit(());
+                if from_input {
+                    ctx.set_open.emit(true);
+                } else {
+                    ctx.toggle.emit(());
+                }
             }
-            // Also call user's handler if provided
             if let Some(cb) = onclick.as_ref() {
                 cb.emit(e);
             }
         })
     };
 
+    // A trigger that wraps its own input keeps it; plain triggers show the
+    // selected label in place of the placeholder children.
+    // The DOM from the previous render tells us whether an input is nested.
+    let has_input = trigger_ref
+        .cast::<web_sys::Element>()
+        .and_then(|el| el.query_selector("input").ok().flatten())
+        .is_some();
+    let content = match selected_label {
+        Some(label) if !has_input => html! {
+            <span class="combobox-value">{ label }</span>
+        },
+        _ => html! { { children } },
+    };
+
     html! {
         <button
+            ref={trigger_ref}
             type="button"
             class={classes}
             onclick={handle_click}
             role="combobox"
             aria-expanded={is_open.to_string()}
             aria-controls={content_id}
+            aria-haspopup="listbox"
         >
-            { children }
+            { content }
         </button>
     }
 }
@@ -231,7 +347,8 @@ pub struct ComboboxInputProps {
     #[prop_or_default]
     pub placeholder: Option<AttrValue>,
 
-    /// Current value
+    /// Current value. When omitted, the input shows the typed filter, or the
+    /// selected item's label after a selection.
     #[prop_or_default]
     pub value: Option<AttrValue>,
 
@@ -246,7 +363,7 @@ pub struct ComboboxInputProps {
 
 /// Combobox input component
 ///
-/// Search input for filtering combobox items.
+/// Filters the items as the user types and opens the popup.
 #[function_component(ComboboxInput)]
 pub fn combobox_input(props: &ComboboxInputProps) -> Html {
     let ComboboxInputProps {
@@ -265,11 +382,24 @@ pub fn combobox_input(props: &ComboboxInputProps) -> Html {
             let input: web_sys::HtmlInputElement = e.target_unchecked_into();
             if let Some(ctx) = context.as_ref() {
                 ctx.set_filter_query.emit(input.value());
+                if !ctx.is_open {
+                    ctx.set_open.emit(true);
+                }
             }
             if let Some(cb) = oninput.as_ref() {
                 cb.emit(e);
             }
         })
+    };
+
+    let value = value.or_else(|| {
+        context
+            .as_ref()
+            .map(|ctx| AttrValue::from(ctx.filter_query.clone()))
+    });
+    let (expanded, controls) = match context.as_ref() {
+        Some(ctx) => (Some(ctx.is_open.to_string()), Some(ctx.content_id.clone())),
+        None => (None, None),
     };
 
     let classes: Classes = vec![Classes::from("combobox-input"), class]
@@ -285,6 +415,8 @@ pub fn combobox_input(props: &ComboboxInputProps) -> Html {
             oninput={oninput_handler}
             role="combobox"
             aria-autocomplete="list"
+            aria-expanded={expanded}
+            aria-controls={controls}
         />
     }
 }
@@ -300,11 +432,11 @@ pub struct ComboboxContentProps {
     #[prop_or_default]
     pub max_visible_items: Option<usize>,
 
-    /// Whether to allow creating new items from the search query
+    /// Whether to show a "Create" option when no items match
     #[prop_or(false)]
     pub allow_create: bool,
 
-    /// Callback invoked when the user creates a new item
+    /// Callback when user creates a new item
     #[prop_or_default]
     pub on_create: Option<Callback<String>>,
 
@@ -314,7 +446,7 @@ pub struct ComboboxContentProps {
 
 /// Combobox content component
 ///
-/// Container for combobox items.
+/// The popup holding the items. Rendered only while open.
 #[function_component(ComboboxContent)]
 pub fn combobox_content(props: &ComboboxContentProps) -> Html {
     let ComboboxContentProps {
@@ -326,35 +458,11 @@ pub fn combobox_content(props: &ComboboxContentProps) -> Html {
     } = props.clone();
 
     let context = use_context::<ComboboxContext>();
-    let content_ref = use_node_ref();
     let is_open = context.as_ref().map(|ctx| ctx.is_open).unwrap_or(false);
     let content_id = context
         .as_ref()
         .map(|ctx| ctx.content_id.clone())
         .unwrap_or_default();
-
-    // Close on click outside
-    let context_click = context.clone();
-    use_click_outside_conditional(
-        content_ref.clone(),
-        move || {
-            if let Some(ctx) = context_click.as_ref() {
-                ctx.set_open.emit(false);
-            }
-        },
-        is_open,
-    );
-
-    // Close on Escape key
-    let context_esc = context.clone();
-    use_escape_key_conditional(
-        move || {
-            if let Some(ctx) = context_esc.as_ref() {
-                ctx.set_open.emit(false);
-            }
-        },
-        is_open,
-    );
 
     // Don't render content when closed
     if !is_open {
@@ -371,7 +479,7 @@ pub fn combobox_content(props: &ComboboxContentProps) -> Html {
     let create_option = if allow_create {
         let filter_query = context
             .as_ref()
-            .map(|ctx| ctx.filter_query.clone())
+            .map(|ctx| ctx.effective_query().to_string())
             .unwrap_or_default();
         if filter_query.is_empty() {
             html! {}
@@ -401,7 +509,6 @@ pub fn combobox_content(props: &ComboboxContentProps) -> Html {
 
     html! {
         <div
-            ref={content_ref}
             class={classes}
             id={content_id}
             role="listbox"
@@ -426,10 +533,15 @@ pub struct ComboboxEmptyProps {
 
 /// Combobox empty component
 ///
-/// Displays when no items match the search.
+/// Displayed only when no items match the current filter.
 #[function_component(ComboboxEmpty)]
 pub fn combobox_empty(props: &ComboboxEmptyProps) -> Html {
     let ComboboxEmptyProps { class, children } = props.clone();
+
+    let context = use_context::<ComboboxContext>();
+    if context.is_some_and(|ctx| ctx.match_count > 0) {
+        return html! {};
+    }
 
     let classes: Classes = vec![Classes::from("combobox-empty"), class]
         .into_iter()
@@ -500,7 +612,8 @@ pub struct ComboboxItemProps {
     #[prop_or_default]
     pub keywords: Option<AttrValue>,
 
-    /// Selected state
+    /// Selected state. Items also show as selected when their value equals
+    /// the combobox value.
     #[prop_or(false)]
     pub selected: bool,
 
@@ -522,7 +635,9 @@ pub struct ComboboxItemProps {
 
 /// Combobox item component
 ///
-/// A selectable item in the combobox.
+/// A selectable item in the combobox. Clicking it (or Enter/Space) commits
+/// its value to the combobox and closes the popup. Items that don't match
+/// the filter stay mounted but hidden.
 #[function_component(ComboboxItem)]
 pub fn combobox_item(props: &ComboboxItemProps) -> Html {
     let ComboboxItemProps {
@@ -536,50 +651,66 @@ pub fn combobox_item(props: &ComboboxItemProps) -> Html {
     } = props.clone();
 
     let context = use_context::<ComboboxContext>();
+    let node_ref = use_node_ref();
+    let label = use_text_content(node_ref.clone());
 
-    // Filter visibility based on context filter_query
-    let is_visible = context
-        .as_ref()
-        .map(|ctx| {
-            if ctx.filter_query.is_empty() {
-                true
-            } else {
-                let query = ctx.filter_query.to_lowercase();
-                let val_str = value.to_string().to_lowercase();
-                let kw_match = keywords
-                    .as_ref()
-                    .map(|k| k.to_lowercase().contains(&query))
-                    .unwrap_or(false);
-                val_str.contains(&query) || kw_match
-            }
-        })
-        .unwrap_or(true);
+    let is_visible = context.as_ref().is_none_or(|ctx| {
+        matches_query(
+            ctx.effective_query(),
+            &[
+                value.as_str(),
+                keywords.as_deref().unwrap_or_default(),
+                label.as_str(),
+            ],
+        )
+    });
+    use_report_match(
+        context.as_ref().map(|ctx| ctx.report_match.clone()),
+        is_visible,
+    );
 
-    if !is_visible {
-        return html! {};
-    }
+    let selected = selected
+        || context
+            .as_ref()
+            .is_some_and(|ctx| ctx.value.as_ref() == Some(&value));
 
-    // Keyboard navigation
-    let onkeydown = {
-        let onclick = onclick.clone();
-        Callback::from(move |e: KeyboardEvent| {
+    let handle_click = {
+        let value = value.clone();
+        let label = label.clone();
+        Callback::from(move |e: MouseEvent| {
             if disabled {
                 return;
             }
-            match e.key().as_str() {
-                "Enter" | " " => {
-                    e.prevent_default();
-                    if let Some(target) = e.target()
-                        && let Ok(el) = target.dyn_into::<web_sys::HtmlElement>()
-                    {
-                        el.click();
-                    }
-                    let _ = onclick.as_ref();
-                }
-                _ => {}
+            if let Some(cb) = onclick.as_ref() {
+                cb.emit(e);
+            }
+            if let Some(ctx) = context.as_ref() {
+                let label = if label.trim().is_empty() {
+                    value.clone()
+                } else {
+                    AttrValue::from(label.trim().to_string())
+                };
+                ctx.select.emit((value.clone(), label));
             }
         })
     };
+
+    let onkeydown = Callback::from(move |e: KeyboardEvent| {
+        if disabled {
+            return;
+        }
+        if matches!(e.key().as_str(), "Enter" | " ") {
+            e.prevent_default();
+            if let Some(item) = e
+                .target()
+                .and_then(|target| target.dyn_into::<web_sys::Element>().ok())
+                .and_then(|target| target.closest(".combobox-item").ok().flatten())
+                .and_then(|item| item.dyn_into::<web_sys::HtmlElement>().ok())
+            {
+                item.click();
+            }
+        }
+    });
 
     let classes: Classes = vec![
         Classes::from("combobox-item"),
@@ -602,11 +733,14 @@ pub fn combobox_item(props: &ComboboxItemProps) -> Html {
 
     html! {
         <div
+            ref={node_ref}
             class={classes}
             role="option"
+            data-value={value}
             aria-selected={selected.to_string()}
             aria-disabled={disabled.to_string()}
-            onclick={onclick}
+            hidden={!is_visible}
+            onclick={handle_click}
             onkeydown={onkeydown}
             tabindex={tabindex}
         >
@@ -649,6 +783,9 @@ mod tests {
             open: None,
             default_open: false,
             on_open_change: None,
+            value: None,
+            default_value: None,
+            on_value_change: None,
             class: Classes::new(),
             children: Children::new(vec![]),
         };
@@ -726,10 +863,37 @@ mod tests {
             toggle: Callback::from(|_: ()| {}),
             set_open: Callback::from(|_: bool| {}),
             content_id: String::from("combobox-1"),
+            value: None,
+            selected_label: None,
+            select: Callback::noop(),
+            query_is_selection: false,
+            match_count: 0,
+            report_match: Callback::noop(),
         };
 
         assert_eq!(ctx.filter_query, "test");
         assert!(ctx.is_open);
+    }
+
+    #[test]
+    fn test_combobox_effective_query_ignores_selection_label() {
+        let mut ctx = ComboboxContext {
+            filter_query: String::from("Next.js"),
+            set_filter_query: Callback::noop(),
+            is_open: true,
+            toggle: Callback::noop(),
+            set_open: Callback::noop(),
+            content_id: String::from("combobox-3"),
+            value: Some(AttrValue::from("next")),
+            selected_label: Some(AttrValue::from("Next.js")),
+            select: Callback::noop(),
+            query_is_selection: true,
+            match_count: 0,
+            report_match: Callback::noop(),
+        };
+        assert_eq!(ctx.effective_query(), "");
+        ctx.query_is_selection = false;
+        assert_eq!(ctx.effective_query(), "Next.js");
     }
 
     #[test]
@@ -741,6 +905,12 @@ mod tests {
             toggle: Callback::from(|_: ()| {}),
             set_open: Callback::from(|_: bool| {}),
             content_id: String::from("combobox-2"),
+            value: None,
+            selected_label: None,
+            select: Callback::noop(),
+            query_is_selection: false,
+            match_count: 0,
+            report_match: Callback::noop(),
         };
 
         assert!(ctx.filter_query.is_empty());
