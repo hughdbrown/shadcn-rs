@@ -3,7 +3,7 @@
 use wasm_bindgen_test::{wasm_bindgen_test as test, wasm_bindgen_test_configure};
 use yew::prelude::*;
 
-use shadcn_rs::{Checkbox, Switch};
+use shadcn_rs::{Checkbox, Radio, RadioGroup, Switch};
 
 #[allow(dead_code)]
 mod utils;
@@ -147,4 +147,94 @@ async fn switch_controlled_and_uncontrolled() {
     click("#sw-locked");
     settle().await;
     assert_eq!(attr("#sw-locked", "aria-checked").as_deref(), Some("false"));
+}
+
+// ---------------------------------------------------------------------------
+// Radio Group
+// ---------------------------------------------------------------------------
+
+#[function_component(RadioHarness)]
+fn radio_harness() -> Html {
+    let emitted = use_state(|| String::from("none"));
+    let on_uncontrolled = {
+        let emitted = emitted.clone();
+        Callback::from(move |value: AttrValue| emitted.set(value.to_string()))
+    };
+    let rejected = use_state(|| String::from("none"));
+    let on_rejected = {
+        let rejected = rejected.clone();
+        Callback::from(move |value: AttrValue| rejected.set(value.to_string()))
+    };
+    let renders = use_state(|| 0u32);
+    let rerender = {
+        let renders = renders.clone();
+        Callback::from(move |_: MouseEvent| renders.set(*renders + 1))
+    };
+
+    html! {
+        <div>
+            <RadioGroup name="rg-free" default_value="b" on_value_change={on_uncontrolled}>
+                <Radio id="rg-free-a" value="a" />
+                <Radio id="rg-free-b" value="b" />
+                <Radio id="rg-free-c" value="c" />
+            </RadioGroup>
+            <div id="rg-emitted">{ (*emitted).clone() }</div>
+
+            // Controlled, and the parent never accepts a change.
+            <RadioGroup name="rg-locked" value="a" on_value_change={on_rejected}>
+                <Radio id="rg-locked-a" value="a" />
+                <Radio id="rg-locked-b" value="b" />
+            </RadioGroup>
+            <div id="rg-rejected">{ (*rejected).clone() }</div>
+
+            <RadioGroup name="rg-disabled" disabled={true}>
+                <Radio id="rg-disabled-a" value="a" />
+            </RadioGroup>
+
+            // Standalone radios still group by name.
+            <Radio id="solo-a" name="solo" value="a" default_checked={true} />
+            <Radio id="solo-b" name="solo" value="b" />
+            <button id="solo-rerender" type="button" onclick={rerender}>
+                { renders.to_string() }
+            </button>
+        </div>
+    }
+}
+
+#[test]
+async fn radio_group_drives_items() {
+    let root = mount_root("radio-test");
+    let _app = yew::Renderer::<RadioHarness>::with_root(root).render();
+    settle().await;
+
+    // Items take their name and checked state from the group.
+    assert_eq!(attr("#rg-free-a", "name").as_deref(), Some("rg-free"));
+    assert!(!is_checked("#rg-free-a"));
+    assert!(is_checked("#rg-free-b"));
+
+    click("#rg-free-c");
+    settle().await;
+    assert_eq!(text("#rg-emitted"), "c");
+    assert!(is_checked("#rg-free-c"));
+    assert!(!is_checked("#rg-free-b"));
+
+    // A controlled group keeps the owner's value when the owner ignores a change.
+    assert!(is_checked("#rg-locked-a"));
+    click("#rg-locked-b");
+    settle().await;
+    assert_eq!(text("#rg-rejected"), "b");
+    assert!(is_checked("#rg-locked-a"));
+    assert!(!is_checked("#rg-locked-b"));
+
+    // Group-level disabled reaches the items.
+    assert!(attr("#rg-disabled-a", "disabled").is_some());
+
+    // Standalone uncontrolled radios keep the user's choice across re-renders.
+    assert!(is_checked("#solo-a"));
+    click("#solo-b");
+    settle().await;
+    click("#solo-rerender");
+    settle().await;
+    assert!(is_checked("#solo-b"));
+    assert!(!is_checked("#solo-a"));
 }
