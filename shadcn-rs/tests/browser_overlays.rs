@@ -4,13 +4,14 @@ use wasm_bindgen_test::{wasm_bindgen_test as test, wasm_bindgen_test_configure};
 use yew::prelude::*;
 
 use shadcn_rs::{
-    AlertDialog, AlertDialogContent, AlertDialogTrigger, Dialog, DialogContent, DialogTrigger,
-    Drawer, DrawerContent, DrawerTrigger, Sheet, SheetContent, SheetTrigger,
+    AlertDialog, AlertDialogContent, AlertDialogTrigger, Collapsible, CollapsibleContent,
+    CollapsibleTrigger, Dialog, DialogContent, DialogTrigger, Drawer, DrawerContent, DrawerTrigger,
+    Sheet, SheetContent, SheetTrigger,
 };
 
 mod utils;
 
-use utils::{click, keydown, mount_root, settle, text};
+use utils::{click, keydown, mount_root, query, settle, text};
 
 wasm_bindgen_test_configure!(run_in_browser);
 
@@ -19,6 +20,10 @@ fn exists(selector: &str) -> bool {
         .query_selector(selector)
         .expect("query selector failed")
         .is_some()
+}
+
+fn attr(selector: &str, name: &str) -> String {
+    query(selector).get_attribute(name).unwrap_or_default()
 }
 
 // ---------------------------------------------------------------------------
@@ -186,4 +191,52 @@ async fn modal_controlled_open_is_honored_without_callback() {
         app.destroy();
         settle().await;
     }
+}
+
+// ---------------------------------------------------------------------------
+// Collapsible: the toggle must flip the effective (controlled) value.
+// ---------------------------------------------------------------------------
+
+#[function_component(ControlledCollapsible)]
+fn controlled_collapsible() -> Html {
+    let open = use_state(|| true);
+    let on_open_change = {
+        let open = open.clone();
+        Callback::from(move |value: bool| open.set(value))
+    };
+    html! {
+        <Collapsible open={*open} {on_open_change}>
+            <CollapsibleTrigger>{ "Toggle" }</CollapsibleTrigger>
+            <CollapsibleContent>
+                <span id="collapsible-body">{ "Body" }</span>
+            </CollapsibleContent>
+        </Collapsible>
+    }
+}
+
+#[test]
+async fn collapsible_controlled_trigger_closes_and_reopens() {
+    let root = mount_root("collapsible-controlled");
+    let app = yew::Renderer::<ControlledCollapsible>::with_root(root).render();
+    settle().await;
+    assert!(exists("#collapsible-body"));
+    assert_eq!(attr(".collapsible-trigger", "aria-expanded"), "true");
+
+    // Before the fix this emitted `true` again (internal state started false).
+    click(".collapsible-trigger");
+    settle().await;
+    assert!(
+        !exists("#collapsible-body"),
+        "controlled trigger must close"
+    );
+    assert_eq!(attr(".collapsible-trigger", "aria-expanded"), "false");
+
+    click(".collapsible-trigger");
+    settle().await;
+    assert!(
+        exists("#collapsible-body"),
+        "controlled trigger must reopen"
+    );
+    app.destroy();
+    settle().await;
 }
