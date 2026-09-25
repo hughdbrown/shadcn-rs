@@ -4,14 +4,17 @@ use wasm_bindgen_test::{wasm_bindgen_test as test, wasm_bindgen_test_configure};
 use yew::prelude::*;
 
 use shadcn_rs::{
-    Checkbox, InputOTP, Radio, RadioGroup, Switch, Toggle, ToggleGroup, ToggleGroupItem,
-    ToggleGroupType,
+    Checkbox, InputOTP, NativeSelect, NativeSelectOption, Radio, RadioGroup, Switch, Toggle,
+    ToggleGroup, ToggleGroupItem, ToggleGroupType,
 };
 
 #[allow(dead_code)]
 mod utils;
 
-use utils::{attr, click, input, input_value, is_checked, mount_root, settle, text};
+use utils::{
+    attr, change_select, click, input, input_value, is_checked, mount_root, select_value, settle,
+    text,
+};
 
 wasm_bindgen_test_configure!(run_in_browser);
 
@@ -472,4 +475,75 @@ async fn input_otp_follows_controlled_value() {
     settle().await;
     assert_eq!(input_value("#otp-controlled input:nth-child(1)"), "9");
     assert_eq!(input_value("#otp-controlled input:nth-child(3)"), "7");
+}
+
+// ---------------------------------------------------------------------------
+// Native Select
+// ---------------------------------------------------------------------------
+
+#[function_component(NativeSelectHarness)]
+fn native_select_harness() -> Html {
+    let value = use_state(|| AttrValue::from("b"));
+    let onchange = {
+        let value = value.clone();
+        Callback::from(move |e: Event| {
+            let select: web_sys::HtmlSelectElement = e.target_unchecked_into();
+            value.set(AttrValue::from(select.value()));
+        })
+    };
+    let set_c = {
+        let value = value.clone();
+        Callback::from(move |_: MouseEvent| value.set(AttrValue::from("c")))
+    };
+    let options = || {
+        html! {
+            <>
+                <NativeSelectOption value="a">{ "A" }</NativeSelectOption>
+                <NativeSelectOption value="b">{ "B" }</NativeSelectOption>
+                <NativeSelectOption value="c">{ "C" }</NativeSelectOption>
+            </>
+        }
+    };
+
+    html! {
+        <div>
+            <NativeSelect id="ns-default" default_value="c">{ options() }</NativeSelect>
+            <NativeSelect id="ns-controlled" value={(*value).clone()} {onchange}>
+                { options() }
+            </NativeSelect>
+            <div id="ns-value">{ (*value).clone() }</div>
+            <button id="ns-set-c" type="button" onclick={set_c}>{ "c" }</button>
+            // Controlled with no parent update: a pick must snap back.
+            <NativeSelect id="ns-locked" value="a">{ options() }</NativeSelect>
+        </div>
+    }
+}
+
+#[test]
+async fn native_select_value_and_default_value() {
+    let root = mount_root("native-select-test");
+    let _app = yew::Renderer::<NativeSelectHarness>::with_root(root).render();
+    settle().await;
+
+    assert_eq!(select_value("#ns-default"), "c");
+    assert_eq!(select_value("#ns-controlled"), "b");
+
+    click("#ns-set-c");
+    settle().await;
+    assert_eq!(select_value("#ns-controlled"), "c");
+
+    change_select("#ns-controlled", "a");
+    settle().await;
+    assert_eq!(text("#ns-value"), "a");
+    assert_eq!(select_value("#ns-controlled"), "a");
+
+    change_select("#ns-locked", "c");
+    settle().await;
+    assert_eq!(select_value("#ns-locked"), "a");
+
+    // The uncontrolled select keeps the user's pick across re-renders.
+    change_select("#ns-default", "a");
+    click("#ns-set-c");
+    settle().await;
+    assert_eq!(select_value("#ns-default"), "a");
 }

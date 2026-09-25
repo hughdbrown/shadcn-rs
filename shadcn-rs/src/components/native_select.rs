@@ -25,16 +25,18 @@
 
 use crate::types::Size;
 use crate::utils::class_names;
+use web_sys::HtmlSelectElement;
 use yew::prelude::*;
 
 /// Native Select component properties
 #[derive(Properties, PartialEq, Clone)]
 pub struct NativeSelectProps {
-    /// Selected value
+    /// Selected value. `Some` makes the select controlled: it shows this value
+    /// until the parent passes a new one.
     #[prop_or_default]
     pub value: Option<AttrValue>,
 
-    /// Default value (for uncontrolled selects)
+    /// Initially selected value for an uncontrolled select (`value` unset)
     #[prop_or_default]
     pub default_value: Option<AttrValue>,
 
@@ -135,6 +137,44 @@ pub fn native_select(props: &NativeSelectProps) -> Html {
         children,
     } = props.clone();
 
+    // Yew 0.21 only sets the `value` *property* on <input> and <textarea>; on a
+    // <select> it becomes an attribute, which browsers ignore. Set the
+    // property through the node ref after each render instead.
+    {
+        let node_ref = node_ref.clone();
+        let controlled = value.clone();
+        use_effect(move || {
+            if let Some(wanted) = controlled {
+                sync_select_value(&node_ref, &wanted);
+            }
+        });
+    }
+    {
+        // `default_value` applies once, on mount, to an uncontrolled select.
+        let node_ref = node_ref.clone();
+        let initial = if value.is_none() { default_value } else { None };
+        use_effect_with((), move |_| {
+            if let Some(wanted) = initial {
+                sync_select_value(&node_ref, &wanted);
+            }
+        });
+    }
+
+    let handle_change = {
+        let node_ref = node_ref.clone();
+        let controlled = value.clone();
+        Callback::from(move |e: Event| {
+            if let Some(callback) = onchange.as_ref() {
+                callback.emit(e);
+            }
+            // A controlled select shows the owner's value until the owner
+            // re-renders with a new one, so undo the user's pick for now.
+            if let Some(wanted) = controlled.as_ref() {
+                sync_select_value(&node_ref, wanted);
+            }
+        })
+    };
+
     let is_invalid = aria_invalid.unwrap_or(false);
 
     // Build class names
@@ -161,12 +201,11 @@ pub fn native_select(props: &NativeSelectProps) -> Html {
             <select
                 ref={node_ref}
                 class={final_classes}
-                value={value.or(default_value)}
                 disabled={disabled}
                 required={required}
                 name={name}
                 id={id}
-                onchange={onchange}
+                onchange={handle_change}
                 onfocus={onfocus}
                 onblur={onblur}
                 aria-label={aria_label}
@@ -191,6 +230,15 @@ pub fn native_select(props: &NativeSelectProps) -> Html {
                 </svg>
             </span>
         </div>
+    }
+}
+
+/// Sets the `<select>` behind `node_ref` to `wanted` if it shows something else.
+fn sync_select_value(node_ref: &NodeRef, wanted: &str) {
+    if let Some(select) = node_ref.cast::<HtmlSelectElement>()
+        && select.value() != wanted
+    {
+        select.set_value(wanted);
     }
 }
 
