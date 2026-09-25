@@ -1,65 +1,66 @@
-//! Sonner component
+//! Sonner component (deprecated)
 //!
-//! Advanced toast notification system with rich features.
+//! Upstream shadcn/ui folded Sonner into Toast. Use [`Toaster`] and
+//! [`use_toast`] from the [`toast`](super::toast) module instead:
 //!
-//! # Examples
+//! | Deprecated            | Replacement                                    |
+//! |-----------------------|------------------------------------------------|
+//! | `SonnerPosition`      | [`ToastPosition`] (type alias, same variants)  |
+//! | `SonnerType`          | [`ToastType`] (type alias, same variants)      |
+//! | `Sonner`              | [`Toaster`]                                    |
+//! | `SonnerToast`         | `use_toast().add(ToastOptions { .. })`         |
+//!
+//! `Sonner` and `SonnerToast` still render the old declarative markup (now
+//! styled with the toaster CSS) so existing code keeps working for one
+//! release.
+//!
+//! # Migration
 //!
 //! ```rust,no_run
 //! use yew::prelude::*;
-//! use shadcn_rs::{Sonner, SonnerToast, SonnerPosition, SonnerType};
+//! use shadcn_rs::{use_toast, Button, ToastPosition, Toaster};
+//!
+//! #[function_component(Notify)]
+//! fn notify() -> Html {
+//!     let toast = use_toast();
+//!     let onclick = Callback::from(move |_: MouseEvent| {
+//!         toast.success("Your changes have been saved.");
+//!     });
+//!     html! { <Button {onclick}>{ "Save" }</Button> }
+//! }
 //!
 //! #[function_component(App)]
 //! fn app() -> Html {
 //!     html! {
-//!         <Sonner position={SonnerPosition::BottomRight}>
-//!             <SonnerToast
-//!                 r#type={SonnerType::Success}
-//!                 title="Success"
-//!                 description="Your changes have been saved."
-//!             />
-//!         </Sonner>
+//!         <Toaster position={ToastPosition::BottomRight}>
+//!             <Notify />
+//!         </Toaster>
 //!     }
 //! }
 //! ```
+//!
+//! [`Toaster`]: super::toast::Toaster
+//! [`use_toast`]: super::toast::use_toast
+//! [`ToastPosition`]: super::toast::ToastPosition
+//! [`ToastType`]: super::toast::ToastType
+
+#![allow(deprecated)]
 
 use gloo::timers::callback::Timeout;
 use yew::prelude::*;
 
+use super::toast::{ToastPosition, ToastType};
+
 /// Sonner position
-#[derive(Debug, Clone, PartialEq)]
-pub enum SonnerPosition {
-    /// Top left
-    TopLeft,
-    /// Top center
-    TopCenter,
-    /// Top right
-    TopRight,
-    /// Bottom left
-    BottomLeft,
-    /// Bottom center
-    BottomCenter,
-    /// Bottom right
-    BottomRight,
-}
+#[deprecated(since = "0.2.0", note = "use `ToastPosition` with `Toaster`")]
+pub type SonnerPosition = ToastPosition;
 
 /// Sonner toast type
-#[derive(Debug, Clone, PartialEq)]
-pub enum SonnerType {
-    /// Default type
-    Default,
-    /// Success type
-    Success,
-    /// Error type
-    Error,
-    /// Warning type
-    Warning,
-    /// Info type
-    Info,
-    /// Loading type (for promises)
-    Loading,
-}
+#[deprecated(since = "0.2.0", note = "use `ToastType` with `use_toast()`")]
+pub type SonnerType = ToastType;
 
 /// Sonner container properties
+#[deprecated(since = "0.2.0", note = "use `Toaster` and `ToasterProps`")]
 #[derive(Properties, PartialEq, Clone)]
 pub struct SonnerProps {
     /// Toast position
@@ -82,15 +83,13 @@ pub struct SonnerProps {
     pub children: Children,
 }
 
-/// Sonner container component
-///
-/// Container for advanced toast notifications.
-///
-/// # Accessibility
-/// - Live region for announcements
-/// - Touch gestures supported
-/// - Keyboard dismissible
-#[function_component(Sonner)]
+/// Deprecated `Sonner` container; use [`Toaster`](super::toast::Toaster).
+#[deprecated(since = "0.2.0", note = "use `Toaster` and `use_toast()`")]
+pub type Sonner = LegacySonner;
+
+/// Implementation behind the deprecated [`Sonner`] alias.
+#[doc(hidden)]
+#[function_component(LegacySonner)]
 pub fn sonner(props: &SonnerProps) -> Html {
     let SonnerProps {
         position,
@@ -100,18 +99,11 @@ pub fn sonner(props: &SonnerProps) -> Html {
         children,
     } = props.clone();
 
-    let position_class = match position {
-        SonnerPosition::TopLeft => "sonner-top-left",
-        SonnerPosition::TopCenter => "sonner-top-center",
-        SonnerPosition::TopRight => "sonner-top-right",
-        SonnerPosition::BottomLeft => "sonner-bottom-left",
-        SonnerPosition::BottomCenter => "sonner-bottom-center",
-        SonnerPosition::BottomRight => "sonner-bottom-right",
-    };
-
     let classes: Classes = vec![
         Classes::from("sonner"),
-        Classes::from(position_class),
+        Classes::from(format!("sonner-{}", position.as_str())),
+        Classes::from("toaster"),
+        Classes::from(format!("toaster-{}", position.as_str())),
         if expand {
             Classes::from("sonner-expanded")
         } else {
@@ -122,7 +114,7 @@ pub fn sonner(props: &SonnerProps) -> Html {
     .into_iter()
     .collect();
 
-    let style = format!("gap: {}px", gap);
+    let style = format!("--toast-gap: {gap}px");
 
     html! {
         <div class={classes} style={style} aria-live="polite">
@@ -132,6 +124,7 @@ pub fn sonner(props: &SonnerProps) -> Html {
 }
 
 /// Sonner toast properties
+#[deprecated(since = "0.2.0", note = "use `ToastOptions` with `use_toast()`")]
 #[derive(Properties, PartialEq, Clone)]
 pub struct SonnerToastProps {
     /// Toast type
@@ -146,7 +139,7 @@ pub struct SonnerToastProps {
     #[prop_or_default]
     pub description: Option<AttrValue>,
 
-    /// Enable swipe to dismiss
+    /// Show a close button
     #[prop_or(true)]
     pub dismissible: bool,
 
@@ -175,10 +168,13 @@ pub struct SonnerToastProps {
     pub children: Children,
 }
 
-/// Sonner toast component
-///
-/// Individual toast notification with rich features.
-#[function_component(SonnerToast)]
+/// Deprecated `SonnerToast`; use [`use_toast`](super::toast::use_toast).
+#[deprecated(since = "0.2.0", note = "use `use_toast().add(ToastOptions)`")]
+pub type SonnerToast = LegacySonnerToast;
+
+/// Implementation behind the deprecated [`SonnerToast`] alias.
+#[doc(hidden)]
+#[function_component(LegacySonnerToast)]
 pub fn sonner_toast(props: &SonnerToastProps) -> Html {
     let SonnerToastProps {
         r#type,
@@ -193,10 +189,7 @@ pub fn sonner_toast(props: &SonnerToastProps) -> Html {
         children,
     } = props.clone();
 
-    // Auto-dismiss timer.
-    // Note: the timer depends on `duration` so it only re-runs when duration changes.
-    // This is correct when the component is unmounted/remounted (common case),
-    // since a new component instance always runs its effects on mount.
+    // Auto-dismiss timer; re-runs only when `duration` changes.
     {
         let on_dismiss = on_dismiss.clone();
         use_effect_with(duration, move |&duration| {
@@ -214,18 +207,11 @@ pub fn sonner_toast(props: &SonnerToastProps) -> Html {
         });
     }
 
-    let type_class = match r#type {
-        SonnerType::Default => "sonner-toast-default",
-        SonnerType::Success => "sonner-toast-success",
-        SonnerType::Error => "sonner-toast-error",
-        SonnerType::Warning => "sonner-toast-warning",
-        SonnerType::Info => "sonner-toast-info",
-        SonnerType::Loading => "sonner-toast-loading",
-    };
-
     let classes: Classes = vec![
         Classes::from("sonner-toast"),
-        Classes::from(type_class),
+        Classes::from(format!("sonner-toast-{}", r#type.as_str())),
+        Classes::from("toast"),
+        Classes::from(format!("toast-{}", r#type.as_str())),
         if dismissible {
             Classes::from("sonner-toast-dismissible")
         } else {
@@ -245,30 +231,30 @@ pub fn sonner_toast(props: &SonnerToastProps) -> Html {
     let has_children = children.iter().count() > 0;
 
     html! {
-        <div class={classes} role="status">
-            <div class="sonner-toast-content">
+        <div class={classes} role={r#type.role()} aria-live={r#type.aria_live()}>
+            <div class="sonner-toast-content toast-content">
                 if has_children {
                     { children }
                 } else {
                     <>
                         if let Some(title_text) = title {
-                            <div class="sonner-toast-title">
+                            <div class="sonner-toast-title toast-title">
                                 { title_text }
                             </div>
                         }
                         if let Some(desc_text) = description {
-                            <div class="sonner-toast-description">
+                            <div class="sonner-toast-description toast-description">
                                 { desc_text }
                             </div>
                         }
                     </>
                 }
             </div>
-            <div class="sonner-toast-actions">
+            <div class="sonner-toast-actions toast-actions">
                 if let Some(action_text) = action {
                     <button
                         type="button"
-                        class="sonner-toast-action"
+                        class="sonner-toast-action toast-action"
                         onclick={on_action}
                     >
                         { action_text }
@@ -277,7 +263,7 @@ pub fn sonner_toast(props: &SonnerToastProps) -> Html {
                 if dismissible {
                     <button
                         type="button"
-                        class="sonner-toast-close"
+                        class="sonner-toast-close toast-close"
                         onclick={dismiss_handler}
                         aria-label="Close"
                     >
@@ -309,59 +295,6 @@ mod tests {
     }
 
     #[test]
-    fn test_sonner_expanded() {
-        let props = SonnerProps {
-            position: SonnerPosition::TopCenter,
-            expand: true,
-            gap: 20,
-            class: Classes::new(),
-            children: Children::new(vec![]),
-        };
-
-        assert!(props.expand);
-        assert_eq!(props.gap, 20);
-    }
-
-    #[test]
-    fn test_sonner_toast_default() {
-        let props = SonnerToastProps {
-            r#type: SonnerType::Default,
-            title: None,
-            description: None,
-            dismissible: true,
-            duration: 4000,
-            action: None,
-            on_action: None,
-            on_dismiss: None,
-            class: Classes::new(),
-            children: Children::new(vec![]),
-        };
-
-        assert_eq!(props.r#type, SonnerType::Default);
-        assert!(props.dismissible);
-        assert_eq!(props.duration, 4000);
-    }
-
-    #[test]
-    fn test_sonner_toast_success() {
-        let props = SonnerToastProps {
-            r#type: SonnerType::Success,
-            title: Some(AttrValue::from("Success")),
-            description: Some(AttrValue::from("Operation completed")),
-            dismissible: true,
-            duration: 3000,
-            action: None,
-            on_action: None,
-            on_dismiss: None,
-            class: Classes::new(),
-            children: Children::new(vec![]),
-        };
-
-        assert_eq!(props.r#type, SonnerType::Success);
-        assert_eq!(props.title, Some(AttrValue::from("Success")));
-    }
-
-    #[test]
     fn test_sonner_toast_loading() {
         let props = SonnerToastProps {
             r#type: SonnerType::Loading,
@@ -381,8 +314,10 @@ mod tests {
     }
 
     #[test]
-    fn test_sonner_types() {
-        assert_eq!(SonnerType::Success, SonnerType::Success);
-        assert_ne!(SonnerType::Success, SonnerType::Error);
+    fn aliases_are_the_toast_types() {
+        let position: ToastPosition = SonnerPosition::TopCenter;
+        let kind: ToastType = SonnerType::Warning;
+        assert_eq!(position, ToastPosition::TopCenter);
+        assert_eq!(kind, ToastType::Warning);
     }
 }
