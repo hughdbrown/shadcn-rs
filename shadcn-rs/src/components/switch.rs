@@ -4,6 +4,9 @@
 //!
 //! # Examples
 //!
+//! Controlled: the parent owns the state and `on_checked_change` reports the
+//! new value.
+//!
 //! ```rust,no_run
 //! use yew::prelude::*;
 //! use shadcn_rs::{Switch, Label};
@@ -12,22 +15,33 @@
 //! fn app() -> Html {
 //!     let enabled = use_state(|| false);
 //!
-//!     let onchange = {
+//!     let on_checked_change = {
 //!         let enabled = enabled.clone();
-//!         Callback::from(move |_| {
-//!             enabled.set(!*enabled);
-//!         })
+//!         Callback::from(move |value: bool| enabled.set(value))
 //!     };
 //!
 //!     html! {
 //!         <div class="flex items-center space-x-2">
-//!             <Switch id="airplane-mode" checked={*enabled} {onchange} />
+//!             <Switch id="airplane-mode" checked={*enabled} {on_checked_change} />
 //!             <Label html_for="airplane-mode">{ "Airplane Mode" }</Label>
 //!         </div>
 //!     }
 //! }
 //! ```
+//!
+//! Uncontrolled: leave `checked` unset and give an initial `default_checked`.
+//!
+//! ```rust,no_run
+//! use yew::prelude::*;
+//! use shadcn_rs::Switch;
+//!
+//! #[function_component(App)]
+//! fn app() -> Html {
+//!     html! { <Switch id="wifi" default_checked={true} /> }
+//! }
+//! ```
 
+use crate::hooks::use_controllable_bool;
 use crate::types::Size;
 use crate::utils::class_names;
 use yew::prelude::*;
@@ -35,11 +49,12 @@ use yew::prelude::*;
 /// Switch component properties
 #[derive(Properties, PartialEq, Clone)]
 pub struct SwitchProps {
-    /// Checked state
-    #[prop_or(false)]
-    pub checked: bool,
+    /// Checked state. `Some` makes the switch controlled: it only changes when
+    /// the parent passes a new value. `None` leaves it uncontrolled.
+    #[prop_or_default]
+    pub checked: Option<bool>,
 
-    /// Default checked state (for uncontrolled switches)
+    /// Initial checked state for an uncontrolled switch (`checked` unset)
     #[prop_or(false)]
     pub default_checked: bool,
 
@@ -67,9 +82,13 @@ pub struct SwitchProps {
     #[prop_or_default]
     pub id: Option<AttrValue>,
 
-    /// Change event handler
+    /// Raw event handler (the click or key event that toggled the switch)
     #[prop_or_default]
     pub onchange: Option<Callback<Event>>,
+
+    /// Called with the new checked value when the user toggles the switch
+    #[prop_or_default]
+    pub on_checked_change: Option<Callback<bool>>,
 
     /// Focus event handler
     #[prop_or_default]
@@ -109,6 +128,11 @@ pub struct SwitchProps {
 /// - On: Enabled (checked)
 /// - Disabled: Non-interactive
 ///
+/// # Controlled and uncontrolled
+/// Pass `checked` to control the switch from the parent, or leave it unset and
+/// use `default_checked` for the initial value. Both modes report changes
+/// through `on_checked_change` (the new value) and `onchange` (the raw event).
+///
 /// # Accessibility
 /// - Uses `role="switch"`
 /// - Supports ARIA attributes
@@ -131,6 +155,7 @@ pub fn switch(props: &SwitchProps) -> Html {
         value,
         id,
         onchange,
+        on_checked_change,
         onfocus,
         onblur,
         aria_label,
@@ -140,47 +165,32 @@ pub fn switch(props: &SwitchProps) -> Html {
         node_ref,
     } = props.clone();
 
-    // Internal state for uncontrolled mode
-    let internal_checked = use_state(|| default_checked);
+    let (is_checked, set_checked) =
+        use_controllable_bool(checked, default_checked, on_checked_change);
 
-    // Use controlled value if provided, otherwise use internal state
-    let is_checked = if checked { checked } else { *internal_checked };
+    // Shared by click and keyboard activation
+    let toggle = Callback::from(move |event: Event| {
+        if disabled {
+            return;
+        }
+        if let Some(callback) = onchange.as_ref() {
+            callback.emit(event);
+        }
+        set_checked.emit(!is_checked);
+    });
 
-    // Handle click events
     let onclick = {
-        let internal_checked = internal_checked.clone();
-        let onchange = onchange.clone();
-        Callback::from(move |e: MouseEvent| {
-            if !disabled {
-                let new_state = !*internal_checked;
-                internal_checked.set(new_state);
-                if let Some(callback) = onchange.as_ref() {
-                    let event: Event = e.into();
-                    callback.emit(event);
-                }
-            }
-        })
+        let toggle = toggle.clone();
+        Callback::from(move |e: MouseEvent| toggle.emit(e.into()))
     };
 
-    // Handle keyboard events (Space/Enter)
-    let onkeydown = {
-        let internal_checked = internal_checked.clone();
-        let onchange = onchange.clone();
-        Callback::from(move |e: KeyboardEvent| {
-            if !disabled {
-                let key = e.key();
-                if key == " " || key == "Enter" {
-                    e.prevent_default();
-                    let new_state = !*internal_checked;
-                    internal_checked.set(new_state);
-                    if let Some(callback) = onchange.as_ref() {
-                        let event: Event = e.into();
-                        callback.emit(event);
-                    }
-                }
-            }
-        })
-    };
+    let onkeydown = Callback::from(move |e: KeyboardEvent| {
+        let key = e.key();
+        if key == " " || key == "Enter" {
+            e.prevent_default();
+            toggle.emit(e.into());
+        }
+    });
 
     // Build class names
     let classes = class_names(&[
@@ -242,99 +252,40 @@ mod tests {
 
     #[test]
     fn test_switch_props_default() {
-        let props = SwitchProps {
-            checked: false,
-            default_checked: false,
-            size: Size::Md,
-            disabled: false,
-            required: false,
-            name: None,
-            value: None,
-            id: None,
-            onchange: None,
-            onfocus: None,
-            onblur: None,
-            aria_label: None,
-            aria_describedby: None,
-            class: Classes::new(),
-            style: None,
-            node_ref: NodeRef::default(),
-        };
-
-        assert!(!props.checked);
+        let props = yew::props!(SwitchProps {});
+        assert_eq!(props.checked, None);
+        assert!(!props.default_checked);
         assert_eq!(props.size, Size::Md);
         assert!(!props.disabled);
+        assert!(props.on_checked_change.is_none());
     }
 
     #[test]
-    fn test_switch_checked() {
-        let props = SwitchProps {
-            checked: true,
-            default_checked: false,
-            size: Size::Md,
-            disabled: false,
-            required: false,
-            name: None,
-            value: None,
-            id: None,
-            onchange: None,
-            onfocus: None,
-            onblur: None,
-            aria_label: None,
-            aria_describedby: None,
-            class: Classes::new(),
-            style: None,
-            node_ref: NodeRef::default(),
-        };
+    fn test_switch_checked_is_controlled() {
+        let on = yew::props!(SwitchProps { checked: true });
+        assert_eq!(on.checked, Some(true));
 
-        assert!(props.checked);
+        // A parent can force the switch off, which `checked: bool` could not express.
+        let off = yew::props!(SwitchProps {
+            checked: false,
+            default_checked: true
+        });
+        assert_eq!(off.checked, Some(false));
     }
 
     #[test]
     fn test_switch_disabled() {
-        let props = SwitchProps {
-            checked: false,
-            default_checked: false,
-            size: Size::Md,
-            disabled: true,
-            required: false,
-            name: None,
-            value: None,
-            id: None,
-            onchange: None,
-            onfocus: None,
-            onblur: None,
-            aria_label: None,
-            aria_describedby: None,
-            class: Classes::new(),
-            style: None,
-            node_ref: NodeRef::default(),
-        };
-
+        let props = yew::props!(SwitchProps { disabled: true });
         assert!(props.disabled);
     }
 
     #[test]
     fn test_switch_with_name() {
-        let props = SwitchProps {
+        let props = yew::props!(SwitchProps {
             checked: true,
-            default_checked: false,
-            size: Size::Md,
-            disabled: false,
-            required: false,
-            name: Some(AttrValue::from("setting")),
-            value: Some(AttrValue::from("on")),
-            id: None,
-            onchange: None,
-            onfocus: None,
-            onblur: None,
-            aria_label: None,
-            aria_describedby: None,
-            class: Classes::new(),
-            style: None,
-            node_ref: NodeRef::default(),
-        };
-
+            name: AttrValue::from("setting"),
+            value: AttrValue::from("on"),
+        });
         assert_eq!(props.name, Some(AttrValue::from("setting")));
         assert_eq!(props.value, Some(AttrValue::from("on")));
     }

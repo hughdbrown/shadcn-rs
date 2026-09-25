@@ -3,7 +3,7 @@
 use wasm_bindgen_test::{wasm_bindgen_test as test, wasm_bindgen_test_configure};
 use yew::prelude::*;
 
-use shadcn_rs::Checkbox;
+use shadcn_rs::{Checkbox, Switch};
 
 #[allow(dead_code)]
 mod utils;
@@ -71,4 +71,80 @@ async fn checkbox_default_checked_and_controlled() {
     settle().await;
     assert_eq!(text("#cb-rejected"), "true");
     assert!(!is_checked("#cb-locked"));
+}
+
+// ---------------------------------------------------------------------------
+// Switch
+// ---------------------------------------------------------------------------
+
+#[function_component(SwitchHarness)]
+fn switch_harness() -> Html {
+    let on = use_state(|| true);
+    let emitted = use_state(|| String::from("none"));
+    let on_checked_change = {
+        let on = on.clone();
+        let emitted = emitted.clone();
+        Callback::from(move |value: bool| {
+            on.set(value);
+            emitted.set(value.to_string());
+        })
+    };
+    let force_off = {
+        let on = on.clone();
+        Callback::from(move |_: MouseEvent| on.set(false))
+    };
+
+    html! {
+        <div>
+            <Switch id="sw-uncontrolled" default_checked={true} />
+            <Switch id="sw-controlled" checked={*on} {on_checked_change} />
+            <button id="sw-force-off" type="button" onclick={force_off}>{ "off" }</button>
+            <div id="sw-emitted">{ (*emitted).clone() }</div>
+            <Switch id="sw-locked" checked={false} />
+        </div>
+    }
+}
+
+#[test]
+async fn switch_controlled_and_uncontrolled() {
+    let root = mount_root("switch-test");
+    let _app = yew::Renderer::<SwitchHarness>::with_root(root).render();
+    settle().await;
+
+    assert_eq!(
+        attr("#sw-uncontrolled", "aria-checked").as_deref(),
+        Some("true")
+    );
+    click("#sw-uncontrolled");
+    settle().await;
+    assert_eq!(
+        attr("#sw-uncontrolled", "aria-checked").as_deref(),
+        Some("false")
+    );
+
+    // The parent can force a controlled switch off.
+    assert_eq!(
+        attr("#sw-controlled", "aria-checked").as_deref(),
+        Some("true")
+    );
+    click("#sw-force-off");
+    settle().await;
+    assert_eq!(
+        attr("#sw-controlled", "aria-checked").as_deref(),
+        Some("false")
+    );
+
+    // Clicking reports the new value.
+    click("#sw-controlled");
+    settle().await;
+    assert_eq!(text("#sw-emitted"), "true");
+    assert_eq!(
+        attr("#sw-controlled", "aria-checked").as_deref(),
+        Some("true")
+    );
+
+    // Without a parent update, a controlled switch does not move.
+    click("#sw-locked");
+    settle().await;
+    assert_eq!(attr("#sw-locked", "aria-checked").as_deref(), Some("false"));
 }
