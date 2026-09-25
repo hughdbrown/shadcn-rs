@@ -209,5 +209,9 @@ pub use input_otp::InputOTP;
 pub use carousel::{Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious};
 pub use chart::{Chart, ChartData, ChartType};
 pub use data_table::{DataTable, DataTableColumn, SelectionMode, SortDirection};
+#[allow(deprecated)]
 pub use sonner::{Sonner, SonnerPosition, SonnerToast, SonnerType};
-pub use toast::{Toast, ToastPosition, ToastVariant};
+pub use toast::{
+    PromiseMessages, Toast, ToastAction, ToastDuration, ToastHandle, ToastId, ToastOptions,
+    ToastPosition, ToastType, ToastVariant, Toaster, ToasterProps, use_toast,
+};
