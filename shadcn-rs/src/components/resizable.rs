@@ -116,8 +116,8 @@ pub fn resizable(props: &ResizableProps) -> Html {
     };
 
     let orientation_class = match orientation {
-        ResizableOrientation::Horizontal => "resizable-horizontal",
-        ResizableOrientation::Vertical => "resizable-vertical",
+        ResizableOrientation::Horizontal => "orientation-horizontal",
+        ResizableOrientation::Vertical => "orientation-vertical",
     };
 
     let classes: Classes = vec![

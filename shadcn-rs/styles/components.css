@@ -2427,6 +2427,8 @@
 
 .resizable.orientation-vertical {
   flex-direction: column;
+  /* A column layout has no intrinsic height to split; give it one. */
+  min-height: 12rem;
 }
 
 .resizable-panel {
