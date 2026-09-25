@@ -5,14 +5,15 @@ use yew::prelude::*;
 
 use shadcn_rs::{
     Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarRadioGroup, MenubarRadioItem,
-    MenubarTrigger, Tabs, TabsContent, TabsList, TabsTrigger,
+    MenubarTrigger, NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink,
+    NavigationMenuList, NavigationMenuTrigger, Tabs, TabsContent, TabsList, TabsTrigger,
 };
 
 mod utils;
 
 use utils::{
-    active_id, attr, click, count, exists, focus, keydown, mount_root, mousedown_body, query,
-    settle, text,
+    active_id, attr, click, click_nth, count, exists, focus, keydown, mount_root, mousedown_body,
+    query, settle, text,
 };
 
 wasm_bindgen_test_configure!(run_in_browser);
@@ -209,4 +210,83 @@ async fn menubar_open_close_and_radio() {
     assert_eq!(text("#menubar-test #menubar-clicked"), "new");
     assert_eq!(count("#menubar-test .menubar-content"), 0);
     assert_eq!(attr(FILE_TRIGGER, "aria-expanded"), "false");
+}
+
+#[function_component(NavigationMenuHarness)]
+fn navigation_menu_harness() -> Html {
+    let open = use_state(|| None::<AttrValue>);
+    let on_value_change = {
+        let open = open.clone();
+        Callback::from(move |value: Option<AttrValue>| open.set(value))
+    };
+
+    html! {
+        <div>
+            <div id="nav-open">{ open.as_deref().unwrap_or("none").to_string() }</div>
+            <NavigationMenu value={(*open).clone()} on_value_change={Some(on_value_change)}>
+                <NavigationMenuList>
+                    <NavigationMenuItem value="docs">
+                        <NavigationMenuTrigger>{ "Docs" }</NavigationMenuTrigger>
+                        <NavigationMenuContent>
+                            <NavigationMenuLink href="#intro">{ "Intro" }</NavigationMenuLink>
+                        </NavigationMenuContent>
+                    </NavigationMenuItem>
+                    <NavigationMenuItem value="blog">
+                        <NavigationMenuTrigger>{ "Blog" }</NavigationMenuTrigger>
+                        <NavigationMenuContent>
+                            <span id="blog-content">{ "Posts" }</span>
+                        </NavigationMenuContent>
+                    </NavigationMenuItem>
+                </NavigationMenuList>
+            </NavigationMenu>
+        </div>
+    }
+}
+
+#[test]
+async fn navigation_menu_shows_only_active_content() {
+    let root = mount_root("nav-test");
+    let _app = yew::Renderer::<NavigationMenuHarness>::with_root(root).render();
+    settle().await;
+
+    let docs = "#nav-test .navigation-menu-item[data-state] > .navigation-menu-trigger";
+    assert_eq!(count("#nav-test .navigation-menu-content"), 0);
+    assert_eq!(attr(docs, "aria-expanded"), "false");
+
+    click_nth("#nav-test .navigation-menu-trigger", 0);
+    settle().await;
+    assert_eq!(text("#nav-test #nav-open"), "docs");
+    assert_eq!(count("#nav-test .navigation-menu-content"), 1);
+    assert_eq!(attr(docs, "aria-expanded"), "true");
+    assert_eq!(
+        attr(docs, "aria-controls"),
+        attr("#nav-test .navigation-menu-content", "id")
+    );
+
+    // Switching items shows only the new item's content.
+    click_nth("#nav-test .navigation-menu-trigger", 1);
+    settle().await;
+    assert_eq!(text("#nav-test #nav-open"), "blog");
+    assert_eq!(count("#nav-test .navigation-menu-content"), 1);
+    assert!(exists("#nav-test #blog-content"));
+    assert_eq!(attr(docs, "aria-expanded"), "false");
+
+    // Escape closes.
+    keydown("#nav-test .navigation-menu-list", "Escape", false);
+    settle().await;
+    assert_eq!(text("#nav-test #nav-open"), "none");
+    assert_eq!(count("#nav-test .navigation-menu-content"), 0);
+
+    // Clicking a trigger twice toggles; clicking outside closes.
+    click_nth("#nav-test .navigation-menu-trigger", 0);
+    settle().await;
+    click_nth("#nav-test .navigation-menu-trigger", 0);
+    settle().await;
+    assert_eq!(count("#nav-test .navigation-menu-content"), 0);
+    click_nth("#nav-test .navigation-menu-trigger", 0);
+    settle().await;
+    mousedown_body();
+    settle().await;
+    assert_eq!(text("#nav-test #nav-open"), "none");
+    assert_eq!(count("#nav-test .navigation-menu-content"), 0);
 }
