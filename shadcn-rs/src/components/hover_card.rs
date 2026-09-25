@@ -29,9 +29,10 @@
 //! }
 //! ```
 
-use crate::hooks::use_escape_key_conditional;
+use crate::hooks::{use_controllable_bool, use_escape_key_conditional};
 use crate::types::Position;
 use crate::utils::Portal;
+use gloo::timers::callback::Timeout;
 use wasm_bindgen::JsCast;
 use yew::prelude::*;
 
@@ -40,16 +41,26 @@ use yew::prelude::*;
 pub struct HoverCardContext {
     /// Whether the hover card is currently open
     pub is_open: bool,
-    /// Callback to set open state
+    /// Requests a new open state immediately (cancels any pending delay)
     pub set_open: Callback<bool>,
+    /// Pointer or focus arrived (trigger or card): open after `open_delay`,
+    /// or cancel a pending close if already open
+    pub schedule_open: Callback<()>,
+    /// Pointer or focus left (trigger or card): close after `close_delay`,
+    /// or cancel a pending open if still closed
+    pub schedule_close: Callback<()>,
 }
 
 /// Hover Card component properties
 #[derive(Properties, PartialEq, Clone)]
 pub struct HoverCardProps {
     /// Whether the hover card is open
-    #[prop_or(false)]
-    pub open: bool,
+    ///
+    /// `Some(_)` makes the card controlled: the value is always honored and
+    /// hover/focus only report the requested state through `on_open_change`.
+    /// `None` (the default) leaves it uncontrolled, starting from `default_open`.
+    #[prop_or_default]
+    pub open: Option<bool>,
 
     /// Default open state (for uncontrolled hover cards)
     #[prop_or(false)]
@@ -63,7 +74,8 @@ pub struct HoverCardProps {
     #[prop_or(200)]
     pub open_delay: u32,
 
-    /// Close delay in milliseconds
+    /// Close delay in milliseconds. Moving the pointer from the trigger into
+    /// the card within this time keeps it open.
     #[prop_or(300)]
     pub close_delay: u32,
 
@@ -86,42 +98,61 @@ pub fn hover_card(props: &HoverCardProps) -> Html {
         open,
         default_open,
         on_open_change,
-        open_delay: _,
-        close_delay: _,
+        open_delay,
+        close_delay,
         children,
     } = props.clone();
 
-    // Internal state for uncontrolled mode
-    let internal_open = use_state(|| default_open);
-
-    // Sync internal state when controlled value changes
-    let has_on_change = on_open_change.is_some();
-    {
-        let internal_open = internal_open.clone();
-        use_effect_with(open, move |&open| {
-            if has_on_change {
-                internal_open.set(open);
-            }
-        });
-    }
-    let is_open = if has_on_change { open } else { *internal_open };
+    let (is_open, request_open) = use_controllable_bool(open, default_open, on_open_change);
+    // One pending open-or-close at a time; dropping the handle cancels it.
+    let pending = use_mut_ref(|| None::<Timeout>);
 
     let set_open = {
-        let internal_open = internal_open.clone();
-        let on_open_change = on_open_change.clone();
-        Callback::from(move |new_state: bool| {
-            internal_open.set(new_state);
-            if let Some(callback) = on_open_change.as_ref() {
-                callback.emit(new_state);
+        let request_open = request_open.clone();
+        let pending = pending.clone();
+        Callback::from(move |value: bool| {
+            pending.borrow_mut().take();
+            if value != is_open {
+                request_open.emit(value);
             }
         })
     };
 
-    let context = HoverCardContext { is_open, set_open };
+    let schedule = {
+        let pending = pending.clone();
+        move |target: bool, delay: u32| {
+            let request_open = request_open.clone();
+            let pending = pending.clone();
+            Callback::from(move |_: ()| {
+                pending.borrow_mut().take();
+                if is_open == target {
+                    // Already there: cancelling the opposite transition is enough.
+                    return;
+                }
+                if delay == 0 {
+                    request_open.emit(target);
+                    return;
+                }
+                let request_open = request_open.clone();
+                *pending.borrow_mut() =
+                    Some(Timeout::new(delay, move || request_open.emit(target)));
+            })
+        }
+    };
+
+    let context = HoverCardContext {
+        is_open,
+        set_open,
+        schedule_open: schedule(true, open_delay),
+        schedule_close: schedule(false, close_delay),
+    };
 
     html! {
         <ContextProvider<HoverCardContext> context={context}>
-            <div class="hover-card-root">
+            <div
+                class="hover-card-root hover-card"
+                data-state={if is_open { "open" } else { "closed" }}
+            >
                 { children }
             </div>
         </ContextProvider<HoverCardContext>>
@@ -152,7 +183,7 @@ pub fn hover_card_trigger(props: &HoverCardTriggerProps) -> Html {
         let context = context.clone();
         Callback::from(move |_: MouseEvent| {
             if let Some(ctx) = context.as_ref() {
-                ctx.set_open.emit(true);
+                ctx.schedule_open.emit(());
             }
         })
     };
@@ -161,7 +192,7 @@ pub fn hover_card_trigger(props: &HoverCardTriggerProps) -> Html {
         let context = context.clone();
         Callback::from(move |_: MouseEvent| {
             if let Some(ctx) = context.as_ref() {
-                ctx.set_open.emit(false);
+                ctx.schedule_close.emit(());
             }
         })
     };
@@ -170,7 +201,7 @@ pub fn hover_card_trigger(props: &HoverCardTriggerProps) -> Html {
         let context = context.clone();
         Callback::from(move |_: FocusEvent| {
             if let Some(ctx) = context.as_ref() {
-                ctx.set_open.emit(true);
+                ctx.schedule_open.emit(());
             }
         })
     };
@@ -190,7 +221,7 @@ pub fn hover_card_trigger(props: &HoverCardTriggerProps) -> Html {
                 return;
             }
             if let Some(ctx) = context.as_ref() {
-                ctx.set_open.emit(false);
+                ctx.schedule_close.emit(());
             }
         })
     };
@@ -205,8 +236,8 @@ pub fn hover_card_trigger(props: &HoverCardTriggerProps) -> Html {
             tabindex="0"
             onmouseenter={on_mouse_enter}
             onmouseleave={on_mouse_leave}
-            onfocus={on_focus}
-            onblur={on_blur}
+            onfocusin={on_focus}
+            onfocusout={on_blur}
         >
             { children }
         </div>
@@ -317,15 +348,47 @@ pub fn hover_card_content(props: &HoverCardContentProps) -> Html {
     .into_iter()
     .collect();
 
-    html! {
-        <Portal>
-            <div class={classes} role="region" aria-label="Additional information">
-                if show_arrow {
-                    <div class="hover-card-arrow" aria-hidden="true" />
-                }
-                { children }
-            </div>
-        </Portal>
+    // Pointer bridge: entering the card cancels the close scheduled when the
+    // pointer left the trigger; leaving the card schedules a close again.
+    let onmouseenter = {
+        let context = context.clone();
+        Callback::from(move |_: MouseEvent| {
+            if let Some(ctx) = context.as_ref() {
+                ctx.schedule_open.emit(());
+            }
+        })
+    };
+    let onmouseleave = {
+        let context = context.clone();
+        Callback::from(move |_: MouseEvent| {
+            if let Some(ctx) = context.as_ref() {
+                ctx.schedule_close.emit(());
+            }
+        })
+    };
+
+    let content = html! {
+        <div
+            class={classes}
+            role="region"
+            aria-label="Additional information"
+            data-state="open"
+            {onmouseenter}
+            {onmouseleave}
+        >
+            if show_arrow {
+                <div class="hover-card-arrow" aria-hidden="true" />
+            }
+            { children }
+        </div>
+    };
+
+    // Inside a HoverCard root the card is anchored next to the trigger (the
+    // root is position: relative); standalone use keeps the Portal.
+    if context.is_some() {
+        content
+    } else {
+        html! { <Portal>{ content }</Portal> }
     }
 }
 
@@ -336,7 +399,7 @@ mod tests {
     #[test]
     fn test_hover_card_props_default() {
         let props = HoverCardProps {
-            open: false,
+            open: None,
             default_open: false,
             on_open_change: None,
             open_delay: 200,
@@ -344,7 +407,7 @@ mod tests {
             children: Children::new(vec![]),
         };
 
-        assert!(!props.open);
+        assert_eq!(props.open, None);
         assert!(!props.default_open);
         assert_eq!(props.open_delay, 200);
         assert_eq!(props.close_delay, 300);
@@ -353,7 +416,7 @@ mod tests {
     #[test]
     fn test_hover_card_custom_delays() {
         let props = HoverCardProps {
-            open: false,
+            open: None,
             default_open: false,
             on_open_change: None,
             open_delay: 500,

@@ -2451,6 +2451,53 @@
   animation: fade-in 0.15s ease;
 }
 
+.hover-card-trigger {
+  display: inline-block;
+}
+
+/* Anchored next to the trigger inside .hover-card-root (position: relative).
+   The close delay lets the pointer cross the gap into the card. */
+.hover-card-root > .hover-card-bottom {
+  top: calc(100% + 0.5rem);
+}
+
+.hover-card-root > .hover-card-top {
+  bottom: calc(100% + 0.5rem);
+}
+
+.hover-card-root > .hover-card-bottom,
+.hover-card-root > .hover-card-top {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.hover-card-root > .hover-card-right {
+  left: calc(100% + 0.5rem);
+}
+
+.hover-card-root > .hover-card-left {
+  right: calc(100% + 0.5rem);
+}
+
+.hover-card-root > .hover-card-right,
+.hover-card-root > .hover-card-left {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.hover-card-root > .hover-card-bottom.hover-card-align-start,
+.hover-card-root > .hover-card-top.hover-card-align-start {
+  left: 0;
+  transform: none;
+}
+
+.hover-card-root > .hover-card-bottom.hover-card-align-end,
+.hover-card-root > .hover-card-top.hover-card-align-end {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
 /* ============================================
    Form
    ============================================ */

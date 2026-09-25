@@ -8,8 +8,8 @@ use yew::prelude::*;
 use shadcn_rs::{
     AlertDialog, AlertDialogContent, AlertDialogTrigger, Collapsible, CollapsibleContent,
     CollapsibleTrigger, Dialog, DialogContent, DialogTrigger, Drawer, DrawerContent, DrawerTrigger,
-    Popover, PopoverContent, PopoverTrigger, Sheet, SheetContent, SheetTrigger, Tooltip,
-    TooltipContent, TooltipProvider, TooltipTrigger,
+    HoverCard, HoverCardContent, HoverCardTrigger, Popover, PopoverContent, PopoverTrigger, Sheet,
+    SheetContent, SheetTrigger, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 };
 
 mod utils;
@@ -544,6 +544,143 @@ async fn tooltip_uses_provider_delay() {
     mouse(".tooltip-trigger", "mouseenter");
     settle().await;
     assert!(exists("[role='tooltip']"), "provider delay 0 opens at once");
+    app.destroy();
+    settle().await;
+}
+
+// ---------------------------------------------------------------------------
+// Hover Card: open/close delays and the trigger -> card pointer bridge.
+// ---------------------------------------------------------------------------
+
+#[derive(Properties, PartialEq, Default)]
+struct HoverCardHarnessProps {
+    #[prop_or_default]
+    open: Option<bool>,
+    #[prop_or_default]
+    observe: bool,
+}
+
+#[function_component(HoverCardHarness)]
+fn hover_card_harness(props: &HoverCardHarnessProps) -> Html {
+    let events = use_state(Vec::<bool>::new);
+    let on_open_change = props.observe.then(|| {
+        let events = events.clone();
+        Callback::from(move |value: bool| {
+            let mut next = (*events).clone();
+            next.push(value);
+            events.set(next);
+        })
+    });
+    let log = events
+        .iter()
+        .map(|value| value.to_string())
+        .collect::<Vec<_>>()
+        .join(",");
+    html! {
+        <>
+            <span id="hc-events">{ log }</span>
+            <HoverCard open={props.open} {on_open_change} open_delay={50} close_delay={80}>
+                <HoverCardTrigger>
+                    <a id="hc-trigger" href="#">{ "@alice" }</a>
+                </HoverCardTrigger>
+                <HoverCardContent>
+                    <a id="hc-link" href="#">{ "Profile" }</a>
+                </HoverCardContent>
+            </HoverCard>
+        </>
+    }
+}
+
+fn render_hover_card(id: &str, props: HoverCardHarnessProps) -> yew::AppHandle<HoverCardHarness> {
+    yew::Renderer::<HoverCardHarness>::with_root_and_props(mount_root(id), props).render()
+}
+
+#[test]
+async fn hover_card_honors_open_and_close_delays() {
+    let app = render_hover_card("hover-card-delays", HoverCardHarnessProps::default());
+    settle().await;
+
+    mouse(".hover-card-trigger", "mouseenter");
+    settle().await;
+    assert!(!exists("#hc-link"), "must wait for open_delay");
+    wait_ms(100).await;
+    assert!(exists("#hc-link"), "must open after open_delay");
+
+    mouse(".hover-card-trigger", "mouseleave");
+    settle().await;
+    assert!(exists("#hc-link"), "must wait for close_delay");
+    wait_ms(140).await;
+    assert!(!exists("#hc-link"), "must close after close_delay");
+
+    // Re-entering before the open delay elapses restarts; leaving cancels.
+    mouse(".hover-card-trigger", "mouseenter");
+    settle().await;
+    mouse(".hover-card-trigger", "mouseleave");
+    wait_ms(100).await;
+    assert!(!exists("#hc-link"), "leaving must cancel the pending open");
+    app.destroy();
+    settle().await;
+}
+
+#[test]
+async fn hover_card_stays_open_while_pointer_moves_into_card() {
+    let app = render_hover_card("hover-card-bridge", HoverCardHarnessProps::default());
+    settle().await;
+    mouse(".hover-card-trigger", "mouseenter");
+    wait_ms(100).await;
+    assert!(exists("#hc-link"));
+
+    // Trigger -> card within close_delay: the pending close is cancelled.
+    mouse(".hover-card-trigger", "mouseleave");
+    settle().await;
+    mouse(".hover-card-content", "mouseenter");
+    wait_ms(140).await;
+    assert!(exists("#hc-link"), "card must stay open while hovered");
+
+    // Card -> trigger also keeps it open.
+    mouse(".hover-card-content", "mouseleave");
+    settle().await;
+    mouse(".hover-card-trigger", "mouseenter");
+    wait_ms(140).await;
+    assert!(exists("#hc-link"), "back on the trigger keeps it open");
+
+    mouse(".hover-card-trigger", "mouseleave");
+    wait_ms(140).await;
+    assert!(!exists("#hc-link"), "leaving everything closes it");
+    app.destroy();
+    settle().await;
+}
+
+#[test]
+async fn hover_card_controlled_open_is_honored_without_callback() {
+    let app = render_hover_card(
+        "hover-card-controlled",
+        HoverCardHarnessProps {
+            open: Some(true),
+            observe: false,
+        },
+    );
+    settle().await;
+    assert!(exists("#hc-link"), "open=Some(true) must render");
+    app.destroy();
+    settle().await;
+
+    // Uncontrolled with only a callback: must still open and report it.
+    let app = render_hover_card(
+        "hover-card-observe",
+        HoverCardHarnessProps {
+            open: None,
+            observe: true,
+        },
+    );
+    settle().await;
+    mouse(".hover-card-trigger", "mouseenter");
+    wait_ms(100).await;
+    assert!(exists("#hc-link"));
+    keydown("#hc-link", "Escape", false);
+    settle().await;
+    assert!(!exists("#hc-link"), "Escape closes");
+    assert_eq!(text("#hc-events"), "true,false");
     app.destroy();
     settle().await;
 }
