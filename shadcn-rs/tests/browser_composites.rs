@@ -9,7 +9,8 @@ use shadcn_rs::{
     DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger,
     Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarRadioGroup, MenubarRadioItem,
     MenubarTrigger, NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink,
-    NavigationMenuList, NavigationMenuTrigger, Tabs, TabsContent, TabsList, TabsTrigger,
+    NavigationMenuList, NavigationMenuTrigger, Sidebar, SidebarContent, SidebarInset,
+    SidebarProvider, SidebarTrigger, Tabs, TabsContent, TabsList, TabsTrigger,
 };
 
 mod utils;
@@ -457,4 +458,49 @@ async fn dropdown_radio_items_follow_group_value() {
     assert_eq!(text("#dropdown-test #dropdown-position"), "bottom");
     assert_eq!(attr(&item("bottom"), "aria-checked"), "true");
     assert_eq!(attr(&item("top"), "aria-checked"), "false");
+}
+
+#[function_component(SidebarHarness)]
+fn sidebar_harness() -> Html {
+    html! {
+        <SidebarProvider>
+            <Sidebar>
+                <SidebarContent>{ "Nav" }</SidebarContent>
+            </Sidebar>
+            <SidebarInset>
+                <SidebarTrigger>{ "Toggle" }</SidebarTrigger>
+            </SidebarInset>
+        </SidebarProvider>
+    }
+}
+
+#[test]
+async fn sidebar_follows_provider_open_state() {
+    let root = mount_root("sidebar-test");
+    let _app = yew::Renderer::<SidebarHarness>::with_root(root).render();
+    settle().await;
+
+    assert_eq!(
+        attr("#sidebar-test aside.sidebar", "data-state"),
+        "expanded"
+    );
+
+    click("#sidebar-test .sidebar-trigger");
+    settle().await;
+    assert_eq!(
+        attr("#sidebar-test aside.sidebar", "data-state"),
+        "collapsed"
+    );
+    assert!(
+        query("#sidebar-test aside.sidebar")
+            .class_list()
+            .contains("sidebar-collapsed")
+    );
+
+    click("#sidebar-test .sidebar-trigger");
+    settle().await;
+    assert_eq!(
+        attr("#sidebar-test aside.sidebar", "data-state"),
+        "expanded"
+    );
 }

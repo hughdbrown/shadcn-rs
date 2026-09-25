@@ -2320,6 +2320,33 @@
   background-color: hsl(var(--color-background));
 }
 
+/* Library Sidebar (it always sets data-state). */
+.sidebar[data-state] {
+  display: flex;
+  flex-direction: column;
+  width: var(--sidebar-width, 16rem);
+  height: 100%;
+  flex-shrink: 0;
+  border-right: 1px solid hsl(var(--color-border));
+  background-color: hsl(var(--color-background));
+  color: hsl(var(--color-foreground));
+}
+
+/* Collapsed: off canvas, following SidebarProvider's open state. */
+.sidebar[data-state="collapsed"] {
+  display: none;
+}
+
+.sidebar-provider {
+  display: flex;
+  width: 100%;
+}
+
+.sidebar-inset {
+  flex: 1;
+  min-width: 0;
+}
+
 /* ============================================
    Field
    ============================================ */
