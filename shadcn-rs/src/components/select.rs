@@ -223,6 +223,34 @@ pub fn select(props: &SelectProps) -> Html {
 // Advanced Select Components (Custom Implementation with Context)
 
 use crate::hooks::{use_click_outside_conditional, use_escape_key_conditional};
+use std::collections::HashMap;
+use std::rc::Rc;
+
+/// Value-to-label map filled in by [`SelectItem`]s as they mount
+#[derive(Default, PartialEq)]
+struct ItemLabels(Rc<HashMap<AttrValue, AttrValue>>);
+
+impl Reducible for ItemLabels {
+    type Action = (AttrValue, AttrValue);
+
+    fn reduce(self: Rc<Self>, (value, label): Self::Action) -> Rc<Self> {
+        if self.0.get(&value) == Some(&label) {
+            return self;
+        }
+        let mut labels = (*self.0).clone();
+        labels.insert(value, label);
+        Rc::new(Self(Rc::new(labels)))
+    }
+}
+
+/// Labels to show for `values`: the registered label, or the raw value when
+/// no item has registered one (yet).
+fn labels_for(values: &[AttrValue], labels: &HashMap<AttrValue, AttrValue>) -> Vec<AttrValue> {
+    values
+        .iter()
+        .map(|v| labels.get(v).cloned().unwrap_or_else(|| v.clone()))
+        .collect()
+}
 
 /// Context for sharing select state with children
 #[derive(Clone, PartialEq)]
@@ -233,10 +261,14 @@ pub struct SelectContext {
     pub selected_values: Vec<AttrValue>,
     /// Display labels for the selected values
     pub selected_labels: Vec<AttrValue>,
+    /// Labels registered by the mounted items, keyed by value
+    pub item_labels: Rc<HashMap<AttrValue, AttrValue>>,
     /// Callback to toggle open/close state
     pub toggle_open: Callback<()>,
     /// Callback to select a value (value, label)
     pub select_value: Callback<(AttrValue, AttrValue)>,
+    /// Callback an item uses to register its label (value, label)
+    pub register_label: Callback<(AttrValue, AttrValue)>,
     /// Whether the select is disabled
     pub disabled: bool,
     /// Whether multiple selections are allowed
@@ -314,13 +346,20 @@ pub fn select_advanced(props: &SelectAdvancedProps) -> Html {
             .map(|v| vec![v.clone()])
             .unwrap_or_default()
     });
-    let internal_labels = use_state(Vec::<AttrValue>::new);
+    // Items register their labels on mount (SelectContent keeps them mounted
+    // while closed), so a preset `value`/`default_value` shows its label on
+    // first render instead of waiting for a click.
+    let item_labels = use_reducer(ItemLabels::default);
     let selected_values: Vec<AttrValue> = if let Some(val) = value.as_ref() {
         vec![val.clone()]
     } else {
         (*internal_values).clone()
     };
-    let selected_labels: Vec<AttrValue> = (*internal_labels).clone();
+    let selected_labels = labels_for(&selected_values, &item_labels.0);
+    let register_label = {
+        let item_labels = item_labels.dispatcher();
+        Callback::from(move |entry: (AttrValue, AttrValue)| item_labels.dispatch(entry))
+    };
 
     let toggle_open = {
         let internal_open = internal_open.clone();
@@ -336,23 +375,19 @@ pub fn select_advanced(props: &SelectAdvancedProps) -> Html {
 
     let select_value = {
         let internal_values = internal_values.clone();
-        let internal_labels = internal_labels.clone();
+        let register_label = register_label.clone();
         let internal_open = internal_open.clone();
         let on_value_change = on_value_change.clone();
         let on_open_change = on_open_change.clone();
         Callback::from(move |(val, label): (AttrValue, AttrValue)| {
+            register_label.emit((val.clone(), label));
             if multiple {
                 // In multiple mode, toggle the value in the collection
                 let mut values = (*internal_values).clone();
-                let mut labels = (*internal_labels).clone();
                 if let Some(pos) = values.iter().position(|v| *v == val) {
                     values.remove(pos);
-                    if pos < labels.len() {
-                        labels.remove(pos);
-                    }
                 } else {
                     values.push(val.clone());
-                    labels.push(label);
                 }
                 let joined = values
                     .iter()
@@ -360,14 +395,12 @@ pub fn select_advanced(props: &SelectAdvancedProps) -> Html {
                     .collect::<Vec<_>>()
                     .join(",");
                 internal_values.set(values);
-                internal_labels.set(labels);
                 // Don't close dropdown in multiple mode
                 if let Some(callback) = on_value_change.as_ref() {
                     callback.emit(AttrValue::from(joined));
                 }
             } else {
                 internal_values.set(vec![val.clone()]);
-                internal_labels.set(vec![label]);
                 internal_open.set(false);
                 if let Some(callback) = on_value_change.as_ref() {
                     callback.emit(val);
@@ -383,8 +416,10 @@ pub fn select_advanced(props: &SelectAdvancedProps) -> Html {
         is_open,
         selected_values,
         selected_labels,
+        item_labels: item_labels.0.clone(),
         toggle_open,
         select_value,
+        register_label,
         disabled,
         multiple,
     };
@@ -621,19 +656,18 @@ pub fn select_content(props: &SelectContentProps) -> Html {
         is_open && close_on_outside_click,
     );
 
-    if !is_open {
-        return html! {};
-    }
-
     let classes: Classes = vec![Classes::from("select-content"), class]
         .into_iter()
         .collect();
 
+    // Stay mounted while closed (just hidden) so the items can register their
+    // labels and SelectValue can show the label of a preset value.
     html! {
         <div
             ref={content_ref}
             class={classes}
             role="listbox"
+            hidden={!is_open}
         >
             if searchable {
                 <input
@@ -700,6 +734,27 @@ pub fn select_item(props: &SelectItemProps) -> Html {
     let context = use_context::<SelectContext>();
     let label_ref = use_node_ref();
 
+    // Register this item's label with the select so SelectValue can show it
+    // for a preset value. Re-checked after every render; only a changed label
+    // is dispatched.
+    {
+        let context = context.clone();
+        let label_ref = label_ref.clone();
+        let value = value.clone();
+        use_effect(move || {
+            if let Some(ctx) = context.as_ref()
+                && let Some(text) = label_ref
+                    .cast::<web_sys::Element>()
+                    .and_then(|el| el.text_content())
+            {
+                let label = AttrValue::from(text.trim().to_string());
+                if ctx.item_labels.get(&value) != Some(&label) {
+                    ctx.register_label.emit((value, label));
+                }
+            }
+        });
+    }
+
     // Check if this item is selected via context (supports multi-select)
     let is_selected = prop_selected
         || context
@@ -720,6 +775,7 @@ pub fn select_item(props: &SelectItemProps) -> Html {
                 let label_text = label_ref
                     .cast::<web_sys::Element>()
                     .and_then(|el| el.text_content())
+                    .map(|t| t.trim().to_string())
                     .unwrap_or_else(|| value.to_string());
 
                 // Notify context
@@ -751,6 +807,7 @@ pub fn select_item(props: &SelectItemProps) -> Html {
                     let label_text = label_ref
                         .cast::<web_sys::Element>()
                         .and_then(|el| el.text_content())
+                        .map(|t| t.trim().to_string())
                         .unwrap_or_else(|| value.to_string());
                     if let Some(ctx) = context.as_ref() {
                         ctx.select_value
@@ -1168,13 +1225,41 @@ mod tests {
     }
 
     #[test]
+    fn test_item_labels_reducer_registers_and_dedupes() {
+        let empty = Rc::new(ItemLabels::default());
+        let one = empty.reduce((AttrValue::from("apple"), AttrValue::from("Apple")));
+        assert_eq!(
+            one.0.get(&AttrValue::from("apple")),
+            Some(&AttrValue::from("Apple"))
+        );
+        // Re-registering the same label keeps the same state (no re-render).
+        let same = one
+            .clone()
+            .reduce((AttrValue::from("apple"), AttrValue::from("Apple")));
+        assert!(Rc::ptr_eq(&one, &same));
+    }
+
+    #[test]
+    fn test_labels_for_falls_back_to_value() {
+        let mut labels = HashMap::new();
+        labels.insert(AttrValue::from("apple"), AttrValue::from("Apple"));
+        let values = vec![AttrValue::from("apple"), AttrValue::from("kiwi")];
+        assert_eq!(
+            labels_for(&values, &labels),
+            vec![AttrValue::from("Apple"), AttrValue::from("kiwi")]
+        );
+    }
+
+    #[test]
     fn test_select_context_multiple() {
         let context = SelectContext {
             is_open: false,
             selected_values: vec![],
             selected_labels: vec![],
+            item_labels: Rc::default(),
             toggle_open: Callback::from(|_: ()| {}),
             select_value: Callback::from(|_: (AttrValue, AttrValue)| {}),
+            register_label: Callback::from(|_: (AttrValue, AttrValue)| {}),
             disabled: false,
             multiple: true,
         };

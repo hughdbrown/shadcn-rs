@@ -1,6 +1,8 @@
 //! Native Select component showcase page
 
-use shadcn_rs::{Label, NativeSelect, NativeSelectOptGroup, NativeSelectOption};
+use shadcn_rs::{
+    Button, Label, NativeSelect, NativeSelectOptGroup, NativeSelectOption, Size, Variant,
+};
 use yew::prelude::*;
 
 use crate::components::{ComponentPage, Example, PropDoc};
@@ -8,7 +10,57 @@ use crate::components::{ComponentPage, Example, PropDoc};
 /// Native Select showcase page
 #[function_component(NativeSelectPage)]
 pub fn native_select_page() -> Html {
+    let theme = use_state(|| AttrValue::from("dark"));
+    let on_theme_change = {
+        let theme = theme.clone();
+        Callback::from(move |e: Event| {
+            let select: web_sys::HtmlSelectElement = e.target_unchecked_into();
+            theme.set(AttrValue::from(select.value()));
+        })
+    };
+    let reset_theme = {
+        let theme = theme.clone();
+        Callback::from(move |_: MouseEvent| theme.set(AttrValue::from("system")))
+    };
+
     let examples = vec![
+        Example {
+            title: "Default and Controlled Value",
+            description: "default_value preselects an option once; value keeps the select in sync with parent state.",
+            demo: html! {
+                <div class="space-y-4">
+                    <div class="space-y-2">
+                        <Label html_for="ns-size">{ "Size (default_value)" }</Label>
+                        <NativeSelect id="ns-size" default_value="m">
+                            <NativeSelectOption value="s">{ "Small" }</NativeSelectOption>
+                            <NativeSelectOption value="m">{ "Medium" }</NativeSelectOption>
+                            <NativeSelectOption value="l">{ "Large" }</NativeSelectOption>
+                        </NativeSelect>
+                    </div>
+                    <div class="space-y-2">
+                        <Label html_for="ns-theme">{ format!("Theme (value = {})", *theme) }</Label>
+                        <NativeSelect id="ns-theme" value={(*theme).clone()} onchange={on_theme_change.clone()}>
+                            <NativeSelectOption value="light">{ "Light" }</NativeSelectOption>
+                            <NativeSelectOption value="dark">{ "Dark" }</NativeSelectOption>
+                            <NativeSelectOption value="system">{ "System" }</NativeSelectOption>
+                        </NativeSelect>
+                        <Button variant={Variant::Outline} size={Size::Sm} onclick={reset_theme.clone()}>
+                            { "Reset to System" }
+                        </Button>
+                    </div>
+                </div>
+            },
+            code: r#"<NativeSelect default_value="m">
+    <NativeSelectOption value="s">{ "Small" }</NativeSelectOption>
+    <NativeSelectOption value="m">{ "Medium" }</NativeSelectOption>
+    <NativeSelectOption value="l">{ "Large" }</NativeSelectOption>
+</NativeSelect>
+
+let theme = use_state(|| AttrValue::from("dark"));
+<NativeSelect value={(*theme).clone()} onchange={on_theme_change}>
+    // options...
+</NativeSelect>"#,
+        },
         Example {
             title: "Default",
             description: "A basic native select dropdown.",

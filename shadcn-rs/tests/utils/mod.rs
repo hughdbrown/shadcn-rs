@@ -132,3 +132,50 @@ pub fn count(selector: &str) -> u32 {
         .expect("query selector failed")
         .length()
 }
+
+#[allow(dead_code)]
+pub fn is_checked(selector: &str) -> bool {
+    query(selector)
+        .dyn_into::<HtmlInputElement>()
+        .expect("selector is not an HtmlInputElement")
+        .checked()
+}
+
+#[allow(dead_code)]
+pub fn attr(selector: &str, name: &str) -> Option<String> {
+    query(selector).get_attribute(name)
+}
+
+#[allow(dead_code)]
+pub fn input_value(selector: &str) -> String {
+    query(selector)
+        .dyn_into::<HtmlInputElement>()
+        .expect("selector is not an HtmlInputElement")
+        .value()
+}
+
+#[allow(dead_code)]
+pub fn select_value(selector: &str) -> String {
+    query(selector)
+        .dyn_into::<web_sys::HtmlSelectElement>()
+        .expect("selector is not an HtmlSelectElement")
+        .value()
+}
+
+/// Sets a `<select>` to `value` and dispatches a bubbling `change` event,
+/// the way a user picking an option would.
+#[allow(dead_code)]
+pub fn change_select(selector: &str, value: &str) {
+    let select = query(selector)
+        .dyn_into::<web_sys::HtmlSelectElement>()
+        .expect("selector is not an HtmlSelectElement");
+    select.set_value(value);
+
+    let event_init = EventInit::new();
+    event_init.set_bubbles(true);
+    let event = Event::new_with_event_init_dict("change", &event_init)
+        .expect("failed to create change event");
+    select
+        .dispatch_event(&event)
+        .expect("failed to dispatch change event");
+}

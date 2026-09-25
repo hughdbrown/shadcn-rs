@@ -1,6 +1,6 @@
 //! Switch component showcase page
 
-use shadcn_rs::Switch;
+use shadcn_rs::{Button, Size, Switch, Variant};
 use yew::prelude::*;
 
 use crate::components::{ComponentPage, Example, PropDoc};
@@ -8,6 +8,16 @@ use crate::components::{ComponentPage, Example, PropDoc};
 /// Switch showcase page
 #[function_component(SwitchPage)]
 pub fn switch_page() -> Html {
+    let wifi = use_state(|| true);
+    let on_checked_change = {
+        let wifi = wifi.clone();
+        Callback::from(move |value: bool| wifi.set(value))
+    };
+    let force_off = {
+        let wifi = wifi.clone();
+        Callback::from(move |_: MouseEvent| wifi.set(false))
+    };
+
     let examples = vec![
         Example {
             title: "Default",
@@ -28,17 +38,44 @@ pub fn switch_page() -> Html {
 </div>"#,
         },
         Example {
-            title: "Checked",
-            description: "A pre-checked switch.",
+            title: "Default Checked",
+            description: "An uncontrolled switch that starts on.",
             demo: html! {
                 <div class="flex items-center space-x-2">
-                    <Switch id="checked-switch" checked={true} />
+                    <Switch id="checked-switch" default_checked={true} />
                     <label html_for="checked-switch" class="text-sm font-medium">
                         { "Enabled" }
                     </label>
                 </div>
             },
-            code: r#"<Switch id="checked-switch" checked={true} />"#,
+            code: r#"<Switch id="checked-switch" default_checked={true} />"#,
+        },
+        Example {
+            title: "Controlled",
+            description: "The parent owns the state and can force the switch off.",
+            demo: html! {
+                <div class="flex items-center space-x-2">
+                    <Switch
+                        id="wifi-switch"
+                        checked={*wifi}
+                        on_checked_change={on_checked_change.clone()}
+                    />
+                    <label html_for="wifi-switch" class="text-sm font-medium">
+                        { if *wifi { "Wi-Fi on" } else { "Wi-Fi off" } }
+                    </label>
+                    <Button variant={Variant::Outline} size={Size::Sm} onclick={force_off.clone()}>
+                        { "Turn off" }
+                    </Button>
+                </div>
+            },
+            code: r#"let wifi = use_state(|| true);
+let on_checked_change = {
+    let wifi = wifi.clone();
+    Callback::from(move |value: bool| wifi.set(value))
+};
+
+<Switch checked={*wifi} {on_checked_change} />
+<Button onclick={move |_| wifi.set(false)}>{ "Turn off" }</Button>"#,
         },
         Example {
             title: "Disabled",
@@ -74,7 +111,7 @@ pub fn switch_page() -> Html {
                                 { "Receive emails about your account security." }
                             </div>
                         </div>
-                        <Switch checked={true} />
+                        <Switch default_checked={true} />
                     </div>
                 </div>
             },
@@ -91,9 +128,21 @@ pub fn switch_page() -> Html {
     let props = vec![
         PropDoc {
             name: "checked",
+            prop_type: "Option<bool>",
+            default: "None",
+            description: "Controlled on/off state (leave unset for uncontrolled)",
+        },
+        PropDoc {
+            name: "default_checked",
             prop_type: "bool",
             default: "false",
-            description: "Whether the switch is on",
+            description: "Initial state when uncontrolled",
+        },
+        PropDoc {
+            name: "on_checked_change",
+            prop_type: "Option<Callback<bool>>",
+            default: "-",
+            description: "Called with the new checked value",
         },
         PropDoc {
             name: "disabled",
@@ -103,9 +152,9 @@ pub fn switch_page() -> Html {
         },
         PropDoc {
             name: "onchange",
-            prop_type: "Callback<bool>",
+            prop_type: "Option<Callback<Event>>",
             default: "-",
-            description: "Change event handler",
+            description: "Raw click/key event that toggled the switch",
         },
         PropDoc {
             name: "id",

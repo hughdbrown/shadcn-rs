@@ -8,6 +8,12 @@ use crate::components::{ComponentPage, Example, PropDoc};
 /// Checkbox showcase page
 #[function_component(CheckboxPage)]
 pub fn checkbox_page() -> Html {
+    let accepted = use_state(|| false);
+    let on_checked_change = {
+        let accepted = accepted.clone();
+        Callback::from(move |value: bool| accepted.set(value))
+    };
+
     let examples = vec![
         Example {
             title: "Default",
@@ -28,17 +34,40 @@ pub fn checkbox_page() -> Html {
 </div>"#,
         },
         Example {
-            title: "Checked",
-            description: "A pre-checked checkbox.",
+            title: "Default Checked",
+            description: "An uncontrolled checkbox that starts checked and toggles on its own.",
             demo: html! {
                 <div class="flex items-center space-x-2">
-                    <Checkbox id="checked" checked={true} />
+                    <Checkbox id="checked" default_checked={true} />
                     <label html_for="checked" class="text-sm font-medium leading-none">
-                        { "This is checked" }
+                        { "Checked by default" }
                     </label>
                 </div>
             },
-            code: r#"<Checkbox id="checked" checked={true} />"#,
+            code: r#"<Checkbox id="checked" default_checked={true} />"#,
+        },
+        Example {
+            title: "Controlled",
+            description: "The parent owns the state; on_checked_change reports the new value.",
+            demo: html! {
+                <div class="flex items-center space-x-2">
+                    <Checkbox
+                        id="controlled"
+                        checked={*accepted}
+                        on_checked_change={on_checked_change.clone()}
+                    />
+                    <label html_for="controlled" class="text-sm font-medium leading-none">
+                        { format!("Accepted: {}", *accepted) }
+                    </label>
+                </div>
+            },
+            code: r#"let accepted = use_state(|| false);
+let on_checked_change = {
+    let accepted = accepted.clone();
+    Callback::from(move |value: bool| accepted.set(value))
+};
+
+<Checkbox id="controlled" checked={*accepted} {on_checked_change} />"#,
         },
         Example {
             title: "Disabled",
@@ -86,9 +115,21 @@ pub fn checkbox_page() -> Html {
     let props = vec![
         PropDoc {
             name: "checked",
+            prop_type: "Option<bool>",
+            default: "None",
+            description: "Controlled checked state (leave unset for uncontrolled)",
+        },
+        PropDoc {
+            name: "default_checked",
             prop_type: "bool",
             default: "false",
-            description: "Whether the checkbox is checked",
+            description: "Initial checked state when uncontrolled",
+        },
+        PropDoc {
+            name: "on_checked_change",
+            prop_type: "Option<Callback<bool>>",
+            default: "-",
+            description: "Called with the new checked value",
         },
         PropDoc {
             name: "disabled",
@@ -104,9 +145,9 @@ pub fn checkbox_page() -> Html {
         },
         PropDoc {
             name: "onchange",
-            prop_type: "Callback<bool>",
+            prop_type: "Option<Callback<Event>>",
             default: "-",
-            description: "Change event handler",
+            description: "Raw change event handler",
         },
         PropDoc {
             name: "id",

@@ -39,6 +39,32 @@ pub fn select_page() -> Html {
 </SelectAdvanced>"#,
         },
         Example {
+            title: "Default Value",
+            description: "A preset default_value shows its item's label before the list is ever opened.",
+            demo: html! {
+                <SelectAdvanced default_value="banana">
+                    <SelectTrigger class="w-[180px]">
+                        <SelectValue placeholder="Select a fruit" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="apple">{ "Apple" }</SelectItem>
+                        <SelectItem value="banana">{ "Banana" }</SelectItem>
+                        <SelectItem value="orange">{ "Orange" }</SelectItem>
+                    </SelectContent>
+                </SelectAdvanced>
+            },
+            code: r#"<SelectAdvanced default_value="banana">
+    <SelectTrigger class="w-[180px]">
+        <SelectValue placeholder="Select a fruit" />
+    </SelectTrigger>
+    <SelectContent>
+        <SelectItem value="apple">{ "Apple" }</SelectItem>
+        <SelectItem value="banana">{ "Banana" }</SelectItem>
+        <SelectItem value="orange">{ "Orange" }</SelectItem>
+    </SelectContent>
+</SelectAdvanced>"#,
+        },
+        Example {
             title: "Disabled",
             description: "A disabled select.",
             demo: html! {
