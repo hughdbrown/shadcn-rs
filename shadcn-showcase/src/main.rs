@@ -16,14 +16,37 @@ use routes::Route;
 /// Main application component
 #[function_component(App)]
 fn app() -> Html {
+    // Only affects narrow screens: on desktop the sidebar is always shown.
+    let menu_open = use_state(|| false);
+    let toggle_menu = {
+        let menu_open = menu_open.clone();
+        Callback::from(move |_: MouseEvent| menu_open.set(!*menu_open))
+    };
+    let close_menu = {
+        let menu_open = menu_open.clone();
+        Callback::from(move |()| menu_open.set(false))
+    };
+    let on_backdrop_click = {
+        let close_menu = close_menu.clone();
+        Callback::from(move |_: MouseEvent| close_menu.emit(()))
+    };
+
     html! {
         <BrowserRouter>
             <div class="app-layout">
-                <Sidebar />
+                <Sidebar open={*menu_open} on_close={close_menu} />
+                if *menu_open {
+                    <div class="mobile-backdrop" onclick={on_backdrop_click} aria-hidden="true" />
+                }
                 <div class="app-main">
                     <header class="app-header">
                         <div class="app-header-content">
-                            <button class="mobile-menu-btn" aria-label="Toggle menu">
+                            <button
+                                class="mobile-menu-btn"
+                                aria-label="Toggle menu"
+                                aria-expanded={menu_open.to_string()}
+                                onclick={toggle_menu}
+                            >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <line x1="3" y1="12" x2="21" y2="12"></line>
                                     <line x1="3" y1="6" x2="21" y2="6"></line>

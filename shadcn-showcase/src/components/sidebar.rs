@@ -9,7 +9,7 @@ use crate::routes::{Route, get_nav_groups};
 #[derive(Properties, PartialEq)]
 pub struct SidebarProps {
     /// Whether the sidebar is open (for mobile)
-    #[prop_or(true)]
+    #[prop_or(false)]
     pub open: bool,
     /// Callback when sidebar should close (mobile)
     #[prop_or_default]
@@ -21,6 +21,12 @@ pub struct SidebarProps {
 pub fn sidebar(props: &SidebarProps) -> Html {
     let nav_groups = get_nav_groups();
     let current_route = use_route::<Route>();
+
+    // Close the mobile menu after navigating to a page.
+    {
+        let on_close = props.on_close.clone();
+        use_effect_with(current_route.clone(), move |_| on_close.emit(()));
+    }
 
     let collapsed_groups = use_state(std::collections::HashSet::<String>::new);
 
