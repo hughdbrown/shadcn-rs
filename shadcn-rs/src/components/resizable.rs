@@ -196,19 +196,16 @@ pub fn resizable_panel(props: &ResizablePanelProps) -> Html {
         .and_then(|ctx| ctx.sizes.get(index).copied())
         .unwrap_or(default_size);
 
-    let orientation = context
-        .as_ref()
-        .map(|ctx| ctx.orientation.clone())
-        .unwrap_or(ResizableOrientation::Horizontal);
-
     let classes: Classes = vec![Classes::from("resizable-panel"), class]
         .into_iter()
         .collect();
 
-    let style = match orientation {
-        ResizableOrientation::Horizontal => format!("flex-basis: {}%; width: {}%", size, size),
-        ResizableOrientation::Vertical => format!("flex-basis: {}%; height: {}%", size, size),
-    };
+    // Grow in proportion to the size from a zero basis. A percentage
+    // flex-basis only resolves against a definite container size, which a
+    // vertical group usually lacks (its height is auto), so dragging had no
+    // visible effect there. Proportional grow works in both orientations and
+    // leaves room for the handles.
+    let style = format!("flex: {size} 1 0px");
 
     html! {
         <div class={classes} style={style} data-panel-index={index.to_string()}>

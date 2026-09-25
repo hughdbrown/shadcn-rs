@@ -9,10 +9,14 @@ use shadcn_rs::{
     CarouselPrevious, DataTable, DataTableColumn, Dialog, DialogContent, DialogTrigger,
     SelectionMode, SortDirection,
 };
+use shadcn_rs::{Resizable, ResizableHandle, ResizableOrientation, ResizablePanel};
 
 mod utils;
 
-use utils::{active_id, click, click_nth, focus, input, keydown, mount_root, query, settle, text};
+use utils::{
+    active_id, click, click_nth, focus, inject_component_styles, input, keydown, mount_root, query,
+    settle, text,
+};
 
 wasm_bindgen_test_configure!(run_in_browser);
 
@@ -253,4 +257,66 @@ async fn data_table_filter_sort_paginate_and_select() {
         .click();
     settle().await;
     assert_eq!(text("#table-test #selection-count"), "1");
+}
+
+#[function_component(VerticalResizableHarness)]
+fn vertical_resizable_harness() -> Html {
+    html! {
+        <Resizable orientation={ResizableOrientation::Vertical}>
+            <ResizablePanel index={0}>{ "Top" }</ResizablePanel>
+            <ResizableHandle />
+            <ResizablePanel index={1}>{ "Bottom" }</ResizablePanel>
+        </Resizable>
+    }
+}
+
+fn mouse(target: &web_sys::EventTarget, kind: &str, x: f64, y: f64) {
+    let init = web_sys::MouseEventInit::new();
+    init.set_bubbles(true);
+    init.set_cancelable(true);
+    init.set_client_x(x as i32);
+    init.set_client_y(y as i32);
+    let event = web_sys::MouseEvent::new_with_mouse_event_init_dict(kind, &init)
+        .expect("failed to create mouse event");
+    target
+        .dispatch_event(&event)
+        .expect("failed to dispatch mouse event");
+}
+
+#[test]
+async fn vertical_resizable_responds_to_dragging() {
+    inject_component_styles();
+    let root = mount_root("resizable-test");
+    let _app = yew::Renderer::<VerticalResizableHarness>::with_root(root).render();
+    settle().await;
+
+    let group = query("#resizable-test .resizable");
+    let rect = group.get_bounding_client_rect();
+    let x = rect.left() + rect.width() / 2.0;
+    let y = rect.top() + rect.height() * 0.3;
+    let window: web_sys::EventTarget = gloo::utils::window().into();
+
+    mouse(
+        &query("#resizable-test .resizable-handle"),
+        "mousedown",
+        x,
+        y,
+    );
+    mouse(&window, "mousemove", x, y);
+    mouse(&window, "mouseup", x, y);
+    settle().await;
+
+    let heights: Vec<f64> = ["[data-panel-index='0']", "[data-panel-index='1']"]
+        .iter()
+        .map(|panel| {
+            query(&format!("#resizable-test {panel}"))
+                .get_bounding_client_rect()
+                .height()
+        })
+        .collect();
+    let top_share = heights[0] / (heights[0] + heights[1]);
+    assert!(
+        (0.25..0.35).contains(&top_share),
+        "top panel should take ~30% after dragging, got {top_share:.2} ({heights:?})"
+    );
 }

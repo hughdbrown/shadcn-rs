@@ -100,3 +100,21 @@ pub fn active_id() -> String {
         .expect("no active element")
         .id()
 }
+
+/// Loads the library stylesheet into the test page (once), for tests whose
+/// assertions depend on layout.
+pub fn inject_component_styles() {
+    const ID: &str = "shadcn-test-styles";
+    let document = gloo::utils::document();
+    if document.get_element_by_id(ID).is_some() {
+        return;
+    }
+    let style = document
+        .create_element("style")
+        .expect("failed to create style element");
+    style.set_id(ID);
+    style.set_text_content(Some(include_str!("../../styles/components.css")));
+    gloo::utils::head()
+        .append_child(&style)
+        .expect("failed to append style element");
+}
