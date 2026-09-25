@@ -49,6 +49,14 @@ async fn dialog_focus_traps_and_restores() {
     click("#dialog-test #open-dialog");
     settle().await;
 
+    // An aria-hidden ancestor would hide the whole dialog from screen readers.
+    assert!(
+        query("[role='dialog']")
+            .closest("[aria-hidden='true']")
+            .expect("closest selector failed")
+            .is_none(),
+        "dialog must not be inside an aria-hidden subtree"
+    );
     assert_eq!(active_id(), "first-action");
 
     keydown(".dialog-content", "Tab", false);

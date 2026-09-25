@@ -284,7 +284,7 @@ pub fn drawer_content(props: &DrawerContentProps) -> Html {
 
     html! {
         <Portal>
-            <div class="drawer-overlay" aria-hidden="true">
+            <div class="drawer-overlay">
                 <div
                     ref={content_ref}
                     class={classes}

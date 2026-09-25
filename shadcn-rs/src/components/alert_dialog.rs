@@ -272,7 +272,7 @@ pub fn alert_dialog_content(props: &AlertDialogContentProps) -> Html {
 
     html! {
         <Portal>
-            <div class="alert-dialog-overlay" aria-hidden="true">
+            <div class="alert-dialog-overlay">
                 <div
                     ref={content_ref}
                     class={classes}

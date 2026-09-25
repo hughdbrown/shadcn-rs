@@ -296,7 +296,7 @@ pub fn sheet_content(props: &SheetContentProps) -> Html {
 
     html! {
         <Portal>
-            <div class="sheet-overlay" aria-hidden="true">
+            <div class="sheet-overlay">
                 <div
                     ref={content_ref}
                     class={classes}

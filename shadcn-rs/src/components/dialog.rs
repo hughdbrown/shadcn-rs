@@ -272,7 +272,7 @@ pub fn dialog_content(props: &DialogContentProps) -> Html {
 
     html! {
         <Portal>
-            <div class="dialog-overlay" aria-hidden="true">
+            <div class="dialog-overlay">
                 <div
                     ref={content_ref}
                     class={classes}
