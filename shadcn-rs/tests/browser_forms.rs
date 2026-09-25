@@ -3,7 +3,7 @@
 use wasm_bindgen_test::{wasm_bindgen_test as test, wasm_bindgen_test_configure};
 use yew::prelude::*;
 
-use shadcn_rs::{Checkbox, Radio, RadioGroup, Switch};
+use shadcn_rs::{Checkbox, Radio, RadioGroup, Switch, Toggle};
 
 #[allow(dead_code)]
 mod utils;
@@ -237,4 +237,77 @@ async fn radio_group_drives_items() {
     settle().await;
     assert!(is_checked("#solo-b"));
     assert!(!is_checked("#solo-a"));
+}
+
+// ---------------------------------------------------------------------------
+// Toggle
+// ---------------------------------------------------------------------------
+
+#[function_component(ToggleHarness)]
+fn toggle_harness() -> Html {
+    let emitted = use_state(|| String::from("none"));
+    let on_pressed_change = {
+        let emitted = emitted.clone();
+        Callback::from(move |value: bool| emitted.set(value.to_string()))
+    };
+    let on = use_state(|| false);
+    let on_controlled_change = {
+        let on = on.clone();
+        Callback::from(move |value: bool| on.set(value))
+    };
+
+    html! {
+        <div>
+            <div id="tg-uncontrolled">
+                <Toggle aria_label="Bold" {on_pressed_change}>{ "B" }</Toggle>
+            </div>
+            <div id="tg-emitted">{ (*emitted).clone() }</div>
+            <div id="tg-controlled">
+                <Toggle pressed={*on} on_pressed_change={on_controlled_change}>{ "I" }</Toggle>
+            </div>
+            // Controlled with no parent update: must stay unpressed.
+            <div id="tg-locked">
+                <Toggle pressed={false}>{ "U" }</Toggle>
+            </div>
+        </div>
+    }
+}
+
+#[test]
+async fn toggle_pressed_state_and_label() {
+    let root = mount_root("toggle-test");
+    let _app = yew::Renderer::<ToggleHarness>::with_root(root).render();
+    settle().await;
+
+    assert_eq!(
+        attr("#tg-uncontrolled button", "aria-label").as_deref(),
+        Some("Bold")
+    );
+    click("#tg-uncontrolled button");
+    settle().await;
+    assert_eq!(text("#tg-emitted"), "true");
+    assert_eq!(
+        attr("#tg-uncontrolled button", "aria-pressed").as_deref(),
+        Some("true")
+    );
+
+    click("#tg-controlled button");
+    settle().await;
+    assert_eq!(
+        attr("#tg-controlled button", "aria-pressed").as_deref(),
+        Some("true")
+    );
+    click("#tg-controlled button");
+    settle().await;
+    assert_eq!(
+        attr("#tg-controlled button", "aria-pressed").as_deref(),
+        Some("false")
+    );
+
+    click("#tg-locked button");
+    settle().await;
+    assert_eq!(
+        attr("#tg-locked button", "aria-pressed").as_deref(),
+        Some("false")
+    );
 }

@@ -4,6 +4,9 @@
 //!
 //! # Examples
 //!
+//! Controlled: the parent owns the state and `on_pressed_change` reports the
+//! new value.
+//!
 //! ```rust,no_run
 //! use yew::prelude::*;
 //! use shadcn_rs::{Toggle, ToggleVariant};
@@ -12,24 +15,36 @@
 //! fn app() -> Html {
 //!     let pressed = use_state(|| false);
 //!
-//!     let ontoggle = {
+//!     let on_pressed_change = {
 //!         let pressed = pressed.clone();
-//!         Callback::from(move |_| {
-//!             pressed.set(!*pressed);
-//!         })
+//!         Callback::from(move |value: bool| pressed.set(value))
 //!     };
 //!
 //!     html! {
 //!         <Toggle
 //!             pressed={*pressed}
-//!             {ontoggle}
+//!             {on_pressed_change}
+//!             aria_label="Toggle bold"
 //!         >
-//!             { "Bold" }
+//!             <strong>{ "B" }</strong>
 //!         </Toggle>
 //!     }
 //! }
 //! ```
+//!
+//! Uncontrolled: leave `pressed` unset and use `default_pressed`.
+//!
+//! ```rust,no_run
+//! use yew::prelude::*;
+//! use shadcn_rs::Toggle;
+//!
+//! #[function_component(App)]
+//! fn app() -> Html {
+//!     html! { <Toggle default_pressed={true} aria_label="Toggle italic"><em>{ "I" }</em></Toggle> }
+//! }
+//! ```
 
+use crate::hooks::use_controllable_bool;
 use crate::types::Size;
 use yew::prelude::*;
 
@@ -45,17 +60,26 @@ pub enum ToggleVariant {
 /// Toggle component properties
 #[derive(Properties, PartialEq, Clone)]
 pub struct ToggleProps {
-    /// Pressed state (controlled)
+    /// Pressed state. `Some` makes the toggle controlled: it only changes when
+    /// the parent passes a new value. `None` leaves it uncontrolled.
     #[prop_or_default]
     pub pressed: Option<bool>,
 
-    /// Default pressed state (uncontrolled)
+    /// Initial pressed state for an uncontrolled toggle (`pressed` unset)
     #[prop_or(false)]
     pub default_pressed: bool,
 
-    /// Toggle handler
+    /// Raw click handler, called whenever the toggle is activated
     #[prop_or_default]
     pub ontoggle: Option<Callback<MouseEvent>>,
+
+    /// Called with the new pressed value when the user toggles the button
+    #[prop_or_default]
+    pub on_pressed_change: Option<Callback<bool>>,
+
+    /// Accessible name, needed when the toggle only shows an icon
+    #[prop_or_default]
+    pub aria_label: Option<AttrValue>,
 
     /// Size of toggle
     #[prop_or(Size::Md)]
@@ -81,8 +105,14 @@ pub struct ToggleProps {
 ///
 /// A two-state button with pressed/unpressed states.
 ///
+/// # Controlled and uncontrolled
+/// Pass `pressed` to control the toggle from the parent, or leave it unset and
+/// use `default_pressed`. Both modes report changes through
+/// `on_pressed_change` (the new value) and `ontoggle` (the raw click).
+///
 /// # Accessibility
 /// - Uses aria-pressed attribute
+/// - `aria_label` names icon-only toggles
 /// - Keyboard accessible
 /// - Disabled state properly handled
 #[function_component(Toggle)]
@@ -91,6 +121,8 @@ pub fn toggle(props: &ToggleProps) -> Html {
         pressed,
         default_pressed,
         ontoggle,
+        on_pressed_change,
+        aria_label,
         size,
         variant,
         disabled,
@@ -98,26 +130,19 @@ pub fn toggle(props: &ToggleProps) -> Html {
         children,
     } = props.clone();
 
-    // Internal state for uncontrolled mode
-    let internal_pressed = use_state(|| default_pressed);
-
-    // Use controlled value if provided, otherwise use internal state
-    let is_pressed = pressed.unwrap_or(*internal_pressed);
+    let (is_pressed, set_pressed) =
+        use_controllable_bool(pressed, default_pressed, on_pressed_change);
 
     // Handle click events
-    let onclick = {
-        let internal_pressed = internal_pressed.clone();
-        let ontoggle = ontoggle.clone();
-        Callback::from(move |e: MouseEvent| {
-            if !disabled {
-                let new_state = !*internal_pressed;
-                internal_pressed.set(new_state);
-                if let Some(callback) = ontoggle.as_ref() {
-                    callback.emit(e);
-                }
-            }
-        })
-    };
+    let onclick = Callback::from(move |e: MouseEvent| {
+        if disabled {
+            return;
+        }
+        if let Some(callback) = ontoggle.as_ref() {
+            callback.emit(e);
+        }
+        set_pressed.emit(!is_pressed);
+    });
 
     let size_class = match size {
         Size::Xs => "toggle-xs",
@@ -159,6 +184,8 @@ pub fn toggle(props: &ToggleProps) -> Html {
             onclick={onclick}
             disabled={disabled}
             aria-pressed={is_pressed.to_string()}
+            aria-label={aria_label}
+            data-state={if is_pressed { "on" } else { "off" }}
         >
             { children }
         </button>
@@ -169,84 +196,51 @@ pub fn toggle(props: &ToggleProps) -> Html {
 mod tests {
     use super::*;
 
+    fn props_with(pressed: Option<bool>, variant: ToggleVariant, size: Size) -> ToggleProps {
+        yew::props!(ToggleProps {
+            pressed,
+            variant,
+            size,
+            children: Children::new(vec![]),
+        })
+    }
+
     #[test]
     fn test_toggle_default() {
-        let props = ToggleProps {
-            pressed: None,
-            default_pressed: false,
-            ontoggle: None,
-            size: Size::Md,
-            variant: ToggleVariant::Default,
-            disabled: false,
-            class: Classes::new(),
-            children: Children::new(vec![]),
-        };
-
+        let props = props_with(None, ToggleVariant::Default, Size::Md);
+        assert_eq!(props.pressed, None);
         assert!(!props.default_pressed);
         assert!(!props.disabled);
+        assert!(props.aria_label.is_none());
+        assert!(props.on_pressed_change.is_none());
     }
 
     #[test]
     fn test_toggle_pressed() {
-        let props = ToggleProps {
-            pressed: Some(true),
-            default_pressed: false,
-            ontoggle: None,
-            size: Size::Md,
-            variant: ToggleVariant::Default,
-            disabled: false,
-            class: Classes::new(),
-            children: Children::new(vec![]),
-        };
-
+        let props = props_with(Some(true), ToggleVariant::Default, Size::Md);
         assert_eq!(props.pressed, Some(true));
     }
 
     #[test]
-    fn test_toggle_disabled() {
-        let props = ToggleProps {
-            pressed: None,
-            default_pressed: false,
-            ontoggle: None,
-            size: Size::Md,
-            variant: ToggleVariant::Default,
+    fn test_toggle_disabled_and_labelled() {
+        let props = yew::props!(ToggleProps {
             disabled: true,
-            class: Classes::new(),
+            aria_label: "Toggle bold",
             children: Children::new(vec![]),
-        };
-
+        });
         assert!(props.disabled);
+        assert_eq!(props.aria_label, Some(AttrValue::from("Toggle bold")));
     }
 
     #[test]
     fn test_toggle_sizes() {
-        let props = ToggleProps {
-            pressed: None,
-            default_pressed: false,
-            ontoggle: None,
-            size: Size::Lg,
-            variant: ToggleVariant::Default,
-            disabled: false,
-            class: Classes::new(),
-            children: Children::new(vec![]),
-        };
-
+        let props = props_with(None, ToggleVariant::Default, Size::Lg);
         assert_eq!(props.size, Size::Lg);
     }
 
     #[test]
     fn test_toggle_outline_variant() {
-        let props = ToggleProps {
-            pressed: None,
-            default_pressed: false,
-            ontoggle: None,
-            size: Size::Md,
-            variant: ToggleVariant::Outline,
-            disabled: false,
-            class: Classes::new(),
-            children: Children::new(vec![]),
-        };
-
+        let props = props_with(None, ToggleVariant::Outline, Size::Md);
         assert_eq!(props.variant, ToggleVariant::Outline);
     }
 }

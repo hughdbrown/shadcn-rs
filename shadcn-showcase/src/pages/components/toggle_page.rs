@@ -7,16 +7,22 @@ use crate::components::{ComponentPage, Example, PropDoc};
 
 #[function_component(TogglePage)]
 pub fn toggle_page() -> Html {
+    let bookmarked = use_state(|| false);
+    let on_pressed_change = {
+        let bookmarked = bookmarked.clone();
+        Callback::from(move |value: bool| bookmarked.set(value))
+    };
+
     let examples = vec![
         Example {
             title: "Default",
             description: "A basic toggle button.",
             demo: html! {
-                <Toggle>
+                <Toggle aria_label="Toggle bold">
                     <strong>{ "B" }</strong>
                 </Toggle>
             },
-            code: r##"<Toggle>
+            code: r##"<Toggle aria_label="Toggle bold">
     <strong>{ "B" }</strong>
 </Toggle>"##,
         },
@@ -24,11 +30,11 @@ pub fn toggle_page() -> Html {
             title: "Outline",
             description: "Toggle with outline variant.",
             demo: html! {
-                <Toggle variant={ToggleVariant::Outline}>
+                <Toggle variant={ToggleVariant::Outline} aria_label="Toggle italic">
                     <em>{ "I" }</em>
                 </Toggle>
             },
-            code: r##"<Toggle variant={ToggleVariant::Outline}>
+            code: r##"<Toggle variant={ToggleVariant::Outline} aria_label="Toggle italic">
     <em>{ "I" }</em>
 </Toggle>"##,
         },
@@ -46,12 +52,39 @@ pub fn toggle_page() -> Html {
             title: "Default Pressed",
             description: "Toggle that starts in pressed state.",
             demo: html! {
-                <Toggle default_pressed={true}>
+                <Toggle default_pressed={true} aria_label="Toggle underline">
                     <u>{ "U" }</u>
                 </Toggle>
             },
-            code: r##"<Toggle default_pressed={true}>
+            code: r##"<Toggle default_pressed={true} aria_label="Toggle underline">
     <u>{ "U" }</u>
+</Toggle>"##,
+        },
+        Example {
+            title: "Controlled",
+            description: "The parent owns the state; on_pressed_change reports the new value.",
+            demo: html! {
+                <div class="flex items-center space-x-2">
+                    <Toggle
+                        pressed={*bookmarked}
+                        on_pressed_change={on_pressed_change.clone()}
+                        aria_label="Toggle bookmark"
+                    >
+                        { "★" }
+                    </Toggle>
+                    <span class="text-sm text-muted-foreground">
+                        { if *bookmarked { "Bookmarked" } else { "Not bookmarked" } }
+                    </span>
+                </div>
+            },
+            code: r##"let bookmarked = use_state(|| false);
+let on_pressed_change = {
+    let bookmarked = bookmarked.clone();
+    Callback::from(move |value: bool| bookmarked.set(value))
+};
+
+<Toggle pressed={*bookmarked} {on_pressed_change} aria_label="Toggle bookmark">
+    { "★" }
 </Toggle>"##,
         },
     ];
@@ -85,7 +118,19 @@ pub fn toggle_page() -> Html {
             name: "ontoggle",
             prop_type: "Option<Callback<MouseEvent>>",
             default: "-",
-            description: "Toggle event handler",
+            description: "Raw click handler",
+        },
+        PropDoc {
+            name: "on_pressed_change",
+            prop_type: "Option<Callback<bool>>",
+            default: "-",
+            description: "Called with the new pressed value",
+        },
+        PropDoc {
+            name: "aria_label",
+            prop_type: "Option<AttrValue>",
+            default: "-",
+            description: "Accessible name for icon-only toggles",
         },
     ];
 
