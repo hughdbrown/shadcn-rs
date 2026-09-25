@@ -129,6 +129,8 @@ Attachment, Bubble, Marker, Message, Message Scroller, Questionnaire, Direction
 - wasm32-unknown-unknown target
 - [Trunk](https://trunkrs.dev/) for development server
 
+The interactive component application lives in [`shadcn-showcase/`](./shadcn-showcase/) — see its [showcase guide](./shadcn-showcase/README.md) for setup, build, and preview instructions.
+
 ### Task Runner
 
 Install `just` with `cargo install --locked just`, then run `just` to list the
