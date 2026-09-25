@@ -25,7 +25,12 @@ pub fn sidebar(props: &SidebarProps) -> Html {
     // Close the mobile menu after navigating to a page.
     {
         let on_close = props.on_close.clone();
-        use_effect_with(current_route.clone(), move |_| on_close.emit(()));
+        use_effect_with(current_route.clone(), move |_| {
+            on_close.emit(());
+            if let Some(window) = web_sys::window() {
+                window.scroll_to_with_x_and_y(0.0, 0.0);
+            }
+        });
     }
 
     let collapsed_groups = use_state(std::collections::HashSet::<String>::new);

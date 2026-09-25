@@ -29,9 +29,10 @@ pub fn avatar_page() -> Html {
             title: "Fallback Icon",
             description: "Avatar showing fallback icon when image fails to load.",
             demo: html! {
-                <Avatar src="/broken-image.jpg" fallback_icon="👤" />
+                <Avatar src="data:image/png;base64,AAAA" fallback_icon="👤" />
             },
-            code: r##"<Avatar src="/broken-image.jpg" fallback_icon="👤" />"##,
+            code: r##"// Invalid image data exercises the error fallback without a network request.
+<Avatar src="data:image/png;base64,AAAA" fallback_icon="👤" />"##,
         },
         Example {
             title: "Sizes",

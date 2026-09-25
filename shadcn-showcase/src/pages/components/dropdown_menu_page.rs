@@ -20,7 +20,7 @@ fn dropdown_radio_demo() -> Html {
     html! {
         <DropdownMenu>
             <DropdownMenuTrigger>
-                <Button variant={Variant::Outline}>{ format!("Panel: {}", *position) }</Button>
+                <Button variant={Variant::Outline}><>{ format!("Panel: {}", *position) }</></Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
                 <DropdownMenuLabel>{ "Panel Position" }</DropdownMenuLabel>

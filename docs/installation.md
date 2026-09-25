@@ -15,7 +15,7 @@ Add shadcn-rs to your `Cargo.toml`:
 ```toml
 [dependencies]
 shadcn-rs = "0.1"
-yew = "0.21"
+yew = "0.23"
 ```
 
 For icons (optional):

@@ -58,7 +58,7 @@ def build_report(root: Path) -> dict:
     records = parse_component_records(root)
     modules = exported_modules(root)
     pages = showcase_pages(root)
-    missing_pages = sorted(set(modules) - set(pages) - {"direction"})
+    missing_pages = sorted(set(modules) - set(pages))
     extra_pages = sorted(set(pages) - set(modules))
 
     return {

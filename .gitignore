@@ -21,6 +21,7 @@ wasm-pack.log
 .trunk/
 
 shadcn-showcase/dist/
+shadcn-showcase/dist-release/
 
 # Node (if using any JS tooling)
 node_modules/

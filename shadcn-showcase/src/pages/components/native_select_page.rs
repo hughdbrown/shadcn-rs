@@ -38,7 +38,7 @@ pub fn native_select_page() -> Html {
                         </NativeSelect>
                     </div>
                     <div class="space-y-2">
-                        <Label html_for="ns-theme">{ format!("Theme (value = {})", *theme) }</Label>
+                        <Label html_for="ns-theme"><>{ format!("Theme (value = {})", *theme) }</></Label>
                         <NativeSelect id="ns-theme" value={(*theme).clone()} onchange={on_theme_change.clone()}>
                             <NativeSelectOption value="light">{ "Light" }</NativeSelectOption>
                             <NativeSelectOption value="dark">{ "Dark" }</NativeSelectOption>

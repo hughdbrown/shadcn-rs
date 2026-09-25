@@ -5,7 +5,7 @@ use web_sys::{Element, Event, EventInit, HtmlInputElement, KeyboardEvent, Keyboa
 use yew::platform::time::sleep;
 
 pub async fn settle() {
-    sleep(Duration::ZERO).await;
+    yew::scheduler::flush().await;
 }
 
 pub fn mount_root(id: &str) -> Element {

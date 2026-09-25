@@ -72,6 +72,13 @@ fn app() -> Html {
 /// Route switch function
 fn switch(route: Route) -> Html {
     match route {
+        Route::Attachment => html! { <AttachmentPage /> },
+        Route::Bubble => html! { <BubblePage /> },
+        Route::Marker => html! { <MarkerPage /> },
+        Route::Message => html! { <MessagePage /> },
+        Route::MessageScroller => html! { <MessageScrollerPage /> },
+        Route::Questionnaire => html! { <QuestionnairePage /> },
+        Route::Direction => html! { <DirectionPage /> },
         Route::Home => html! { <HomePage /> },
 
         // Getting Started

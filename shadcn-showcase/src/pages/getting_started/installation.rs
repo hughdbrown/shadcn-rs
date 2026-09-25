@@ -42,7 +42,7 @@ cargo install trunk"
 
                 <CodeBlock
                     code={r#"[dependencies]
-yew = { version = "0.21", features = ["csr"] }
+yew = { version = "0.23", features = ["csr"] }
 shadcn-rs = "0.1"
 shadcn-icons = "0.1"  # Optional: for icon components"#}
                     language="toml"

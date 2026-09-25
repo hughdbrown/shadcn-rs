@@ -38,7 +38,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-yew = { version = "0.21", features = ["csr"] }
+yew = { version = "0.23", features = ["csr"] }
 wasm-bindgen = "0.2"
 shadcn-rs = "0.1""#}
                     language="toml"

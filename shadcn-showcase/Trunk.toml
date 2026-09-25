@@ -11,7 +11,7 @@ public_url = "/"
 # Files/directories to watch for changes
 watch = ["src", "index.html", "showcase.css", "../shadcn-rs/src", "../shadcn-rs/styles", "../shadcn-icons/src"]
 # Files to ignore
-ignore = ["dist"]
+ignore = ["dist", "dist-release"]
 
 [serve]
 # Development server configuration
@@ -19,8 +19,5 @@ addresses = ["127.0.0.1"]
 port = 8180
 open = false
 
-[[hooks]]
-# Clean dist directory before build
-stage = "pre_build"
-command = "sh"
-command_arguments = ["-c", "rm -rf dist/*"]
+# Trunk manages staging and replaces its output directory after successful builds.
+# Avoid a custom cleanup hook: it races with other builds and ignores --dist.

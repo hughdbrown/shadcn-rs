@@ -707,6 +707,8 @@ pub fn questionnaire_submit(props: &QuestionnaireSubmitProps) -> Html {
         let custom = props.onclick.clone();
         let submit = context.submit;
         Callback::from(move |e: MouseEvent| {
+            // The click handles submission here; suppress the form's second submit event.
+            e.prevent_default();
             if let Some(ref cb) = custom {
                 cb.emit(e);
             } else {
@@ -744,8 +746,6 @@ pub fn questionnaire_submit(props: &QuestionnaireSubmitProps) -> Html {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
     fn test_questionnaire_classes_have_css() {
         let css = include_str!("../../styles/components.css");

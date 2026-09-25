@@ -3,17 +3,38 @@
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-use crate::routes::Route;
+use crate::routes::{Route, get_nav_groups};
 
 /// Home page component
 #[function_component(HomePage)]
 pub fn home_page() -> Html {
+    let filter = use_state(String::new);
+    let oninput = {
+        let filter = filter.clone();
+        Callback::from(move |event: InputEvent| {
+            filter.set(
+                event
+                    .target_unchecked_into::<web_sys::HtmlInputElement>()
+                    .value(),
+            );
+        })
+    };
+    let all_items: Vec<_> = get_nav_groups()
+        .into_iter()
+        .skip(1)
+        .flat_map(|group| group.items)
+        .collect();
+    let query = filter.to_lowercase();
+    let visible: Vec<_> = all_items
+        .iter()
+        .filter(|item| item.label.to_lowercase().contains(&query))
+        .collect();
     html! {
         <div class="home-page">
             <section class="hero">
                 <h1 class="hero-title">{ "shadcn-rs" }</h1>
                 <p class="hero-subtitle">
-                    { "Beautiful, accessible UI components for Rust and WebAssembly" }
+                    { "66 components. One place to try them all." }
                 </p>
                 <p class="hero-description">
                     { "A comprehensive port of shadcn/ui to Rust using the Yew framework. " }
@@ -26,6 +47,21 @@ pub fn home_page() -> Html {
                     <Link<Route> to={Route::Button} classes="btn btn-outline btn-lg">
                         { "Browse Components" }
                     </Link<Route>>
+                </div>
+            </section>
+
+            <section class="component-catalog" aria-labelledby="catalog-title">
+                <h2 id="catalog-title" class="section-title">{ "Explore every component" }</h2>
+                <p>{ "Live examples, controls, and Rust source — running on Yew 0.23." }</p>
+                <label for="component-filter">{ "Find a component" }</label>
+                <input id="component-filter" class="input" type="search" placeholder="Try message, calendar, or tooltip…" value={(*filter).clone()} {oninput} />
+                <p role="status">{ format!("{} of {} components", visible.len(), all_items.len()) }</p>
+                <div class="catalog-grid">
+                    { for visible.into_iter().map(|item| html! {
+                        <Link<Route> to={item.route.clone()} classes="catalog-link">
+                            <span>{ item.label }</span><span aria-hidden="true">{ "↗" }</span>
+                        </Link<Route>>
+                    }) }
                 </div>
             </section>
 

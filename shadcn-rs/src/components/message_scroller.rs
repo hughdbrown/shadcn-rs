@@ -31,7 +31,15 @@
 //! }
 //! ```
 
+use std::{cell::RefCell, rc::Rc};
+
 use yew::prelude::*;
+
+#[derive(Clone, PartialEq)]
+struct ViewportContext {
+    element: Rc<RefCell<Option<web_sys::HtmlElement>>>,
+    set_at_bottom: Callback<bool>,
+}
 
 /// Shared context for message scroller state and controls
 #[derive(Clone, PartialEq)]
@@ -71,18 +79,27 @@ pub struct MessageScrollerProviderProps {
 /// Context provider for chat scrolling behaviors
 #[function_component(MessageScrollerProvider)]
 pub fn message_scroller_provider(props: &MessageScrollerProviderProps) -> Html {
-    let is_at_bottom = use_state(|| true);
+    let is_at_bottom = use_state_eq(|| true);
+    let viewport = use_mut_ref(|| None::<web_sys::HtmlElement>);
 
     let scroll_to_bottom = {
         let is_at_bottom = is_at_bottom.clone();
+        let viewport = viewport.clone();
         Callback::from(move |()| {
+            if let Some(element) = viewport.borrow().as_ref() {
+                element.set_scroll_top(element.scroll_height());
+            }
             is_at_bottom.set(true);
         })
     };
 
     let scroll_to_top = {
         let is_at_bottom = is_at_bottom.clone();
+        let viewport = viewport.clone();
         Callback::from(move |()| {
+            if let Some(element) = viewport.borrow().as_ref() {
+                element.set_scroll_top(0);
+            }
             is_at_bottom.set(false);
         })
     };
@@ -93,10 +110,16 @@ pub fn message_scroller_provider(props: &MessageScrollerProviderProps) -> Html {
         auto_scroll: props.auto_scroll,
         is_at_bottom: *is_at_bottom,
     };
+    let viewport_context = ViewportContext {
+        element: viewport,
+        set_at_bottom: Callback::from(move |at_bottom| is_at_bottom.set(at_bottom)),
+    };
 
     html! {
         <ContextProvider<MessageScrollerContext> context={context}>
+            <ContextProvider<ViewportContext> context={viewport_context}>
             { props.children.clone() }
+            </ContextProvider<ViewportContext>>
         </ContextProvider<MessageScrollerContext>>
     }
 }
@@ -147,12 +170,40 @@ pub struct MessageScrollerViewportProps {
 #[function_component(MessageScrollerViewport)]
 pub fn message_scroller_viewport(props: &MessageScrollerViewportProps) -> Html {
     let classes = classes!("message-scroller-viewport", props.class.clone());
+    let context = use_message_scroller();
+    let viewport = use_context::<ViewportContext>();
+    let node_ref = props.node_ref.clone();
+    {
+        let node_ref = node_ref.clone();
+        let viewport = viewport.clone();
+        // Recheck after children render, including newly appended messages.
+        use_effect(move || {
+            if let Some(viewport) = viewport {
+                *viewport.element.borrow_mut() = node_ref.cast::<web_sys::HtmlElement>();
+            }
+            if let (true, Some(element)) = (
+                context.auto_scroll && context.is_at_bottom,
+                node_ref.cast::<web_sys::HtmlElement>(),
+            ) {
+                element.set_scroll_top(element.scroll_height());
+            }
+        });
+    }
+    let onscroll = Callback::from(move |event: Event| {
+        if let Some(viewport) = &viewport {
+            let element = event.target_unchecked_into::<web_sys::HtmlElement>();
+            let at_bottom =
+                element.scroll_height() - element.client_height() - element.scroll_top() <= 4;
+            viewport.set_at_bottom.emit(at_bottom);
+        }
+    });
 
     html! {
         <div
             id={props.id.clone()}
-            ref={props.node_ref.clone()}
+            ref={node_ref}
             class={classes}
+            {onscroll}
             tabindex="0"
         >
             { props.children.clone() }
@@ -281,8 +332,6 @@ pub fn message_scroller_button(props: &MessageScrollerButtonProps) -> Html {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
     fn test_message_scroller_classes_have_css() {
         let css = include_str!("../../styles/components.css");

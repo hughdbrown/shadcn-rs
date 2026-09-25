@@ -54,6 +54,7 @@ serde_json = { workspace = true, optional = true }
 
 [dev-dependencies]
 wasm-bindgen-test = { workspace = true }
+yew = { workspace = true, features = ["test"] }
 
 [features]
 default = []

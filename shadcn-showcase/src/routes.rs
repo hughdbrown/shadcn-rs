@@ -155,6 +155,22 @@ pub enum Route {
     #[at("/components/toast")]
     Toast,
 
+    // Conversation and direction examples
+    #[at("/components/attachment")]
+    Attachment,
+    #[at("/components/bubble")]
+    Bubble,
+    #[at("/components/marker")]
+    Marker,
+    #[at("/components/message")]
+    Message,
+    #[at("/components/message-scroller")]
+    MessageScroller,
+    #[at("/components/questionnaire")]
+    Questionnaire,
+    #[at("/components/direction")]
+    Direction,
+
     /// 404 page
     #[not_found]
     #[at("/404")]
@@ -476,6 +492,39 @@ pub fn get_nav_groups() -> Vec<NavGroup> {
                 NavItem {
                     label: "Toast",
                     route: Route::Toast,
+                },
+            ],
+        },
+        NavGroup {
+            title: "Conversation & Utilities",
+            items: vec![
+                NavItem {
+                    label: "Attachment",
+                    route: Route::Attachment,
+                },
+                NavItem {
+                    label: "Bubble",
+                    route: Route::Bubble,
+                },
+                NavItem {
+                    label: "Marker",
+                    route: Route::Marker,
+                },
+                NavItem {
+                    label: "Message",
+                    route: Route::Message,
+                },
+                NavItem {
+                    label: "Message Scroller",
+                    route: Route::MessageScroller,
+                },
+                NavItem {
+                    label: "Questionnaire",
+                    route: Route::Questionnaire,
+                },
+                NavItem {
+                    label: "Direction",
+                    route: Route::Direction,
                 },
             ],
         },
