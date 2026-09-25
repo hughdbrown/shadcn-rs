@@ -1394,6 +1394,72 @@
   animation: fade-in 0.15s ease;
 }
 
+.popover-trigger {
+  display: inline-block;
+}
+
+/* Anchored next to the trigger inside .popover-root (position: relative).
+   Reset the generic .position-* utilities, which pin to an edge. */
+.popover-root > .popover-content {
+  inset: auto;
+  transform: none;
+  margin: 0;
+}
+
+.popover-root > .popover-content.position-bottom {
+  top: calc(100% + 0.5rem);
+}
+
+.popover-root > .popover-content.position-top {
+  bottom: calc(100% + 0.5rem);
+}
+
+.popover-root > .popover-content.position-bottom,
+.popover-root > .popover-content.position-top {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.popover-root > .popover-content.position-right {
+  left: calc(100% + 0.5rem);
+}
+
+.popover-root > .popover-content.position-left {
+  right: calc(100% + 0.5rem);
+}
+
+.popover-root > .popover-content.position-right,
+.popover-root > .popover-content.position-left {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.popover-root > .popover-content.position-bottom[data-align="start"],
+.popover-root > .popover-content.position-top[data-align="start"] {
+  left: 0;
+  transform: none;
+}
+
+.popover-root > .popover-content.position-bottom[data-align="end"],
+.popover-root > .popover-content.position-top[data-align="end"] {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+.popover-root > .popover-content.position-right[data-align="start"],
+.popover-root > .popover-content.position-left[data-align="start"] {
+  top: 0;
+  transform: none;
+}
+
+.popover-root > .popover-content.position-right[data-align="end"],
+.popover-root > .popover-content.position-left[data-align="end"] {
+  top: auto;
+  bottom: 0;
+  transform: none;
+}
+
 /* ============================================
    Dropdown Menu
    ============================================ */

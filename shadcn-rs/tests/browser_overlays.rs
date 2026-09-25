@@ -1,17 +1,19 @@
 #![cfg(target_arch = "wasm32")]
 
+use wasm_bindgen::JsCast;
 use wasm_bindgen_test::{wasm_bindgen_test as test, wasm_bindgen_test_configure};
+use web_sys::{MouseEvent, MouseEventInit};
 use yew::prelude::*;
 
 use shadcn_rs::{
     AlertDialog, AlertDialogContent, AlertDialogTrigger, Collapsible, CollapsibleContent,
     CollapsibleTrigger, Dialog, DialogContent, DialogTrigger, Drawer, DrawerContent, DrawerTrigger,
-    Sheet, SheetContent, SheetTrigger,
+    Popover, PopoverContent, PopoverTrigger, Sheet, SheetContent, SheetTrigger,
 };
 
 mod utils;
 
-use utils::{click, keydown, mount_root, query, settle, text};
+use utils::{active_id, click, focus, keydown, mount_root, query, settle, text};
 
 wasm_bindgen_test_configure!(run_in_browser);
 
@@ -24,6 +26,31 @@ fn exists(selector: &str) -> bool {
 
 fn attr(selector: &str, name: &str) -> String {
     query(selector).get_attribute(name).unwrap_or_default()
+}
+
+/// Dispatches a mouse event (`mousedown`, `mouseenter`, `mouseleave`, ...).
+fn mouse(selector: &str, kind: &str) {
+    let init = MouseEventInit::new();
+    // mouseenter/mouseleave don't bubble in browsers; mirror that.
+    init.set_bubbles(!matches!(kind, "mouseenter" | "mouseleave"));
+    init.set_cancelable(true);
+    let event =
+        MouseEvent::new_with_mouse_event_init_dict(kind, &init).expect("failed to create event");
+    query(selector)
+        .dispatch_event(&event)
+        .expect("failed to dispatch mouse event");
+}
+
+fn blur_active() {
+    if let Some(active) = gloo::utils::document().active_element()
+        && let Ok(element) = active.dyn_into::<web_sys::HtmlElement>()
+    {
+        element.blur().expect("blur failed");
+    }
+}
+
+async fn wait_ms(ms: u64) {
+    yew::platform::time::sleep(std::time::Duration::from_millis(ms)).await;
 }
 
 // ---------------------------------------------------------------------------
@@ -237,6 +264,128 @@ async fn collapsible_controlled_trigger_closes_and_reopens() {
         exists("#collapsible-body"),
         "controlled trigger must reopen"
     );
+    app.destroy();
+    settle().await;
+}
+
+// ---------------------------------------------------------------------------
+// Popover: root state, trigger toggle, outside click, Escape, focus restore.
+// ---------------------------------------------------------------------------
+
+#[derive(Properties, PartialEq)]
+struct PopoverHarnessProps {
+    #[prop_or_default]
+    controlled: bool,
+    #[prop_or_default]
+    default_open: bool,
+}
+
+#[function_component(PopoverHarness)]
+fn popover_harness(props: &PopoverHarnessProps) -> Html {
+    let state = use_state(|| props.default_open);
+    let on_open_change = {
+        let state = state.clone();
+        Callback::from(move |value: bool| state.set(value))
+    };
+    let open = props.controlled.then_some(*state);
+    html! {
+        <>
+            <button id="outside" type="button">{ "Outside" }</button>
+            <Popover {open} default_open={props.default_open} {on_open_change}>
+                <PopoverTrigger>
+                    <button id="popover-trigger" type="button">{ "Open" }</button>
+                </PopoverTrigger>
+                <PopoverContent>
+                    <button id="popover-inner" type="button">{ "Inner" }</button>
+                </PopoverContent>
+            </Popover>
+        </>
+    }
+}
+
+#[test]
+async fn popover_trigger_toggles_uncontrolled_and_controlled() {
+    for controlled in [false, true] {
+        let root = mount_root("popover-toggle");
+        let app = yew::Renderer::<PopoverHarness>::with_root_and_props(
+            root,
+            PopoverHarnessProps {
+                controlled,
+                default_open: false,
+            },
+        )
+        .render();
+        settle().await;
+        assert!(!exists("#popover-inner"));
+        assert_eq!(attr(".popover-trigger", "aria-expanded"), "false");
+
+        click("#popover-trigger");
+        settle().await;
+        assert!(exists("#popover-inner"), "trigger must open");
+        assert_eq!(attr(".popover-trigger", "aria-expanded"), "true");
+        // Content is anchored inside the root, next to the trigger.
+        assert!(
+            query(".popover-root")
+                .query_selector(".popover-content")
+                .expect("query failed")
+                .is_some()
+        );
+
+        click("#popover-trigger");
+        settle().await;
+        assert!(!exists("#popover-inner"), "trigger must close");
+        app.destroy();
+        settle().await;
+    }
+}
+
+#[test]
+async fn popover_default_open_and_outside_click() {
+    let root = mount_root("popover-outside");
+    let app = yew::Renderer::<PopoverHarness>::with_root_and_props(
+        root,
+        PopoverHarnessProps {
+            controlled: false,
+            default_open: true,
+        },
+    )
+    .render();
+    settle().await;
+    assert!(exists("#popover-inner"), "default_open must render content");
+
+    // A press inside the content must not close it.
+    mouse("#popover-inner", "mousedown");
+    settle().await;
+    assert!(exists("#popover-inner"));
+
+    mouse("#outside", "mousedown");
+    settle().await;
+    assert!(!exists("#popover-inner"), "outside click must close");
+    app.destroy();
+    settle().await;
+}
+
+#[test]
+async fn popover_escape_closes_and_restores_focus() {
+    let root = mount_root("popover-escape");
+    let app = yew::Renderer::<PopoverHarness>::with_root_and_props(
+        root,
+        PopoverHarnessProps {
+            controlled: true,
+            default_open: false,
+        },
+    )
+    .render();
+    settle().await;
+    focus("#popover-trigger");
+    click("#popover-trigger");
+    settle().await;
+    assert_eq!(active_id(), "popover-inner", "focus moves into content");
+
+    keydown("#popover-inner", "Escape", false);
+    settle().await;
+    assert!(!exists("#popover-inner"), "Escape must close");
+    assert_eq!(active_id(), "popover-trigger", "focus returns to trigger");
     app.destroy();
     settle().await;
 }
