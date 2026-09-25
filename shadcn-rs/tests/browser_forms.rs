@@ -4,16 +4,17 @@ use wasm_bindgen_test::{wasm_bindgen_test as test, wasm_bindgen_test_configure};
 use yew::prelude::*;
 
 use shadcn_rs::{
-    Checkbox, InputOTP, NativeSelect, NativeSelectOption, Radio, RadioGroup, Switch, Toggle,
-    ToggleGroup, ToggleGroupItem, ToggleGroupType,
+    Checkbox, InputOTP, NativeSelect, NativeSelectOption, Radio, RadioGroup, SelectAdvanced,
+    SelectContent, SelectItem, SelectTrigger, SelectValue, Switch, Toggle, ToggleGroup,
+    ToggleGroupItem, ToggleGroupType,
 };
 
 #[allow(dead_code)]
 mod utils;
 
 use utils::{
-    attr, change_select, click, input, input_value, is_checked, mount_root, select_value, settle,
-    text,
+    attr, change_select, click, click_nth, input, input_value, is_checked, mount_root,
+    select_value, settle, text,
 };
 
 wasm_bindgen_test_configure!(run_in_browser);
@@ -546,4 +547,79 @@ async fn native_select_value_and_default_value() {
     click("#ns-set-c");
     settle().await;
     assert_eq!(select_value("#ns-default"), "a");
+}
+
+// ---------------------------------------------------------------------------
+// Select (custom)
+// ---------------------------------------------------------------------------
+
+#[function_component(SelectHarness)]
+fn select_harness() -> Html {
+    let fruit = use_state(|| AttrValue::from("banana"));
+    let on_value_change = {
+        let fruit = fruit.clone();
+        Callback::from(move |value: AttrValue| fruit.set(value))
+    };
+    let set_orange = {
+        let fruit = fruit.clone();
+        Callback::from(move |_: MouseEvent| fruit.set(AttrValue::from("orange")))
+    };
+    let items = || {
+        html! {
+            <SelectContent>
+                <SelectItem value="apple">{ "Apple" }</SelectItem>
+                <SelectItem value="banana">{ "Banana" }</SelectItem>
+                <SelectItem value="orange">{ "Orange" }</SelectItem>
+            </SelectContent>
+        }
+    };
+
+    html! {
+        <div>
+            <div id="sel-default">
+                <SelectAdvanced default_value="apple">
+                    <SelectTrigger><SelectValue placeholder="Pick" /></SelectTrigger>
+                    { items() }
+                </SelectAdvanced>
+            </div>
+            <div id="sel-controlled">
+                <SelectAdvanced value={(*fruit).clone()} {on_value_change}>
+                    <SelectTrigger><SelectValue placeholder="Pick" /></SelectTrigger>
+                    { items() }
+                </SelectAdvanced>
+            </div>
+            <button id="sel-set-orange" type="button" onclick={set_orange}>{ "orange" }</button>
+            <div id="sel-empty">
+                <SelectAdvanced>
+                    <SelectTrigger><SelectValue placeholder="Pick" /></SelectTrigger>
+                    { items() }
+                </SelectAdvanced>
+            </div>
+        </div>
+    }
+}
+
+#[test]
+async fn select_shows_label_for_preset_value() {
+    let root = mount_root("select-test");
+    let _app = yew::Renderer::<SelectHarness>::with_root(root).render();
+    settle().await;
+
+    // Labels show on first render, before the list was ever opened.
+    assert_eq!(text("#sel-default .select-value"), "Apple");
+    assert_eq!(text("#sel-controlled .select-value"), "Banana");
+    assert_eq!(text("#sel-empty .select-value"), "Pick");
+    assert!(attr("#sel-default .select-content", "hidden").is_some());
+
+    click("#sel-set-orange");
+    settle().await;
+    assert_eq!(text("#sel-controlled .select-value"), "Orange");
+
+    click("#sel-default .select-trigger");
+    settle().await;
+    assert!(attr("#sel-default .select-content", "hidden").is_none());
+    click_nth("#sel-default .select-item", 2);
+    settle().await;
+    assert_eq!(text("#sel-default .select-value"), "Orange");
+    assert!(attr("#sel-default .select-content", "hidden").is_some());
 }
