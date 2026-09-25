@@ -12,7 +12,7 @@ pub fn resizable_page() -> Html {
             title: "Horizontal",
             description: "Horizontally resizable panels.",
             demo: html! {
-                <Resizable orientation={ResizableOrientation::Horizontal} class="min-h-[200px] max-w-md rounded-lg border">
+                <Resizable orientation={ResizableOrientation::Horizontal} class="demo-resizable max-w-md rounded-lg border">
                     <ResizablePanel index={0} default_size={50.0}>
                         <div class="flex h-full items-center justify-center p-6">
                             <span class="font-semibold">{ "One" }</span>
@@ -40,7 +40,7 @@ pub fn resizable_page() -> Html {
             title: "Vertical",
             description: "Vertically resizable panels.",
             demo: html! {
-                <Resizable orientation={ResizableOrientation::Vertical} class="min-h-[200px] max-w-md rounded-lg border">
+                <Resizable orientation={ResizableOrientation::Vertical} class="demo-resizable-tall max-w-md rounded-lg border">
                     <ResizablePanel index={0} default_size={25.0}>
                         <div class="flex h-full items-center justify-center p-6">
                             <span class="font-semibold">{ "Header" }</span>

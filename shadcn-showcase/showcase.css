@@ -866,6 +866,10 @@ code {
 .max-w-sm { max-width: 24rem; }
 .max-w-md { max-width: 28rem; }
 
+/* Resizable demos need a definite size so the panels have room to move. */
+.demo-resizable { height: 12.5rem; }
+.demo-resizable-tall { height: 20rem; }
+
 /* Arbitrary width values for card examples */
 .\[w-\[350px\]\], .w-\[350px\] { width: 350px; }
 .\[w-\[380px\]\], .w-\[380px\] { width: 380px; }
