@@ -7,6 +7,21 @@ use crate::components::{ComponentPage, Example, PropDoc};
 
 #[function_component(ToggleGroupPage)]
 pub fn toggle_group_page() -> Html {
+    let marks = use_state(|| vec![AttrValue::from("bold")]);
+    let on_value_change = {
+        let marks = marks.clone();
+        Callback::from(move |value: Vec<AttrValue>| marks.set(value))
+    };
+    let marks_text = if marks.is_empty() {
+        String::from("none")
+    } else {
+        marks
+            .iter()
+            .map(|v| v.as_str())
+            .collect::<Vec<_>>()
+            .join(", ")
+    };
+
     let examples = vec![
         Example {
             title: "Single",
@@ -29,15 +44,44 @@ pub fn toggle_group_page() -> Html {
             description: "Toggle group with multiple selection.",
             demo: html! {
                 <ToggleGroup r#type={ToggleGroupType::Multiple}>
-                    <ToggleGroupItem value="bold"><strong>{ "B" }</strong></ToggleGroupItem>
-                    <ToggleGroupItem value="italic"><em>{ "I" }</em></ToggleGroupItem>
-                    <ToggleGroupItem value="underline"><u>{ "U" }</u></ToggleGroupItem>
+                    <ToggleGroupItem value="bold" aria_label="Toggle bold"><strong>{ "B" }</strong></ToggleGroupItem>
+                    <ToggleGroupItem value="italic" aria_label="Toggle italic"><em>{ "I" }</em></ToggleGroupItem>
+                    <ToggleGroupItem value="underline" aria_label="Toggle underline"><u>{ "U" }</u></ToggleGroupItem>
                 </ToggleGroup>
             },
             code: r##"<ToggleGroup r#type={ToggleGroupType::Multiple}>
-    <ToggleGroupItem value="bold"><strong>{ "B" }</strong></ToggleGroupItem>
-    <ToggleGroupItem value="italic"><em>{ "I" }</em></ToggleGroupItem>
-    <ToggleGroupItem value="underline"><u>{ "U" }</u></ToggleGroupItem>
+    <ToggleGroupItem value="bold" aria_label="Toggle bold"><strong>{ "B" }</strong></ToggleGroupItem>
+    <ToggleGroupItem value="italic" aria_label="Toggle italic"><em>{ "I" }</em></ToggleGroupItem>
+    <ToggleGroupItem value="underline" aria_label="Toggle underline"><u>{ "U" }</u></ToggleGroupItem>
+</ToggleGroup>"##,
+        },
+        Example {
+            title: "Controlled",
+            description: "on_value_change receives the whole resulting selection.",
+            demo: html! {
+                <div class="space-y-2">
+                    <ToggleGroup
+                        r#type={ToggleGroupType::Multiple}
+                        value={(*marks).clone()}
+                        on_value_change={on_value_change.clone()}
+                    >
+                        <ToggleGroupItem value="bold" aria_label="Toggle bold"><strong>{ "B" }</strong></ToggleGroupItem>
+                        <ToggleGroupItem value="italic" aria_label="Toggle italic"><em>{ "I" }</em></ToggleGroupItem>
+                        <ToggleGroupItem value="underline" aria_label="Toggle underline"><u>{ "U" }</u></ToggleGroupItem>
+                    </ToggleGroup>
+                    <p class="text-sm text-muted-foreground">{ format!("Selected: {marks_text}") }</p>
+                </div>
+            },
+            code: r##"let marks = use_state(|| vec![AttrValue::from("bold")]);
+let on_value_change = {
+    let marks = marks.clone();
+    Callback::from(move |value: Vec<AttrValue>| marks.set(value))
+};
+
+<ToggleGroup r#type={ToggleGroupType::Multiple} value={(*marks).clone()} {on_value_change}>
+    <ToggleGroupItem value="bold" aria_label="Toggle bold"><strong>{ "B" }</strong></ToggleGroupItem>
+    <ToggleGroupItem value="italic" aria_label="Toggle italic"><em>{ "I" }</em></ToggleGroupItem>
+    <ToggleGroupItem value="underline" aria_label="Toggle underline"><u>{ "U" }</u></ToggleGroupItem>
 </ToggleGroup>"##,
         },
         Example {
@@ -79,21 +123,27 @@ pub fn toggle_group_page() -> Html {
         },
         PropDoc {
             name: "value",
-            prop_type: "Option<AttrValue>",
-            default: "-",
-            description: "Controlled value (single)",
+            prop_type: "Option<Vec<AttrValue>>",
+            default: "None",
+            description: "Controlled pressed values",
         },
         PropDoc {
-            name: "values",
-            prop_type: "Option<Vec<AttrValue>>",
-            default: "-",
-            description: "Controlled values (multiple)",
+            name: "default_value",
+            prop_type: "Vec<AttrValue>",
+            default: "[]",
+            description: "Initially pressed values when uncontrolled",
         },
         PropDoc {
             name: "on_value_change",
-            prop_type: "Option<Callback<AttrValue>>",
+            prop_type: "Option<Callback<Vec<AttrValue>>>",
             default: "-",
-            description: "Value change handler",
+            description: "Called with the resulting selection",
+        },
+        PropDoc {
+            name: "ToggleGroupItem aria_label",
+            prop_type: "Option<AttrValue>",
+            default: "-",
+            description: "Accessible name for icon-only items",
         },
         PropDoc {
             name: "disabled",

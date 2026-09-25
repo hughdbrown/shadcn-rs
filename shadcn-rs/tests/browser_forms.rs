@@ -3,7 +3,9 @@
 use wasm_bindgen_test::{wasm_bindgen_test as test, wasm_bindgen_test_configure};
 use yew::prelude::*;
 
-use shadcn_rs::{Checkbox, Radio, RadioGroup, Switch, Toggle};
+use shadcn_rs::{
+    Checkbox, Radio, RadioGroup, Switch, Toggle, ToggleGroup, ToggleGroupItem, ToggleGroupType,
+};
 
 #[allow(dead_code)]
 mod utils;
@@ -310,4 +312,100 @@ async fn toggle_pressed_state_and_label() {
         attr("#tg-locked button", "aria-pressed").as_deref(),
         Some("false")
     );
+}
+
+// ---------------------------------------------------------------------------
+// Toggle Group
+// ---------------------------------------------------------------------------
+
+#[function_component(ToggleGroupHarness)]
+fn toggle_group_harness() -> Html {
+    let marks = use_state(Vec::<AttrValue>::new);
+    let on_value_change = {
+        let marks = marks.clone();
+        Callback::from(move |value: Vec<AttrValue>| marks.set(value))
+    };
+    let single = use_state(|| String::from("unset"));
+    let on_single_change = {
+        let single = single.clone();
+        Callback::from(move |value: Vec<AttrValue>| {
+            single.set(
+                value
+                    .iter()
+                    .map(|v| v.as_str())
+                    .collect::<Vec<_>>()
+                    .join(","),
+            )
+        })
+    };
+    let joined = marks
+        .iter()
+        .map(|v| v.as_str())
+        .collect::<Vec<_>>()
+        .join(",");
+
+    html! {
+        <div>
+            <div id="tgm">
+                <ToggleGroup
+                    r#type={ToggleGroupType::Multiple}
+                    value={(*marks).clone()}
+                    {on_value_change}
+                >
+                    <ToggleGroupItem value="bold" aria_label="Bold">{ "B" }</ToggleGroupItem>
+                    <ToggleGroupItem value="italic" aria_label="Italic">{ "I" }</ToggleGroupItem>
+                </ToggleGroup>
+            </div>
+            <div id="tgm-value">{ joined }</div>
+            <div id="tgs">
+                <ToggleGroup
+                    r#type={ToggleGroupType::Single}
+                    default_value={vec![AttrValue::from("left")]}
+                    on_value_change={on_single_change}
+                >
+                    <ToggleGroupItem value="left">{ "L" }</ToggleGroupItem>
+                    <ToggleGroupItem value="right">{ "R" }</ToggleGroupItem>
+                </ToggleGroup>
+            </div>
+            <div id="tgs-value">{ (*single).clone() }</div>
+        </div>
+    }
+}
+
+#[test]
+async fn toggle_group_emits_selection() {
+    let root = mount_root("toggle-group-test");
+    let _app = yew::Renderer::<ToggleGroupHarness>::with_root(root).render();
+    settle().await;
+
+    assert_eq!(
+        attr("#tgm [data-value='bold']", "aria-label").as_deref(),
+        Some("Bold")
+    );
+
+    click("#tgm [data-value='bold']");
+    settle().await;
+    assert_eq!(text("#tgm-value"), "bold");
+    click("#tgm [data-value='italic']");
+    settle().await;
+    assert_eq!(text("#tgm-value"), "bold,italic");
+    click("#tgm [data-value='bold']");
+    settle().await;
+    assert_eq!(text("#tgm-value"), "italic");
+    assert_eq!(
+        attr("#tgm [data-value='bold']", "aria-pressed").as_deref(),
+        Some("false")
+    );
+
+    // Single mode: default_value applies, and a deselect reports an empty selection.
+    assert_eq!(
+        attr("#tgs [data-value='left']", "aria-checked").as_deref(),
+        Some("true")
+    );
+    click("#tgs [data-value='right']");
+    settle().await;
+    assert_eq!(text("#tgs-value"), "right");
+    click("#tgs [data-value='right']");
+    settle().await;
+    assert_eq!(text("#tgs-value"), "");
 }
